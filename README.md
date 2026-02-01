@@ -1,4 +1,4 @@
-# Bank Management System
+# HTTP_based_Bank Payment System
 
 A comprehensive Spring Boot-based REST API for managing banking operations including bank management, customer accounts, and inter-bank transactions.
 

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-02-01T03:16:31+0530",
+    date = "2026-02-03T00:34:05+0530",
     comments = "version: 1.6.3, compiler: javac, environment: Java 21.0.8 (Oracle Corporation)"
 )
 @Component
@@ -25,6 +25,8 @@ public class CustomerMapperImpl implements CustomerMapper {
         customer.fullName( dto.getFullName() );
         customer.email( dto.getEmail() );
         customer.phoneNumber( dto.getPhoneNumber() );
+        customer.age( dto.getAge() );
+        customer.address( dto.getAddress() );
         customer.kycStatus( dto.getKycStatus() );
         customer.customerStatus( dto.getCustomerStatus() );
 
@@ -39,13 +41,14 @@ public class CustomerMapperImpl implements CustomerMapper {
 
         CustomerResponseDTO customerResponseDTO = new CustomerResponseDTO();
 
-        if ( entity.getId() != null ) {
-            customerResponseDTO.setId( Long.parseLong( entity.getId() ) );
-        }
+        customerResponseDTO.setAccountNumbers( accountsToNumbers( entity.getAccount() ) );
+        customerResponseDTO.setId( entity.getId() );
         customerResponseDTO.setFullName( entity.getFullName() );
         customerResponseDTO.setEmail( entity.getEmail() );
         customerResponseDTO.setPhoneNumber( entity.getPhoneNumber() );
         customerResponseDTO.setKycStatus( entity.getKycStatus() );
+        customerResponseDTO.setAge( entity.getAge() );
+        customerResponseDTO.setAddress( entity.getAddress() );
         customerResponseDTO.setCustomerStatus( entity.getCustomerStatus() );
 
         return customerResponseDTO;

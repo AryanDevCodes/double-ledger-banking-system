@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-02-01T03:16:31+0530",
+    date = "2026-02-03T00:34:06+0530",
     comments = "version: 1.6.3, compiler: javac, environment: Java 21.0.8 (Oracle Corporation)"
 )
 @Component
@@ -25,7 +25,6 @@ public class AccountMapperImpl implements AccountMapper {
         Account.AccountBuilder account = Account.builder();
 
         account.balance( dto.getInitialDeposit() );
-        account.currencyCode( dto.getCurrencyCode() );
 
         return account.build();
     }
@@ -42,6 +41,8 @@ public class AccountMapperImpl implements AccountMapper {
         accountResponseDTO.setBankName( accountBankBankName( account ) );
         accountResponseDTO.setCustomerId( accountCustomerId( account ) );
         accountResponseDTO.setCustomerName( accountCustomerFullName( account ) );
+        accountResponseDTO.setAge( accountCustomerAge( account ) );
+        accountResponseDTO.setAddress( accountCustomerAddress( account ) );
         accountResponseDTO.setAccountNumber( account.getAccountNumber() );
         accountResponseDTO.setCurrencyCode( account.getCurrencyCode() );
         accountResponseDTO.setBalance( account.getBalance() );
@@ -80,5 +81,21 @@ public class AccountMapperImpl implements AccountMapper {
             return null;
         }
         return customer.getFullName();
+    }
+
+    private Integer accountCustomerAge(Account account) {
+        Customer customer = account.getCustomer();
+        if ( customer == null ) {
+            return null;
+        }
+        return customer.getAge();
+    }
+
+    private String accountCustomerAddress(Account account) {
+        Customer customer = account.getCustomer();
+        if ( customer == null ) {
+            return null;
+        }
+        return customer.getAddress();
     }
 }

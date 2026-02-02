@@ -20,5 +20,7 @@ public interface AccountMapper {
     @Mapping(target = "bankName", source = "bank.bankName")
     @Mapping(target = "customerId", source = "customer.id")
     @Mapping(target = "customerName", source = "customer.fullName")
+    @Mapping(target = "age", source = "customer.age")
+    @Mapping(target = "address", source = "customer.address")
     AccountResponseDTO toResponseDTO( Account account );
 }

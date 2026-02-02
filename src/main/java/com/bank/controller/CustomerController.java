@@ -43,7 +43,7 @@ public class CustomerController {
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<CustomerResponseDTO> deleteCustomer(@RequestParam Long id){
+    public ResponseEntity<CustomerResponseDTO> deleteCustomer(@RequestParam String id){
         customerService.deleteCustomer(id);
         return ResponseEntity.ok().build();
     }

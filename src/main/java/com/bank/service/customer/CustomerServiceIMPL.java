@@ -59,13 +59,15 @@ public class CustomerServiceIMPL implements CustomerService {
         customer.setEmail(dto.getEmail());
         customer.setPhoneNumber(dto.getPhoneNumber());
         customer.setKycStatus(dto.getKycStatus());
+        customer.setAge(dto.getAge());
+        customer.setAddress(dto.getAddress());
         customer.setCustomerStatus(dto.getCustomerStatus());
 
         return customerMapper.toResponseDTO(customerRepository.save(customer));
     }
 
     @Override
-    public void deleteCustomer( Long id ) {
+    public void deleteCustomer( String id ) {
         if ( id == null ) {
             throw new InvalidDataException("id should not be null");
         }

@@ -10,6 +10,8 @@ public class CustomerRequestDTO {
     private String email;
     private String phoneNumber;
     private Status kycStatus;
+    private Integer age;
+    private String address;
 
     private Status customerStatus;
 

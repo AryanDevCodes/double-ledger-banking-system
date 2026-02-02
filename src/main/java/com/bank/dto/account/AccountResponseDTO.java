@@ -13,11 +13,15 @@ public class AccountResponseDTO {
     private BigDecimal balance;
     private Status status;
 
+
+
     // Only include IDs to avoid circular references excluding entities directly
     private String bankId;
     private String bankName;
     private String customerId;
     private String customerName;
+    private Integer age;
+    private String address;
 
 
 }

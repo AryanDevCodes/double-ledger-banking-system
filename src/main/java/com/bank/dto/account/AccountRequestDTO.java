@@ -8,8 +8,6 @@ import java.math.BigDecimal;
 @Data
 public class AccountRequestDTO {
 
-    private String currencyCode;
-
     private BigDecimal initialDeposit;
 
     private CustomerRequestDTO customer;

@@ -8,6 +8,7 @@ import com.bank.entity.Customer;
 import com.bank.entity.Status;
 import com.bank.exception.InvalidDataException;
 import com.bank.exception.ResourceNotFoundException;
+import com.bank.ledger.LedgerWriter;
 import com.bank.repository.AccountRepository;
 import com.bank.repository.BankRepository;
 import com.bank.repository.CustomerRepository;
@@ -27,6 +28,7 @@ public class AccountsServiceIMPL implements AccountsService{
     private final AccountMapper accountMapper;
     private final BankRepository bankRepository;
     private final CustomerRepository customerRepository;
+    private final LedgerWriter ledgerWriter;
 
     @Override
     public List<AccountResponseDTO> findAll() {
@@ -56,27 +58,10 @@ public class AccountsServiceIMPL implements AccountsService{
     @Override
     public AccountResponseDTO createAccount(String bankName, AccountRequestDTO dto) {
         // Validate input parameters
-        if (bankName == null || bankName.trim().isEmpty()) {
-            throw new InvalidDataException("Bank name cannot be null or empty", "bankName", bankName);
-        }
-        if (dto == null) {
-            throw new InvalidDataException("Account data cannot be null", "accountRequestDTO", null);
-        }
-        if (dto.getCustomer() == null) {
-            throw new InvalidDataException("Customer data cannot be null", "customerRequestDTO", null);
-        }
-
-        // Validate initial deposit
-        if (dto.getInitialDeposit() == null || dto.getInitialDeposit().compareTo(BigDecimal.ZERO) < 0) {
-            throw new InvalidDataException("Initial deposit must be a positive value", "initialDeposit", dto.getInitialDeposit());
-        }
+        validateCreateAccountRequest(bankName,dto);
 
         // Find the bank
-        Bank bank = bankRepository.findByBankName(bankName);
-        if (bank == null) {
-            throw new ResourceNotFoundException("Bank", "bankName", bankName);
-        }
-
+        Bank bank = resolveBank(bankName);
         // Find or create customer
         Customer customer = customerRepository.findCustomerByFullNameAndEmailAndPhoneNumber(
                 dto.getCustomer().getFullName(),
@@ -88,6 +73,8 @@ public class AccountsServiceIMPL implements AccountsService{
                     .id(bankName + "_" + generateAccountNumber())
                     .fullName(dto.getCustomer().getFullName())
                     .email(dto.getCustomer().getEmail())
+                    .age(dto.getCustomer().getAge())
+                    .address(dto.getCustomer().getAddress())
                     .phoneNumber(dto.getCustomer().getPhoneNumber())
                     .kycStatus(dto.getCustomer().getKycStatus() != null ? dto.getCustomer().getKycStatus() : Status.PENDING)
                     .customerStatus(dto.getCustomer().getCustomerStatus() != null ? dto.getCustomer().getCustomerStatus() : Status.ACTIVE)
@@ -101,7 +88,18 @@ public class AccountsServiceIMPL implements AccountsService{
 
         account.setCustomer(customer);
         account.setBank(bank);
+        account.setBalance(BigDecimal.ZERO);
         Account savedAccount = accountRepository.save(account);
+        if ( dto.getInitialDeposit().compareTo(BigDecimal.ZERO) >= 0 ) {
+            ledgerWriter.postCredit(
+                    savedAccount.getId(),
+                    dto.getInitialDeposit(),
+                    "OPENING_BALANCE"
+            );
+        }
+        // Temporary sync
+        savedAccount.setBalance(dto.getInitialDeposit());
+        accountRepository.save(savedAccount);
 
         return accountMapper.toResponseDTO(savedAccount);
     }
@@ -128,10 +126,6 @@ public class AccountsServiceIMPL implements AccountsService{
                 throw new InvalidDataException("Balance cannot be negative", "balance", dto.getInitialDeposit());
             }
             account.setBalance(dto.getInitialDeposit());
-        }
-
-        if ( dto.getCurrencyCode() != null && !dto.getCurrencyCode().trim().isEmpty() ) {
-            account.setCurrencyCode(dto.getCurrencyCode());
         }
 
         return accountMapper.toResponseDTO(accountRepository.save(account));
@@ -161,5 +155,25 @@ public class AccountsServiceIMPL implements AccountsService{
             return baseAccountNumber.substring(0, 20);
         }
         return baseAccountNumber;
+    }
+    private void validateCreateAccountRequest(String bankName, AccountRequestDTO dto){
+        if ( bankName == null || bankName.isBlank() ){
+            throw new InvalidDataException("Bank name cannot be null or empty", "bankName", bankName);
+        }
+        if ( dto == null || dto.getCustomer() == null ){
+            throw new InvalidDataException("Customer data is required");
+        }
+        if ( dto.getInitialDeposit() == null || dto.getInitialDeposit().compareTo(BigDecimal.ZERO) < 0 ){
+            throw new InvalidDataException("Initial deposit must be a positive value");
+        }
+    }
+
+    private Bank resolveBank(String bankName){
+        Bank bank  = bankRepository.findByBankName(bankName);
+        if ( bank == null ) {
+
+            throw new ResourceNotFoundException("Bank", "bankName", bankName);
+        }
+        return bank;
     }
 }

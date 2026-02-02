@@ -32,6 +32,9 @@ public class Customer {
     @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
 
+    private Integer age;
+    private String address;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default

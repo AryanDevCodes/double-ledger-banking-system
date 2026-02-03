@@ -13,6 +13,7 @@ import com.bank.repository.AccountRepository;
 import com.bank.repository.BankRepository;
 import com.bank.repository.CustomerRepository;
 import com.bank.service.account.mapper.AccountMapper;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -56,6 +57,7 @@ public class AccountsServiceIMPL implements AccountsService{
     }
 
     @Override
+    @Transactional
     public AccountResponseDTO createAccount(String bankName, AccountRequestDTO dto) {
         // Validate input parameters
         validateCreateAccountRequest(bankName,dto);
@@ -105,6 +107,7 @@ public class AccountsServiceIMPL implements AccountsService{
     }
 
     @Override
+    @Transactional
     public AccountResponseDTO updateAccount( String accountNumber, AccountRequestDTO dto ) {
         // Validate input parameters
         if ( accountNumber == null ) {
@@ -132,6 +135,7 @@ public class AccountsServiceIMPL implements AccountsService{
     }
 
     @Override
+    @Transactional
     public void deleteAccount( String accountNumber ) {
         // Validate input parameter
         if ( accountNumber == null ) {

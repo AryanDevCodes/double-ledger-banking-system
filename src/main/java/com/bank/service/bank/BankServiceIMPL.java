@@ -3,6 +3,7 @@ package com.bank.service.bank;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import com.bank.dto.bank.BankRequestDTO;
@@ -48,6 +49,7 @@ public class BankServiceIMPL implements BankService {
 
 
     @Override
+    @Transactional
     public BankResponseDTO updateBank(String id, BankRequestDTO dto) {
         if (id == null || id.trim().isEmpty()) {
             throw new InvalidDataException("Bank ID cannot be null or empty", "id", id);
@@ -67,6 +69,7 @@ public class BankServiceIMPL implements BankService {
     }
 
     @Override
+    @Transactional
     public void deleteBank(String id) {
         if (id == null || id.trim().isEmpty()) {
             throw new InvalidDataException("Bank ID cannot be null or empty", "id", id);

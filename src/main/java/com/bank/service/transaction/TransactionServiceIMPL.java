@@ -82,9 +82,14 @@ public class TransactionServiceIMPL implements TransactionService{
     @Transactional
     public TransactionResponseDTO makeTransaction(@NotNull TransactionRequestDTO dto) {
 
-        Account sender = accountRepository.lockById(resolveSenderAccount(dto).getId());
-        Account receiver = accountRepository.lockById(resolveReceiverAccount(dto).getId());
+        Account sender = accountRepository.lockById(
+                resolveSenderAccount(dto).getId()
+        ).orElseThrow(() -> new ResourceNotFoundException("Sender not found"));
+        Account receiver = (resolveReceiverAccount(dto));
 
+        if (sender.getId().equals(receiver.getId())) {
+            throw new InvalidDataException("Sender and receiver cannot be the same account");
+        }
         BigDecimal senderBalance =
                 ledgerRepository.calculateBalance(sender.getId());
 
@@ -126,6 +131,7 @@ public class TransactionServiceIMPL implements TransactionService{
 
         } catch (Exception e) {
             tx.setStatus(Status.FAILED);
+            transactionRepository.save(tx);
             throw e;
         }
 

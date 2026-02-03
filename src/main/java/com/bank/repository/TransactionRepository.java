@@ -17,5 +17,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
            "order by t.transactionDate desc")
     List<Transaction> findTransactionByAccountNumberAndEmail(
             @Param("accountNumber") String accountNumber,
-            @Param("email") String email );
+            @Param("email") String email
+    );
 }

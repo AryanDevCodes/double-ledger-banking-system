@@ -6,6 +6,7 @@ import com.bank.entity.Customer;
 import com.bank.exception.InvalidDataException;
 import com.bank.repository.CustomerRepository;
 import com.bank.service.customer.mapper.CustomerMapper;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -46,6 +47,7 @@ public class CustomerServiceIMPL implements CustomerService {
     }
 
     @Override
+    @Transactional
     public CustomerResponseDTO updateCustomer( String name,String email,String phoneNumber, CustomerRequestDTO dto ) {
         if (dto==null) {
             throw new InvalidDataException("Please enter some data to update");

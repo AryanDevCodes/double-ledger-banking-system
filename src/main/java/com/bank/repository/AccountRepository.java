@@ -24,4 +24,12 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     @Query("select a from Account a where a.id = :id")
     Optional<Account> lockById( @Param ("id") Long id);
 
+//    @Query("""
+//                    select a,c from Account a
+//                    join a.customer c
+//                    where a.accountNumber = :accountNumber
+//                            and c.email = :email
+//                    """)
+//    Optional<Account> findAccountByAccountNumberAndEmail(@Param("accountNumber") String accountNumber, @Param("email") String email);
+
 }

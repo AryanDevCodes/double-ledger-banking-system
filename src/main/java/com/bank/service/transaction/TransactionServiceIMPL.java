@@ -85,11 +85,13 @@ public class TransactionServiceIMPL implements TransactionService{
         Account sender = accountRepository.lockById(
                 resolveSenderAccount(dto).getId()
         ).orElseThrow(() -> new ResourceNotFoundException("Sender not found"));
-        Account receiver = (resolveReceiverAccount(dto));
+        Account receiver = accountRepository.lockById(resolveReceiverAccount(dto).getId())
+                .orElseThrow(()-> new ResourceNotFoundException("Receiver not found"));
 
         if (sender.getId().equals(receiver.getId())) {
             throw new InvalidDataException("Sender and receiver cannot be the same account");
         }
+
         BigDecimal senderBalance =
                 ledgerRepository.calculateBalance(sender.getId());
 
@@ -128,6 +130,15 @@ public class TransactionServiceIMPL implements TransactionService{
             );
 
             tx.setStatus(Status.COMPLETED);
+            // Saving the updated balance to accountTable for a consistent view or a cached view
+            BigDecimal updatedSenderBalance =
+                    ledgerRepository.calculateBalance(sender.getId());
+
+            BigDecimal updatedReceiverBalance =
+                    ledgerRepository.calculateBalance(receiver.getId());
+
+            sender.setBalance(updatedSenderBalance);
+            receiver.setBalance(updatedReceiverBalance);
 
         } catch (Exception e) {
             tx.setStatus(Status.FAILED);
@@ -146,7 +157,12 @@ public class TransactionServiceIMPL implements TransactionService{
         if ( accountNumber==null || email==null ){
             throw new InvalidDataException("please enter account number and email address");
         }
+       /* Account account = accountRepository.findAccountByAccountNumberAndEmail(accountNumber,email)
+                .orElseThrow(()-> new ResourceNotFoundException("Transaction with account number "+accountNumber +" and email "+email+" not found"));
+       */
         List<Transaction> transactions = transactionRepository.findTransactionByAccountNumberAndEmail(accountNumber,email);
+        if ( transactions.isEmpty() )
+            throw new ResourceNotFoundException("\"No transactions found for account number \" + accountNumber + \" and email \" + email);");
         return transactions.stream()
                 .map(transactionMapper::toResponseDTO)
                 .collect(java.util.stream.Collectors.toList());

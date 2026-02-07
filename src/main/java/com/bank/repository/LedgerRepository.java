@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 
 @Repository
-public interface LedgerRepository extends JpaRepository<Ledger, String> {
+public interface LedgerRepository extends JpaRepository<Ledger, Long> {
 
     @Query("""
             select coalesce(

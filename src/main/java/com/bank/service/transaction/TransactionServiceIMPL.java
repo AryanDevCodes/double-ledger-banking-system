@@ -78,6 +78,7 @@ public class TransactionServiceIMPL implements TransactionService{
         return transactionMapper.toResponseDTO(transactionRepository.save(transaction));
     }*/
 
+/*
     @Override
     @Transactional
     public TransactionResponseDTO makeTransaction(@NotNull TransactionRequestDTO dto) {
@@ -150,7 +151,72 @@ public class TransactionServiceIMPL implements TransactionService{
                 transactionRepository.save(tx)
         );
     }
+*/
 
+    @Override
+    @Transactional
+    public TransactionResponseDTO makeTransaction(@NotNull TransactionRequestDTO dto) {
+
+        Account senderRef = resolveSenderAccount(dto);
+        Account receiverRef = resolveReceiverAccount(dto);
+
+        if (senderRef.getId().equals(receiverRef.getId())) {
+            throw new InvalidDataException("Sender and receiver cannot be the same account");
+        }
+
+        LockedAccounts locked = lockAccountsInOrder(
+                senderRef.getId(),
+                receiverRef.getId()
+        );
+
+        Account sender = locked.sender();
+        Account receiver = locked.receiver();
+
+        BigDecimal senderBalance =
+                ledgerRepository.calculateBalance(sender.getId());
+
+        if (senderBalance.compareTo(dto.getAmount()) < 0) {
+            throw new GlobalServiceException("Insufficient balance");
+        }
+
+        Transaction tx = transactionMapper.toEntity(dto);
+        populateTransactionSnapshot(tx, sender, receiver);
+
+        tx.setStatus(Status.INITIATED);
+        tx = transactionRepository.save(tx);
+
+        try {
+            ledgerWriter.postDebit(
+                    sender.getId(),
+                    dto.getAmount(),
+                    tx.getTransactionId().toString()
+            );
+
+            ledgerWriter.postCredit(
+                    receiver.getId(),
+                    dto.getAmount(),
+                    tx.getTransactionId().toString()
+            );
+
+            tx.setStatus(Status.COMPLETED);
+            // setting the UpdatedBalance to accounts
+            sender.setBalance(
+                    ledgerRepository.calculateBalance(sender.getId())
+            );
+            receiver.setBalance(
+                    ledgerRepository.calculateBalance(receiver.getId())
+            );
+
+        } catch (Exception ex) {
+            tx.setStatus(Status.FAILED);
+            transactionRepository.save(tx);
+            throw ex;
+        }
+
+        return transactionMapper.toResponseDTO(
+                transactionRepository.save(tx)
+        );
+    }
 
     @Override
     public List<TransactionResponseDTO> getAllTransactions( String accountNumber, String email ) {
@@ -202,4 +268,49 @@ public class TransactionServiceIMPL implements TransactionService{
 
         return receiverAccount;
     }
+
+    /**
+     * Populates transaction with denormalized snapshot data.
+     * This captures the state of accounts at transaction time for historical accuracy.
+     */
+    private void populateTransactionSnapshot(
+            Transaction tx,
+            Account sender,
+            Account receiver
+    ) {
+        tx.setSenderAccount(sender);
+        tx.setReceiverAccount(receiver);
+        tx.setSenderBank(sender.getBank());
+        tx.setReceiverBank(receiver.getBank());
+
+        tx.setSenderAccountNumber(sender.getAccountNumber());
+        tx.setSenderEmail(sender.getCustomer().getEmail());
+        tx.setSenderBankName(sender.getBank().getBankName());
+
+        tx.setReceiverAccountNumber(receiver.getAccountNumber());
+        tx.setReceiverEmail(receiver.getCustomer().getEmail());
+        tx.setReceiverBankName(receiver.getBank().getBankName());
+    }
+
+    /**
+     * Locks accounts in deterministic order to prevent deadlocks.
+     * Always locks the account with lower ID first.
+     */
+    private LockedAccounts lockAccountsInOrder(Long senderId, Long receiverId) {
+
+        Long firstId = senderId < receiverId ? senderId : receiverId;
+        Long secondId = senderId < receiverId ? receiverId : senderId;
+
+        Account first = accountRepository.lockById(firstId)
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
+
+        Account second = accountRepository.lockById(secondId)
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
+
+        Account sender = first.getId().equals(senderId) ? first : second;
+        Account receiver = first.getId().equals(receiverId) ? first : second;
+
+        return new LockedAccounts(sender, receiver);
+    }
+
 }

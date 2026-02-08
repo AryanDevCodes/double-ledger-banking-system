@@ -20,7 +20,7 @@ import java.time.Instant;
         )
 )
 @Entity
-@Getter @Setter
+//@Getter @Setter
 @AllArgsConstructor @NoArgsConstructor
 public class Ledger {
     @Id
@@ -29,6 +29,7 @@ public class Ledger {
     private Long accountId;
 
     private BigDecimal amount;
+
     // transaction Id
     private String referenceId;
 

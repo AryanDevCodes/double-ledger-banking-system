@@ -9,6 +9,8 @@ public interface AccountsService {
 
     List<AccountResponseDTO> findAll();
     List<AccountResponseDTO> findByBank(String bankName);
+    List<AccountResponseDTO> findByCustomerEmail(String email);
+    List<AccountResponseDTO> findByUserId(Long userId);
 
     AccountResponseDTO findByAccountNumber(String accountNumber);
 

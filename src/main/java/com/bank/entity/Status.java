@@ -9,5 +9,6 @@ public enum Status {
     INACTIVE,
     CLOSED,
     INITIATED,
+    PROCESSING,
     SUCCESS,
 }

@@ -10,6 +10,8 @@ public interface BankService {
 
     List<BankResponseDTO> findAllBank();
 
+    BankResponseDTO findByUpiId(String upiId);
+
     BankResponseDTO createBank(BankRequestDTO dto);
 
     BankResponseDTO updateBank(String id, BankRequestDTO dto);

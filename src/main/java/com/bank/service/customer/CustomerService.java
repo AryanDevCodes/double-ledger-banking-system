@@ -9,6 +9,8 @@ public interface CustomerService {
     List<CustomerResponseDTO> findAll();
     List<CustomerResponseDTO> findCustomerByNameAndBank(String name, String bank);
     List<CustomerResponseDTO> findCustomerByBank(String bank);
+    CustomerResponseDTO findCustomerByEmail(String email);
+    CustomerResponseDTO findCustomerByUserId(Long userId);
     CustomerResponseDTO updateCustomer( String name,String email,String phoneNumber, CustomerRequestDTO dto );
     void deleteCustomer( String id );
 

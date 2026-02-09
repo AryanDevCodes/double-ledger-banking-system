@@ -1,0 +1,184 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 174 72% 43%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 14% 93%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 174 72% 43%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 174 72% 43%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 222 47% 8%;
+    --sidebar-foreground: 220 14% 80%;
+    --sidebar-primary: 174 72% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 30% 14%;
+    --sidebar-accent-foreground: 220 14% 90%;
+    --sidebar-border: 222 30% 16%;
+    --sidebar-ring: 174 72% 50%;
+    --sidebar-muted: 220 9% 46%;
+  }
+
+  .dark {
+    --background: 222 47% 6%;
+    --foreground: 220 14% 90%;
+
+    --card: 222 35% 10%;
+    --card-foreground: 220 14% 90%;
+
+    --popover: 222 35% 10%;
+    --popover-foreground: 220 14% 90%;
+
+    --primary: 174 72% 50%;
+    --primary-foreground: 222 47% 8%;
+
+    --secondary: 222 30% 16%;
+    --secondary-foreground: 220 14% 90%;
+
+    --muted: 222 30% 14%;
+    --muted-foreground: 220 9% 55%;
+
+    --accent: 174 50% 20%;
+    --accent-foreground: 174 72% 60%;
+
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 71% 35%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 40%;
+    --warning-foreground: 0 0% 100%;
+
+    --info: 217 91% 50%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 222 30% 18%;
+    --input: 222 30% 18%;
+    --ring: 172 66% 50%;
+
+    --sidebar-background: 222 47% 5%;
+    --sidebar-foreground: 220 14% 75%;
+    --sidebar-primary: 172 66% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 30% 12%;
+    --sidebar-accent-foreground: 220 14% 85%;
+    --sidebar-border: 222 30% 14%;
+    --sidebar-ring: 172 66% 50%;
+    --sidebar-muted: 220 9% 46%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-sm border border-border rounded-lg;
+    box-shadow: var(--shadow-md);
+  }
+
+  .stat-card {
+    @apply glass-card p-5 transition-all duration-300;
+  }
+
+  .stat-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+  }
+
+  .page-header {
+    @apply mb-8;
+  }
+
+  .page-title {
+    @apply text-2xl font-bold tracking-tight;
+  }
+
+  .page-subtitle {
+    @apply text-muted-foreground text-sm mt-1;
+  }
+
+  .status-badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  .status-active {
+    @apply bg-accent text-accent-foreground;
+  }
+
+  .status-completed {
+    @apply text-success-foreground;
+    background-color: hsl(var(--success) / 0.15);
+    color: hsl(var(--success));
+  }
+
+  .status-failed {
+    @apply text-destructive-foreground;
+    background-color: hsl(var(--destructive) / 0.15);
+    color: hsl(var(--destructive));
+  }
+
+  .status-pending {
+    background-color: hsl(var(--warning) / 0.15);
+    color: hsl(var(--warning));
+  }
+
+  .status-processing {
+    background-color: hsl(var(--info) / 0.15);
+    color: hsl(var(--info));
+  }
+
+  .mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}

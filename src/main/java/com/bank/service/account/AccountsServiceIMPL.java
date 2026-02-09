@@ -48,6 +48,24 @@ public class AccountsServiceIMPL implements AccountsService{
     }
 
     @Override
+    public List<AccountResponseDTO> findByCustomerEmail(String email) {
+        if (email == null || email.isEmpty()) {
+            throw new InvalidDataException("email can't be null or empty");
+        }
+        List<Account> accounts = accountRepository.findByCustomerEmail(email);
+        return accounts.stream().map(accountMapper::toResponseDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<AccountResponseDTO> findByUserId(Long userId) {
+        if (userId == null) {
+            throw new InvalidDataException("userId can't be null");
+        }
+        List<Account> accounts = accountRepository.findByCustomerUserId(userId);
+        return accounts.stream().map(accountMapper::toResponseDTO).collect(Collectors.toList());
+    }
+
+    @Override
     public AccountResponseDTO findByAccountNumber( String accountNumber ) {
         if ( accountNumber == null ) {
             throw  new InvalidDataException("accountNumber can't be null");

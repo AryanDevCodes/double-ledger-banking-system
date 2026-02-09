@@ -4,6 +4,7 @@ import com.bank.dto.customer.CustomerRequestDTO;
 import com.bank.dto.customer.CustomerResponseDTO;
 import com.bank.entity.Customer;
 import com.bank.exception.InvalidDataException;
+import com.bank.exception.ResourceNotFoundException;
 import com.bank.repository.CustomerRepository;
 import com.bank.service.customer.mapper.CustomerMapper;
 import jakarta.transaction.Transactional;
@@ -44,6 +45,30 @@ public class CustomerServiceIMPL implements CustomerService {
         List<Customer> customers = customerRepository.findCustomerByAccount_Bank_BankName(bankName);
         return customers.stream().map(customerMapper::toResponseDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public CustomerResponseDTO findCustomerByEmail(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            throw new InvalidDataException("email should not be null or empty");
+        }
+        Customer customer = customerRepository.findByEmail(email);
+        if (customer == null) {
+            throw new ResourceNotFoundException("Customer not found with email: " + email);
+        }
+        return customerMapper.toResponseDTO(customer);
+    }
+
+    @Override
+    public CustomerResponseDTO findCustomerByUserId(Long userId) {
+        if (userId == null) {
+            throw new InvalidDataException("userId should not be null");
+        }
+        Customer customer = customerRepository.findByUserId(userId);
+        if (customer == null) {
+            throw new ResourceNotFoundException("Customer not found for user ID: " + userId);
+        }
+        return customerMapper.toResponseDTO(customer);
     }
 
     @Override

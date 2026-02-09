@@ -7,4 +7,3 @@ import com.bank.entity.Account;
  * This is used to maintain deterministic locking order and prevent deadlocks.
  */
 record LockedAccounts(Account sender, Account receiver) {}
-

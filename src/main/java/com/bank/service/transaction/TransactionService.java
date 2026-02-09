@@ -7,6 +7,11 @@ import java.util.List;
 
 public interface TransactionService {
 
-    TransactionResponseDTO makeTransaction( TransactionRequestDTO transactionRequestDTO);
-    List<TransactionResponseDTO> getAllTransactions(String accountNumber,String email);
+    TransactionResponseDTO makeTransaction(TransactionRequestDTO transactionRequestDTO);
+
+    List<TransactionResponseDTO> getAllTransactions(String accountNumber, String email);
+
+    List<TransactionResponseDTO> getAllTransactionsWithoutFilter();
+
+    List<TransactionResponseDTO> getTransactionsForUser(Long userId);
 }

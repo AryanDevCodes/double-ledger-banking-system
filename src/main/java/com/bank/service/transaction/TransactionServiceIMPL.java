@@ -10,6 +10,7 @@ import com.bank.exception.InvalidDataException;
 import com.bank.exception.ResourceNotFoundException;
 import com.bank.ledger.LedgerWriter;
 import com.bank.repository.AccountRepository;
+import com.bank.repository.CustomerRepository;
 import com.bank.repository.LedgerRepository;
 import com.bank.repository.TransactionRepository;
 import com.bank.service.transaction.mapper.TransactionMapper;
@@ -23,135 +24,149 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class TransactionServiceIMPL implements TransactionService{
+public class TransactionServiceIMPL implements TransactionService {
     private final TransactionRepository transactionRepository;
     private final TransactionMapper transactionMapper;
     private final AccountRepository accountRepository;
     private final LedgerWriter ledgerWriter;
     private final LedgerRepository ledgerRepository;
+    private final CustomerRepository customerRepository;
 
-/*    @Override
-    @Transactional
-    public TransactionResponseDTO makeTransaction(@NotNull TransactionRequestDTO dto) {
+    /*
+     * @Override
+     * 
+     * @Transactional
+     * public TransactionResponseDTO makeTransaction(@NotNull TransactionRequestDTO
+     * dto) {
+     * 
+     * if ( dto.getSenderAccount() == null || dto.getReceiverAccount() == null ||
+     * dto.getAmount() == null){
+     * throw new InvalidDataException(
+     * " Sender account, receiver account, and amount are required ");
+     * }
+     * 
+     * Account senderAccount = resolveSenderAccount(dto);
+     * Account receiverAccount = resolveReceiverAccount(dto);
+     * 
+     * // Lock Sender account
+     * accountRepository.lockById(senderAccount.getId());
+     * 
+     * BigDecimal senderBalance =
+     * ledgerRepository.calculateBalance(senderAccount.getId());
+     * if ( senderBalance.compareTo(dto.getAmount())<0 ){
+     * throw new GlobalServiceException("Insufficient balance");
+     * }
+     * 
+     * Transaction transaction = transactionMapper.toEntity(dto);
+     * transaction.setSenderAccount(senderAccount);
+     * transaction.setReceiverAccount(receiverAccount);
+     * transaction.setSenderBank(senderAccount.getBank());
+     * transaction.setReceiverBank(receiverAccount.getBank());
+     * transaction.setAmount(dto.getAmount());
+     * transaction.setStatus(Status.INITIATED);
+     * transaction = transactionRepository.save(transaction);
+     * 
+     * try {
+     * // Ledger is the only writable
+     * ledgerWriter.postDebit(
+     * senderAccount.getId(),
+     * dto.getAmount(),
+     * transaction.getTransactionId().toString()
+     * );
+     * ledgerWriter.postCredit(
+     * receiverAccount.getId(),
+     * dto.getAmount(),
+     * transaction.getTransactionId().toString()
+     * );
+     * transaction.setStatus(Status.COMPLETED);
+     * }catch ( Exception e ){
+     * transaction.setStatus(Status.FAILED);
+     * throw new GlobalServiceException("Transaction Failed ", e);
+     * }
+     * return
+     * transactionMapper.toResponseDTO(transactionRepository.save(transaction));
+     * }
+     */
 
-       if ( dto.getSenderAccount() == null || dto.getReceiverAccount() == null || dto.getAmount() == null){
-           throw new InvalidDataException( " Sender account, receiver account, and amount are required ");
-       }
-
-       Account senderAccount = resolveSenderAccount(dto);
-       Account receiverAccount = resolveReceiverAccount(dto);
-
-       // Lock Sender account
-       accountRepository.lockById(senderAccount.getId());
-
-        BigDecimal senderBalance = ledgerRepository.calculateBalance(senderAccount.getId());
-        if ( senderBalance.compareTo(dto.getAmount())<0 ){
-            throw new GlobalServiceException("Insufficient balance");
-        }
-
-        Transaction transaction = transactionMapper.toEntity(dto);
-        transaction.setSenderAccount(senderAccount);
-        transaction.setReceiverAccount(receiverAccount);
-        transaction.setSenderBank(senderAccount.getBank());
-        transaction.setReceiverBank(receiverAccount.getBank());
-        transaction.setAmount(dto.getAmount());
-        transaction.setStatus(Status.INITIATED);
-        transaction  = transactionRepository.save(transaction);
-
-        try {
-            // Ledger is the only writable
-            ledgerWriter.postDebit(
-                    senderAccount.getId(),
-                    dto.getAmount(),
-                    transaction.getTransactionId().toString()
-            );
-            ledgerWriter.postCredit(
-                    receiverAccount.getId(),
-                    dto.getAmount(),
-                    transaction.getTransactionId().toString()
-            );
-            transaction.setStatus(Status.COMPLETED);
-        }catch ( Exception e ){
-            transaction.setStatus(Status.FAILED);
-            throw new GlobalServiceException("Transaction Failed ", e);
-        }
-        return transactionMapper.toResponseDTO(transactionRepository.save(transaction));
-    }*/
-
-/*
-    @Override
-    @Transactional
-    public TransactionResponseDTO makeTransaction(@NotNull TransactionRequestDTO dto) {
-
-        Account sender = accountRepository.lockById(
-                resolveSenderAccount(dto).getId()
-        ).orElseThrow(() -> new ResourceNotFoundException("Sender not found"));
-        Account receiver = accountRepository.lockById(resolveReceiverAccount(dto).getId())
-                .orElseThrow(()-> new ResourceNotFoundException("Receiver not found"));
-
-        if (sender.getId().equals(receiver.getId())) {
-            throw new InvalidDataException("Sender and receiver cannot be the same account");
-        }
-
-        BigDecimal senderBalance =
-                ledgerRepository.calculateBalance(sender.getId());
-
-        if (senderBalance.compareTo(dto.getAmount()) < 0) {
-            throw new GlobalServiceException("Insufficient balance");
-        }
-
-        Transaction tx = transactionMapper.toEntity(dto);
-        tx.setSenderAccount(sender);
-        tx.setReceiverAccount(receiver);
-        tx.setSenderBank(sender.getBank());
-        tx.setReceiverBank(receiver.getBank());
-
-        // Populate denormalized fields for fast queries and historical accuracy
-        tx.setSenderAccountNumber(sender.getAccountNumber());
-        tx.setSenderEmail(sender.getCustomer().getEmail());
-        tx.setSenderBankName(sender.getBank().getBankName());
-        tx.setReceiverAccountNumber(receiver.getAccountNumber());
-        tx.setReceiverEmail(receiver.getCustomer().getEmail());
-        tx.setReceiverBankName(receiver.getBank().getBankName());
-
-        tx.setStatus(Status.INITIATED);
-        tx = transactionRepository.save(tx);
-
-        try {
-            ledgerWriter.postDebit(
-                    sender.getId(),
-                    dto.getAmount(),
-                    tx.getTransactionId().toString()
-            );
-
-            ledgerWriter.postCredit(
-                    receiver.getId(),
-                    dto.getAmount(),
-                    tx.getTransactionId().toString()
-            );
-
-            tx.setStatus(Status.COMPLETED);
-            // Saving the updated balance to accountTable for a consistent view or a cached view
-            BigDecimal updatedSenderBalance =
-                    ledgerRepository.calculateBalance(sender.getId());
-
-            BigDecimal updatedReceiverBalance =
-                    ledgerRepository.calculateBalance(receiver.getId());
-
-            sender.setBalance(updatedSenderBalance);
-            receiver.setBalance(updatedReceiverBalance);
-
-        } catch (Exception e) {
-            tx.setStatus(Status.FAILED);
-            transactionRepository.save(tx);
-            throw e;
-        }
-
-        return transactionMapper.toResponseDTO(
-                transactionRepository.save(tx)
-        );
-    }
-*/
+    /*
+     * @Override
+     * 
+     * @Transactional
+     * public TransactionResponseDTO makeTransaction(@NotNull TransactionRequestDTO
+     * dto) {
+     * 
+     * Account sender = accountRepository.lockById(
+     * resolveSenderAccount(dto).getId()
+     * ).orElseThrow(() -> new ResourceNotFoundException("Sender not found"));
+     * Account receiver =
+     * accountRepository.lockById(resolveReceiverAccount(dto).getId())
+     * .orElseThrow(()-> new ResourceNotFoundException("Receiver not found"));
+     * 
+     * if (sender.getId().equals(receiver.getId())) {
+     * throw new
+     * InvalidDataException("Sender and receiver cannot be the same account");
+     * }
+     * 
+     * BigDecimal senderBalance =
+     * ledgerRepository.calculateBalance(sender.getId());
+     * 
+     * if (senderBalance.compareTo(dto.getAmount()) < 0) {
+     * throw new GlobalServiceException("Insufficient balance");
+     * }
+     * 
+     * Transaction tx = transactionMapper.toEntity(dto);
+     * tx.setSenderAccount(sender);
+     * tx.setReceiverAccount(receiver);
+     * tx.setSenderBank(sender.getBank());
+     * tx.setReceiverBank(receiver.getBank());
+     * 
+     * // Populate denormalized fields for fast queries and historical accuracy
+     * tx.setSenderAccountNumber(sender.getAccountNumber());
+     * tx.setSenderEmail(sender.getCustomer().getEmail());
+     * tx.setSenderBankName(sender.getBank().getBankName());
+     * tx.setReceiverAccountNumber(receiver.getAccountNumber());
+     * tx.setReceiverEmail(receiver.getCustomer().getEmail());
+     * tx.setReceiverBankName(receiver.getBank().getBankName());
+     * 
+     * tx.setStatus(Status.INITIATED);
+     * tx = transactionRepository.save(tx);
+     * 
+     * try {
+     * ledgerWriter.postDebit(
+     * sender.getId(),
+     * dto.getAmount(),
+     * tx.getTransactionId().toString()
+     * );
+     * 
+     * ledgerWriter.postCredit(
+     * receiver.getId(),
+     * dto.getAmount(),
+     * tx.getTransactionId().toString()
+     * );
+     * 
+     * tx.setStatus(Status.COMPLETED);
+     * // Saving the updated balance to accountTable for a consistent view or a
+     * cached view
+     * BigDecimal updatedSenderBalance =
+     * ledgerRepository.calculateBalance(sender.getId());
+     * 
+     * BigDecimal updatedReceiverBalance =
+     * ledgerRepository.calculateBalance(receiver.getId());
+     * 
+     * sender.setBalance(updatedSenderBalance);
+     * receiver.setBalance(updatedReceiverBalance);
+     * 
+     * } catch (Exception e) {
+     * tx.setStatus(Status.FAILED);
+     * transactionRepository.save(tx);
+     * throw e;
+     * }
+     * 
+     * return transactionMapper.toResponseDTO(
+     * transactionRepository.save(tx)
+     * );
+     * }
+     */
 
     @Override
     @Transactional
@@ -166,14 +181,12 @@ public class TransactionServiceIMPL implements TransactionService{
 
         LockedAccounts locked = lockAccountsInOrder(
                 senderRef.getId(),
-                receiverRef.getId()
-        );
+                receiverRef.getId());
 
         Account sender = locked.sender();
         Account receiver = locked.receiver();
 
-        BigDecimal senderBalance =
-                ledgerRepository.calculateBalance(sender.getId());
+        BigDecimal senderBalance = ledgerRepository.calculateBalance(sender.getId());
 
         if (senderBalance.compareTo(dto.getAmount()) < 0) {
             throw new GlobalServiceException("Insufficient balance");
@@ -189,23 +202,19 @@ public class TransactionServiceIMPL implements TransactionService{
             ledgerWriter.postDebit(
                     sender.getId(),
                     dto.getAmount(),
-                    tx.getTransactionId().toString()
-            );
+                    tx.getTransactionId().toString());
 
             ledgerWriter.postCredit(
                     receiver.getId(),
                     dto.getAmount(),
-                    tx.getTransactionId().toString()
-            );
+                    tx.getTransactionId().toString());
 
             tx.setStatus(Status.COMPLETED);
             // setting the UpdatedBalance to accounts
             sender.setBalance(
-                    ledgerRepository.calculateBalance(sender.getId())
-            );
+                    ledgerRepository.calculateBalance(sender.getId()));
             receiver.setBalance(
-                    ledgerRepository.calculateBalance(receiver.getId())
-            );
+                    ledgerRepository.calculateBalance(receiver.getId()));
 
         } catch (Exception ex) {
             tx.setStatus(Status.FAILED);
@@ -214,56 +223,99 @@ public class TransactionServiceIMPL implements TransactionService{
         }
 
         return transactionMapper.toResponseDTO(
-                transactionRepository.save(tx)
-        );
+                transactionRepository.save(tx));
     }
 
     @Override
-    public List<TransactionResponseDTO> getAllTransactions( String accountNumber, String email ) {
-        if ( accountNumber==null || email==null ){
+    public List<TransactionResponseDTO> getAllTransactions(String accountNumber, String email) {
+        if (accountNumber == null || email == null) {
             throw new InvalidDataException("please enter account number and email address");
         }
-       /* Account account = accountRepository.findAccountByAccountNumberAndEmail(accountNumber,email)
-                .orElseThrow(()-> new ResourceNotFoundException("Transaction with account number "+accountNumber +" and email "+email+" not found"));
-       */
-        List<Transaction> transactions = transactionRepository.findTransactionByAccountNumberAndEmail(accountNumber,email);
-        if ( transactions.isEmpty() )
-            throw new ResourceNotFoundException("\"No transactions found for account number \" + accountNumber + \" and email \" + email);");
+        /*
+         * Account account =
+         * accountRepository.findAccountByAccountNumberAndEmail(accountNumber,email)
+         * .orElseThrow(()-> new
+         * ResourceNotFoundException("Transaction with account number "+accountNumber
+         * +" and email "+email+" not found"));
+         */
+        List<Transaction> transactions = transactionRepository.findTransactionByAccountNumberAndEmail(accountNumber,
+                email);
+        if (transactions.isEmpty())
+            throw new ResourceNotFoundException(
+                    "\"No transactions found for account number \" + accountNumber + \" and email \" + email);");
         return transactions.stream()
                 .map(transactionMapper::toResponseDTO)
                 .collect(java.util.stream.Collectors.toList());
     }
 
+    @Override
+    public List<TransactionResponseDTO> getAllTransactionsWithoutFilter() {
+        List<Transaction> transactions = transactionRepository.findAll();
+        return transactions.stream()
+                .map(transactionMapper::toResponseDTO)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
+    public List<TransactionResponseDTO> getTransactionsForUser(Long userId) {
+        if (userId == null) {
+            throw new InvalidDataException("User ID is required");
+        }
+
+        var customer = customerRepository.findByUserId(userId);
+        if (customer == null) {
+            throw new ResourceNotFoundException("Customer", "userId", userId.toString());
+        }
+
+        List<Account> accounts = accountRepository.findByCustomerUserId(userId);
+        if (accounts.isEmpty()) {
+            return List.of();
+        }
+
+        String email = customer.getEmail();
+
+        List<Transaction> allTransactions = accounts.stream()
+                .flatMap(acc -> transactionRepository
+                        .findTransactionByAccountNumberAndEmail(acc.getAccountNumber(), email)
+                        .stream())
+                .distinct()
+                .sorted((a, b) -> b.getTransactionDate().compareTo(a.getTransactionDate()))
+                .toList();
+
+        return allTransactions.stream()
+                .map(transactionMapper::toResponseDTO)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
     private Account resolveSenderAccount(TransactionRequestDTO dto) {
-        if ( dto.getSenderBankName() != null && !dto.getSenderBankName().isBlank() ){
+        if (dto.getSenderBankName() != null && !dto.getSenderBankName().isBlank()) {
             List<Account> senderAccounts = accountRepository.findByBankBankName(dto.getSenderBankName());
 
-            if(senderAccounts.isEmpty()){
-                throw new ResourceNotFoundException("Account","bankName",dto.getSenderBankName());
+            if (senderAccounts.isEmpty()) {
+                throw new ResourceNotFoundException("Account", "bankName", dto.getSenderBankName());
             }
             return senderAccounts.getFirst();
         }
 
         Account senderAccount = accountRepository.findByAccountNumber(dto.getSenderAccount());
 
-        if ( senderAccount == null ){
-            throw new ResourceNotFoundException("Account","accountNumber",dto.getSenderAccount());
+        if (senderAccount == null) {
+            throw new ResourceNotFoundException("Account", "accountNumber", dto.getSenderAccount());
         }
         return senderAccount;
     }
 
     private Account resolveReceiverAccount(TransactionRequestDTO dto) {
-        if ( dto.getReceiverBankName() != null && !dto.getReceiverBankName().isBlank() ){
-            List<Account> receiverAccounts =
-                    accountRepository.findByBankBankName(dto.getReceiverBankName());
-            if ( receiverAccounts.isEmpty() ){
-                throw new ResourceNotFoundException("Account","bankName",dto.getReceiverBankName());
+        if (dto.getReceiverBankName() != null && !dto.getReceiverBankName().isBlank()) {
+            List<Account> receiverAccounts = accountRepository.findByBankBankName(dto.getReceiverBankName());
+            if (receiverAccounts.isEmpty()) {
+                throw new ResourceNotFoundException("Account", "bankName", dto.getReceiverBankName());
             }
             return receiverAccounts.getFirst();
         }
         Account receiverAccount = accountRepository.findByAccountNumber(dto.getReceiverAccount());
-        if (receiverAccount == null ){
-            throw new ResourceNotFoundException("Account","accountNumber",dto.getReceiverAccount());
+        if (receiverAccount == null) {
+            throw new ResourceNotFoundException("Account", "accountNumber", dto.getReceiverAccount());
         }
 
         return receiverAccount;
@@ -271,13 +323,13 @@ public class TransactionServiceIMPL implements TransactionService{
 
     /**
      * Populates transaction with denormalized snapshot data.
-     * This captures the state of accounts at transaction time for historical accuracy.
+     * This captures the state of accounts at transaction time for historical
+     * accuracy.
      */
     private void populateTransactionSnapshot(
             Transaction tx,
             Account sender,
-            Account receiver
-    ) {
+            Account receiver) {
         tx.setSenderAccount(sender);
         tx.setReceiverAccount(receiver);
         tx.setSenderBank(sender.getBank());
@@ -312,5 +364,4 @@ public class TransactionServiceIMPL implements TransactionService{
 
         return new LockedAccounts(sender, receiver);
     }
-
 }

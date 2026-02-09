@@ -1,4 +1,21 @@
 package com.bank.repository;
 
-public class UpiRespository {
+import com.bank.entity.Status;
+import com.bank.entity.UpiProfile;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface UpiRepository extends JpaRepository<UpiProfile, Long> {
+
+    Optional<UpiProfile> findByUpiIdAndStatus( String upiId, Status status );
+
+    boolean existsByUpiId( String upiId );
+
+    Optional<UpiProfile> findByUpiId( String upiId );
+
+    List<UpiProfile> findByLinkedAccountAccountNumber( String accountNumber );
 }

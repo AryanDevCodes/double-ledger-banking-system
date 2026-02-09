@@ -42,11 +42,25 @@ public class BankServiceIMPL implements BankService {
     }
 
     @Override
+    public BankResponseDTO findByUpiId(String upiId) {
+        if (upiId == null || upiId.trim().isEmpty()) {
+            throw new InvalidDataException("UPI ID cannot be null or empty", "upiId", upiId);
+        }
+
+        Bank bank = repository.findByUpiId(upiId);
+        if (bank == null) {
+            throw new ResourceNotFoundException("Bank not found for UPI ID: " + upiId);
+        }
+
+        return mapper.toResponse(bank);
+    }
+
+    @Override
+    @SuppressWarnings("null")
     public BankResponseDTO createBank(BankRequestDTO dto) {
         Bank bank = mapper.toEntity(dto);
         return mapper.toResponse(repository.save(bank));
     }
-
 
     @Override
     @Transactional
@@ -56,7 +70,7 @@ public class BankServiceIMPL implements BankService {
         }
 
         Bank bank = repository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Bank", "id", id));
+                .orElseThrow(() -> new ResourceNotFoundException("Bank", "id", id));
 
         bank.setBankName(dto.getBankName());
         bank.setBranch(dto.getBranch());
@@ -78,7 +92,9 @@ public class BankServiceIMPL implements BankService {
         Bank bank = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Bank", "id", id));
 
-        repository.delete(bank);
+        @SuppressWarnings("null")
+        var deleted = bank;
+        repository.delete(deleted);
     }
 
 }

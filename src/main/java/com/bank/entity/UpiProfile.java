@@ -2,6 +2,7 @@ package com.bank.entity;
 
 
 import jakarta.persistence.*;
+import lombok.*;
 import org.hibernate.annotations.CurrentTimestamp;
 
 import java.time.LocalDateTime;
@@ -11,6 +12,10 @@ import java.time.LocalDateTime;
         name = "upi_profiles",
         uniqueConstraints = @UniqueConstraint(columnNames = "upi_id")
 )
+@Builder
+@Getter @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class UpiProfile {
 
     @Id

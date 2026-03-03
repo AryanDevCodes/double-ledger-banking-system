@@ -22,5 +22,8 @@ public interface AccountMapper {
     @Mapping(target = "customerName", source = "customer.fullName")
     @Mapping(target = "age", source = "customer.age")
     @Mapping(target = "address", source = "customer.address")
+    @Mapping(target = "userId", source = "customer.user.id")
+    @Mapping(target = "username", source = "customer.user.username")
+    @Mapping(target = "temporaryPassword", ignore = true)
     AccountResponseDTO toResponseDTO( Account account );
 }

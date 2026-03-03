@@ -15,5 +15,9 @@ public class CustomerRequestDTO {
 
     private Status customerStatus;
 
+    // Optional auth fields when creating an account-linked user
+    private String username;
+    private String password;
+
 
 }

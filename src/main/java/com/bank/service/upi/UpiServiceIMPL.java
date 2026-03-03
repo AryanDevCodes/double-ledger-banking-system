@@ -47,6 +47,7 @@ public class UpiServiceIMPL implements UpiService {
         if (upiRepository.existsByUpiId(upiId)) {
             throw new InvalidDataException("UPI Id already exist");
         }
+        enforceUpiLimit(account.getAccountNumber());
         UpiProfile upiProfile = UpiProfile.builder()
                 .upiId(upiId)
                 .linkedAccount(account)
@@ -54,7 +55,6 @@ public class UpiServiceIMPL implements UpiService {
                 .build();
         upiRepository.save(upiProfile);
     }
-
 
     @Override
     @Transactional
@@ -168,6 +168,8 @@ public class UpiServiceIMPL implements UpiService {
             throw new ResourceNotFoundException("Account", "accountNumber", dto.getAccountNumber());
         }
 
+        enforceUpiLimit(account.getAccountNumber());
+
         UpiProfile upiProfile = UpiProfile.builder()
                 .upiId(dto.getUpiId())
                 .linkedAccount(account)
@@ -243,8 +245,8 @@ public class UpiServiceIMPL implements UpiService {
     @Override
     @Transactional
     public UpiProfileResponseDTO updateUpiStatus(String upiId, String status) {
-        UpiProfile upiProfile = upiRepository.findByUpiIdAndStatus(upiId, Status.ACTIVE)
-                .orElseThrow(() -> new ResourceNotFoundException("UPI Profile", "upiId", upiId));
+        UpiProfile upiProfile = upiRepository.findByUpiId(upiId)
+            .orElseThrow(() -> new ResourceNotFoundException("UPI Profile", "upiId", upiId));
 
         try {
             Status newStatus = Status.valueOf(status.toUpperCase());
@@ -259,11 +261,18 @@ public class UpiServiceIMPL implements UpiService {
     @Override
     @Transactional
     public void deleteUpiProfile(String upiId) {
-        UpiProfile upiProfile = upiRepository.findByUpiIdAndStatus(upiId, Status.ACTIVE)
+        UpiProfile upiProfile = upiRepository.findByUpiId(upiId)
                 .orElseThrow(() -> new ResourceNotFoundException("UPI Profile", "upiId", upiId));
 
         upiProfile.setStatus(Status.INACTIVE);
         upiRepository.save(upiProfile);
+    }
+
+    private void enforceUpiLimit(String accountNumber) {
+        long count = upiRepository.countByLinkedAccountAccountNumber(accountNumber);
+        if (count >= 4) {
+            throw new InvalidDataException("UPI limit reached for this account (max 4)");
+        }
     }
 
     private UpiProfileResponseDTO mapToResponseDTO(UpiProfile profile) {

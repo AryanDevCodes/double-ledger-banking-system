@@ -32,6 +32,8 @@ export interface CustomerRequestDTO {
   age?: number;
   address?: string;
   customerStatus?: Status;
+  username?: string;
+  password?: string;
 }
 
 export interface CustomerResponseDTO {
@@ -63,6 +65,9 @@ export interface AccountResponseDTO {
   customerName: string;
   age?: number;
   address?: string;
+  userId?: number;
+  username?: string;
+  temporaryPassword?: string;
 }
 
 // Transaction

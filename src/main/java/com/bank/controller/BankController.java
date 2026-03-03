@@ -39,13 +39,14 @@ public class BankController {
     public ResponseEntity<BankResponseDTO> createBank(@RequestBody BankRequestDTO bankRequestDTO) {
         return ResponseEntity.ok(bankService.createBank(bankRequestDTO));
     }
-    
+
     @PatchMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public ResponseEntity<BankResponseDTO> updateBank(@PathVariable String id, @RequestBody BankRequestDTO bankRequestDTO) {
+    public ResponseEntity<BankResponseDTO> updateBank(@PathVariable String id,
+            @RequestBody BankRequestDTO bankRequestDTO) {
         return ResponseEntity.ok(bankService.updateBank(id, bankRequestDTO));
     }
-    
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<Void> deleteBank(@PathVariable String id) {

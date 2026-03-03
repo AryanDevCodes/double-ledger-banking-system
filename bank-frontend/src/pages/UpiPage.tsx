@@ -7,6 +7,7 @@ import EmptyState from "@/components/EmptyState";
 import QRCodeGenerator from "@/components/QRCodeGenerator";
 import { Can } from "@/components/PermissionGate";
 import { upiApi, accountApi } from "@/lib/api-client";
+import { ApiError } from "@/lib/api-client";
 import { exportToCSV, exportToExcel, exportToPDF } from "@/lib/export";
 import { formatDate } from "@/lib/format";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -23,6 +24,7 @@ import {
   Smartphone,
   CheckCircle2,
   Ban,
+  Trash2,
   Download,
   FileSpreadsheet,
   FileText,
@@ -106,6 +108,10 @@ export default function UpiPage() {
   const activeCount = profiles.filter((p) => p.status === "ACTIVE").length;
   const inactiveCount = profiles.filter((p) => p.status !== "ACTIVE").length;
   const uniqueBanks = Array.from(new Set(profiles.map((p) => p.bankName).filter(Boolean))).sort();
+  const upiCountByAccount = profiles.reduce<Record<string, number>>((acc, p) => {
+    acc[p.accountNumber] = (acc[p.accountNumber] || 0) + 1;
+    return acc;
+  }, {});
 
   const handleExport = (format: "csv" | "excel" | "pdf") => {
     try {
@@ -138,6 +144,12 @@ export default function UpiPage() {
       return;
     }
 
+    const count = upiCountByAccount[form.accountNumber] || 0;
+    if (count >= 4) {
+      toast.error("UPI limit reached for this account (max 4)");
+      return;
+    }
+
     try {
       await upiApi.register({
         upiId: form.upiId,
@@ -148,7 +160,12 @@ export default function UpiPage() {
       toast.success("UPI profile registered");
       loadData();
     } catch (error) {
-      toast.error("Failed to register UPI profile");
+      const message = error instanceof ApiError && (error.data as any)?.message
+        ? (error.data as any).message
+        : error instanceof Error
+          ? error.message
+          : "Failed to register UPI profile";
+      toast.error(message);
       console.error(error);
     }
   };
@@ -161,6 +178,19 @@ export default function UpiPage() {
       loadData();
     } catch (error) {
       toast.error("Failed to update status");
+      console.error(error);
+    }
+  };
+
+  const handleDelete = async (upiId: string) => {
+    const confirmed = window.confirm("Delete this UPI profile? This will deactivate access.");
+    if (!confirmed) return;
+    try {
+      await upiApi.delete(upiId);
+      toast.success("UPI profile deleted");
+      loadData();
+    } catch (error) {
+      toast.error("Failed to delete UPI profile");
       console.error(error);
     }
   };
@@ -217,13 +247,15 @@ export default function UpiPage() {
                       <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
                       <SelectContent>
                         {accounts.filter(a => a.status === "ACTIVE").map((a) => (
-                          <SelectItem key={a.accountNumber} value={a.accountNumber}>
+                          <SelectItem key={a.accountNumber} value={a.accountNumber} disabled={(upiCountByAccount[a.accountNumber] || 0) >= 4}>
                             {a.customerName} — {a.accountNumber}
+                            {(upiCountByAccount[a.accountNumber] || 0) >= 4 ? " (limit reached)" : ""}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
+                  <p className="text-xs text-muted-foreground">Max 4 UPI IDs per account. Deactivate or delete one to add another.</p>
                   <Button onClick={handleAdd} className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
                     Register Profile
                   </Button>
@@ -308,6 +340,7 @@ export default function UpiPage() {
                     <TableHead>Bank</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Created</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -327,6 +360,13 @@ export default function UpiPage() {
                         )}
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">{formatDate(p.createdAt)}</TableCell>
+                      <TableCell className="text-right">
+                        {canEditAll && (
+                          <Button variant="ghost" size="sm" onClick={() => handleDelete(p.upiId)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

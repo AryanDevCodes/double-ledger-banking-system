@@ -18,4 +18,6 @@ public interface UpiRepository extends JpaRepository<UpiProfile, Long> {
     Optional<UpiProfile> findByUpiId( String upiId );
 
     List<UpiProfile> findByLinkedAccountAccountNumber( String accountNumber );
+
+    long countByLinkedAccountAccountNumber( String accountNumber );
 }

@@ -27,18 +27,18 @@ public class CustomerServiceIMPL implements CustomerService {
     }
 
     @Override
-    public List<CustomerResponseDTO> findCustomerByNameAndBank( String name, String bank ) {
+    public List<CustomerResponseDTO> findCustomerByNameAndBank(String name, String bank) {
         if (name == null || name.trim().isEmpty() || bank == null || bank.trim().isEmpty()) {
             throw new InvalidDataException("name and bank should not be null or empty", "name/bank", name + "/" + bank);
         }
 
-        List<Customer> customers = customerRepository.findCustomerByFullNameAndAccount_Bank_BankName(name,bank);
+        List<Customer> customers = customerRepository.findCustomerByFullNameAndAccount_Bank_BankName(name, bank);
         return customers.stream().map(customerMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<CustomerResponseDTO> findCustomerByBank( String bankName ) {
+    public List<CustomerResponseDTO> findCustomerByBank(String bankName) {
         if (bankName == null || bankName.trim().isEmpty()) {
             throw new InvalidDataException("bank should not be null or empty");
         }
@@ -73,13 +73,13 @@ public class CustomerServiceIMPL implements CustomerService {
 
     @Override
     @Transactional
-    public CustomerResponseDTO updateCustomer( String name,String email,String phoneNumber, CustomerRequestDTO dto ) {
-        if (dto==null) {
+    public CustomerResponseDTO updateCustomer(String name, String email, String phoneNumber, CustomerRequestDTO dto) {
+        if (dto == null) {
             throw new InvalidDataException("Please enter some data to update");
         }
 
-        Customer customer = customerRepository.findCustomerByFullNameAndEmailAndPhoneNumber(name,email,phoneNumber);
-        if ( customer == null ) {
+        Customer customer = customerRepository.findCustomerByFullNameAndEmailAndPhoneNumber(name, email, phoneNumber);
+        if (customer == null) {
             throw new InvalidDataException("Customer not found");
         }
         customer.setFullName(dto.getFullName());
@@ -94,8 +94,8 @@ public class CustomerServiceIMPL implements CustomerService {
     }
 
     @Override
-    public void deleteCustomer( String id ) {
-        if ( id == null ) {
+    public void deleteCustomer(String id) {
+        if (id == null) {
             throw new InvalidDataException("id should not be null");
         }
         customerRepository.deleteById(id);

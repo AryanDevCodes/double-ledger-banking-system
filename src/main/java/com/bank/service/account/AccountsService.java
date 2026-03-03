@@ -8,13 +8,18 @@ import java.util.List;
 public interface AccountsService {
 
     List<AccountResponseDTO> findAll();
+
     List<AccountResponseDTO> findByBank(String bankName);
+
     List<AccountResponseDTO> findByCustomerEmail(String email);
+
     List<AccountResponseDTO> findByUserId(Long userId);
 
     AccountResponseDTO findByAccountNumber(String accountNumber);
 
-    AccountResponseDTO createAccount( String bankName, AccountRequestDTO dto);
+    AccountResponseDTO createAccount(String bankName, AccountRequestDTO dto);
+
     AccountResponseDTO updateAccount(String accountNumber, AccountRequestDTO dto);
+
     void deleteAccount(String accountNumber);
 }

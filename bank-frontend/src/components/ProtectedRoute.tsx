@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { ReactNode } from 'react';
 
@@ -8,7 +8,8 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children, requiredRoles }: ProtectedRouteProps) {
-  const { isAuthenticated, hasAnyRole, loading } = useAuth();
+  const { isAuthenticated, hasAnyRole, loading, passwordChangeRequired } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -23,6 +24,10 @@ export default function ProtectedRoute({ children, requiredRoles }: ProtectedRou
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (passwordChangeRequired && location.pathname !== '/set-password') {
+    return <Navigate to="/set-password" replace />;
   }
 
   if (requiredRoles && requiredRoles.length > 0 && !hasAnyRole(...requiredRoles)) {

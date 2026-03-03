@@ -2,12 +2,13 @@ package com.bank.controller;
 
 import com.bank.service.auth.AuthService;
 import com.bank.service.dto.auth.AuthResponseDTO;
+import com.bank.service.dto.auth.ChangePasswordRequestDTO;
 import com.bank.service.dto.auth.LoginRequestDTO;
-import com.bank.service.dto.auth.RegisterRequestDTO;
 import com.bank.service.dto.auth.UserResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -17,16 +18,6 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
     
     private final AuthService authService;
-    
-    @PostMapping("/register")
-    public ResponseEntity<AuthResponseDTO> register(@RequestBody RegisterRequestDTO request) {
-        try {
-            AuthResponseDTO response = authService.register(request);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
     
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> login(@RequestBody LoginRequestDTO request) {
@@ -47,6 +38,18 @@ public class AuthController {
         String username = authentication.getName();
         UserResponseDTO user = authService.getCurrentUser(username);
         return ResponseEntity.ok(user);
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/change-password")
+    public ResponseEntity<Void> changePassword(Authentication authentication,
+            @RequestBody ChangePasswordRequestDTO request) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).build();
+        }
+
+        authService.changePassword(authentication.getName(), request);
+        return ResponseEntity.ok().build();
     }
     
     @PostMapping("/logout")

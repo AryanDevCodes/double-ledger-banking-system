@@ -18,9 +18,4 @@ public interface BankService {
 
     void deleteBank(String id);
 
-
-
-
-
-
 }

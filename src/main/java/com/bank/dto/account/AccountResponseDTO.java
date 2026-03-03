@@ -23,5 +23,10 @@ public class AccountResponseDTO {
     private Integer age;
     private String address;
 
+    // Linked auth info (username/password only returned for newly-created users)
+    private Long userId;
+    private String username;
+    private String temporaryPassword;
+
 
 }

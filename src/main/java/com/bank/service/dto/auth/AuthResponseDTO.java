@@ -23,4 +23,5 @@ public class AuthResponseDTO {
     private String fullName;
     private Set<String> roles;
     private LocalDateTime expiresAt;
+    private boolean passwordChangeRequired;
 }

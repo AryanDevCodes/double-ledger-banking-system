@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,8 +19,8 @@ export default function LoginPage() {
     setLoading(true);
     
     try {
-      await login(username, password);
-      navigate('/dashboard');
+      const needsPasswordChange = await login(username, password);
+      navigate(needsPasswordChange ? '/set-password' : '/dashboard');
     } catch (error) {
       // Error handled in AuthContext
     } finally {
@@ -64,7 +64,7 @@ export default function LoginPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-                Password
+                Password (leave blank if first login)
               </Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -75,7 +75,6 @@ export default function LoginPage() {
                   className="pl-10 border-gray-300"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  required
                   disabled={loading}
                 />
               </div>
@@ -99,10 +98,7 @@ export default function LoginPage() {
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
             <p className="text-xs text-center text-gray-600">
-              Don't have an account?{' '}
-              <Link to="/register" className="text-teal-600 hover:underline font-medium">
-                Register here
-              </Link>
+              Need access? Contact your bank administrator.
             </p>
           </CardFooter>
         </form>

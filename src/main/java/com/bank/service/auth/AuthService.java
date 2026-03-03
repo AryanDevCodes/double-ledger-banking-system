@@ -5,10 +5,12 @@ import com.bank.entity.User;
 import com.bank.repository.RoleRepository;
 import com.bank.repository.UserRepository;
 import com.bank.security.JwtUtil;
+import com.bank.service.dto.auth.ChangePasswordRequestDTO;
 import com.bank.service.dto.auth.AuthResponseDTO;
 import com.bank.service.dto.auth.LoginRequestDTO;
 import com.bank.service.dto.auth.RegisterRequestDTO;
 import com.bank.service.dto.auth.UserResponseDTO;
+import com.bank.exception.InvalidDataException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -16,6 +18,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -74,27 +77,37 @@ public class AuthService {
         String accessToken = jwtUtil.generateToken(user);
         String refreshToken = jwtUtil.generateRefreshToken(user);
 
-        return buildAuthResponse(user, accessToken, refreshToken);
+        return buildAuthResponse(user, accessToken, refreshToken, false);
     }
 
     @Transactional
     public AuthResponseDTO login(LoginRequestDTO request) {
-        // Authenticate user
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
-
         User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        // Update last login
-        user.setLastLogin(LocalDateTime.now());
-        userRepository.save(user);
+        boolean firstLogin = user.getLastLogin() == null;
+        boolean hasPassword = StringUtils.hasText(user.getPassword());
+        boolean passwordProvided = StringUtils.hasText(request.getPassword());
+
+        // Allow passwordless first login; otherwise authenticate with password
+        if (!(firstLogin && !passwordProvided)) {
+            authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+        }
+
+        boolean passwordChangeRequired = firstLogin;
+
+        // Only stamp lastLogin once a password has been set (avoid clearing first-login requirement)
+        if (!firstLogin && hasPassword) {
+            user.setLastLogin(LocalDateTime.now());
+            userRepository.save(user);
+        }
 
         // Generate tokens
         String accessToken = jwtUtil.generateToken(user);
         String refreshToken = jwtUtil.generateRefreshToken(user);
 
-        return buildAuthResponse(user, accessToken, refreshToken);
+        return buildAuthResponse(user, accessToken, refreshToken, passwordChangeRequired);
     }
 
     @Transactional(readOnly = true)
@@ -105,7 +118,34 @@ public class AuthService {
         return buildUserResponse(user);
     }
 
-    private AuthResponseDTO buildAuthResponse(User user, String accessToken, String refreshToken) {
+    @Transactional
+    public void changePassword(String username, ChangePasswordRequestDTO request) {
+        if (request == null || !StringUtils.hasText(request.getNewPassword())) {
+            throw new InvalidDataException("New password is required", "newPassword", null);
+        }
+        if (request.getNewPassword().length() < 8) {
+            throw new InvalidDataException("New password must be at least 8 characters", "newPassword",
+                    null);
+        }
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        boolean hasExistingPassword = StringUtils.hasText(user.getPassword());
+        boolean firstLogin = user.getLastLogin() == null || !hasExistingPassword;
+
+        if (hasExistingPassword && !firstLogin && !passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new InvalidDataException("Current password is incorrect", "currentPassword", null);
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setUpdatedAt(LocalDateTime.now());
+        user.setLastLogin(LocalDateTime.now());
+        userRepository.save(user);
+    }
+
+        private AuthResponseDTO buildAuthResponse(User user, String accessToken, String refreshToken,
+            boolean passwordChangeRequired) {
         return AuthResponseDTO.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
@@ -118,6 +158,7 @@ public class AuthService {
                         .map(role -> role.getName().name())
                         .collect(Collectors.toSet()))
                 .expiresAt(LocalDateTime.now().plusHours(24))
+            .passwordChangeRequired(passwordChangeRequired)
                 .build();
     }
 

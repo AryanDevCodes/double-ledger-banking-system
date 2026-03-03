@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,6 +40,8 @@ export default function AccountsPage() {
     fullName: "", 
     email: "", 
     phoneNumber: "", 
+    username: "",
+    password: "",
     age: "",
     address: "",
     initialDeposit: "" 
@@ -86,19 +88,25 @@ export default function AccountsPage() {
     }
 
     try {
-      await accountApi.create(form.bankName, {
+      const response = await accountApi.create(form.bankName, {
         initialDeposit: form.initialDeposit ? parseFloat(form.initialDeposit) : undefined,
         customer: {
           fullName: form.fullName,
           email: form.email,
           phoneNumber: form.phoneNumber,
+          username: form.username || undefined,
+          password: form.password || undefined,
           age: form.age ? parseInt(form.age) : undefined,
           address: form.address || undefined,
         }
       });
-      setForm({ bankName: "", fullName: "", email: "", phoneNumber: "", age: "", address: "", initialDeposit: "" });
+      setForm({ bankName: "", fullName: "", email: "", phoneNumber: "", username: "", password: "", age: "", address: "", initialDeposit: "" });
       setOpen(false);
-      toast.success("Account created successfully");
+      if (response?.temporaryPassword) {
+        toast.success(`Account created. Temporary password: ${response.temporaryPassword}`);
+      } else {
+        toast.success("Account created successfully");
+      }
       loadData();
     } catch (error) {
       toast.error("Failed to create account");
@@ -171,52 +179,84 @@ export default function AccountsPage() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
+          <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger asChild>
               <Button><Plus className="h-4 w-4 mr-2" /> Open Account</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>Open New Account</DialogTitle></DialogHeader>
-              <div className="grid gap-4 py-2">
-                <div className="space-y-1.5">
-                  <Label>Bank *</Label>
-                  <Select value={form.bankName} onValueChange={(v) => setForm({ ...form, bankName: v })}>
-                    <SelectTrigger><SelectValue placeholder="Select bank" /></SelectTrigger>
-                    <SelectContent>
-                      {banks.map((b) => (
-                        <SelectItem key={b.id} value={b.bankName}>{b.bankName} — {b.branch}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+            </SheetTrigger>
+            <SheetContent className="w-[480px] sm:w-[540px] overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle>Open New Account</SheetTitle>
+              </SheetHeader>
+              <div className="mt-4 space-y-6">
+                <div className="grid grid-cols-1 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>Bank *</Label>
+                    <Select value={form.bankName} onValueChange={(v) => setForm({ ...form, bankName: v })}>
+                      <SelectTrigger><SelectValue placeholder="Select bank" /></SelectTrigger>
+                      <SelectContent>
+                        {banks.map((b) => (
+                          <SelectItem key={b.id} value={b.bankName}>{b.bankName} — {b.branch}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label>Full Name *</Label>
+                      <Input value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Phone Number *</Label>
+                      <Input value={form.phoneNumber} onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })} />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label>Email *</Label>
+                      <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Username (optional)</Label>
+                      <Input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} placeholder="Defaults to email" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label>Password (optional)</Label>
+                      <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Generate secure password if empty" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Initial Deposit (₹)</Label>
+                      <Input type="number" value={form.initialDeposit} onChange={(e) => setForm({ ...form, initialDeposit: e.target.value })} />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label>Age</Label>
+                      <Input type="number" value={form.age} onChange={(e) => setForm({ ...form, age: e.target.value })} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Address</Label>
+                      <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+                    </div>
+                  </div>
+
+                  <div className="flex items-start justify-between rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
+                    <span>Leave password empty to auto-generate a secure temporary password for the new user.</span>
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label>Full Name *</Label>
-                  <Input value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} />
+
+                <div className="flex gap-3 justify-end">
+                  <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+                  <Button onClick={handleAdd}>Create Account</Button>
                 </div>
-                <div className="space-y-1.5">
-                  <Label>Email *</Label>
-                  <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Phone Number *</Label>
-                  <Input value={form.phoneNumber} onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Age</Label>
-                  <Input type="number" value={form.age} onChange={(e) => setForm({ ...form, age: e.target.value })} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Address</Label>
-                  <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Initial Deposit (₹)</Label>
-                  <Input type="number" value={form.initialDeposit} onChange={(e) => setForm({ ...form, initialDeposit: e.target.value })} />
-                </div>
-                <Button onClick={handleAdd}>Create Account</Button>
               </div>
-            </DialogContent>
-          </Dialog>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
 

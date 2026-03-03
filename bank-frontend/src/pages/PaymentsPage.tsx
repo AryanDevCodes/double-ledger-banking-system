@@ -188,6 +188,12 @@ export default function PaymentsPage() {
       return;
     }
 
+    const countForAccount = upiProfiles.filter((p) => p.accountNumber === upiRegistration.accountNumber).length;
+    if (countForAccount >= 4) {
+      toast.error("UPI limit reached for this account (max 4)");
+      return;
+    }
+
     try {
       setLoading(true);
       await upiApi.register({
@@ -198,7 +204,8 @@ export default function PaymentsPage() {
       setUpiRegistration({ upiId: "", accountNumber: "" });
       loadData();
     } catch (error: any) {
-      toast.error(error.message || "Failed to register UPI ID");
+      const message = error?.data?.message || error?.message || "Failed to register UPI ID";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -212,7 +219,8 @@ export default function PaymentsPage() {
       toast.success("UPI status updated");
       loadData();
     } catch (error: any) {
-      toast.error(error.message || "Failed to update status");
+      const message = error?.data?.message || error?.message || "Failed to update status";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -225,6 +233,8 @@ export default function PaymentsPage() {
     }
     upiByAccount.get(profile.accountNumber)?.push(profile.upiId);
   });
+
+  const activeUpiProfiles = upiProfiles.filter((p) => p.status === "ACTIVE");
 
   const formatParty = (name: string | undefined, accountNumber: string) => {
     const upiIds = upiByAccount.get(accountNumber) || [];
@@ -388,7 +398,7 @@ export default function PaymentsPage() {
                         <SelectValue placeholder="Select your UPI" />
                       </SelectTrigger>
                       <SelectContent>
-                        {upiProfiles.map((upi) => (
+                        {activeUpiProfiles.map((upi) => (
                           <SelectItem key={upi.upiId} value={upi.upiId}>
                             {upi.upiId}
                           </SelectItem>
@@ -420,8 +430,7 @@ export default function PaymentsPage() {
                     />
                   </div>
 
-
-                  <Button type="submit" className="w-full" disabled={loading || upiProfiles.length === 0 || !upiPayment.fromUpi}>
+                  <Button type="submit" className="w-full" disabled={loading || activeUpiProfiles.length === 0 || !upiPayment.fromUpi}>
                     <Send className="h-4 w-4 mr-2" />
                     Send via UPI
                   </Button>

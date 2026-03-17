@@ -14,7 +14,7 @@
 ![React](https://img.shields.io/badge/React-Frontend-61DAFB?logo=react&logoColor=black)
 ![Vite](https://img.shields.io/badge/Vite-Dev%20Server-646CFF?logo=vite&logoColor=white)
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Open-0ea5e9?style=for-the-badge)](https://aryandevcodes.github.io/-Bank-Ledger-Payment-Engine1/)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Open-0ea5e9?style=for-the-badge)](https://aryandevcodes.github.io/Bank-Ledger-Payment-Engine/)
 [![Swagger UI](https://img.shields.io/badge/Swagger%20UI-Local-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)](http://localhost:8081/swagger-ui.html)
 
 </div>
@@ -48,7 +48,7 @@ The security centerpiece is **full sender ownership validation**: even if someon
 
 [![Watch the demo](https://img.youtube.com/vi/qOHr7ZWKY7E/0.jpg)](https://www.youtube.com/watch?v=qOHr7ZWKY7E)
 
-👉 [Live Demo Page](https://aryandevcodes.github.io/-Bank-Ledger-Payment-Engine1/)
+👉 [Live Demo Page](https://aryandevcodes.github.io/Bank-Ledger-Payment-Engine/)
 
 
 

@@ -22,6 +22,9 @@ import com.bank.service.transaction.mapper.TransactionMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -76,28 +79,40 @@ public class UpiServiceIMPL implements UpiService {
             throw new GlobalServiceException("Previous payment attempt failed: " + obj.getFailureReason());
         }
 
-        // IMPROVEMENT: Persist PROCESSING state BEFORE transaction execution
-        // This prevents concurrent threads from processing the same intent
         if (obj.getStatus() == Status.INITIATED) {
             obj.setStatus(Status.PROCESSING);
-            obj = upiPaymentObjRepository.save(obj); // Persist immediately for iron-clad idempotency
+            obj = upiPaymentObjRepository.save(obj);
         }
 
-        // SECURITY: Ownership validation implemented
-        // Get current authenticated user from security context
-        String currentUsername = org.springframework.security.core.context.SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getName();
+        // ────────────────────────────────────────────────────────────────
+        // SECURITY: Ownership validation
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        // Verify sender owns the UPI account (throws SecurityException if not)
-        Account sender = upiResolver.resolveAndVerifyOwnership(obj.getFromUpi(), currentUsername);
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal() == null) {
+            throw new AccessDeniedException("Authentication required for UPI payment");
+        }
+
+        String currentUsername = authentication.getName(); // safe now
+
+        if (currentUsername == null || currentUsername.isBlank()) {
+            throw new AccessDeniedException("Authenticated user has no username");
+        }
+
+        // This should throw if not owner or UPI/account not found
+        Account sender;
+        try {
+            sender = upiResolver.resolveAndVerifyOwnership(obj.getFromUpi(), currentUsername);
+        } catch (Exception e) {
+            // Optional: wrap with more specific message if needed
+            throw new AccessDeniedException("You do not own the source UPI ID: " + obj.getFromUpi(), e);
+        }
+
         Account receiver = upiResolver.resolveActiveAccount(obj.getToUpi());
+        // ────────────────────────────────────────────────────────────────
 
         TransactionResponseDTO response;
 
         try {
-            // Create transaction request with account numbers
             TransactionRequestDTO transactionRequest = new TransactionRequestDTO();
             transactionRequest.setSenderAccount(sender.getAccountNumber());
             transactionRequest.setReceiverAccount(receiver.getAccountNumber());
@@ -107,12 +122,12 @@ public class UpiServiceIMPL implements UpiService {
 
             obj.setStatus(Status.COMPLETED);
             obj.setTransactionId(response.getTransactionId());
-            obj.setFailureReason(null); // Clear any previous failure reason
+            obj.setFailureReason(null);
             upiPaymentObjRepository.save(obj);
 
         } catch (Exception ex) {
             obj.setStatus(Status.FAILED);
-            obj.setFailureReason(ex.getMessage()); // 🟡 Store failure reason for debugging and UI feedback
+            obj.setFailureReason(ex.getMessage());
             upiPaymentObjRepository.save(obj);
             throw ex;
         }
@@ -246,7 +261,7 @@ public class UpiServiceIMPL implements UpiService {
     @Transactional
     public UpiProfileResponseDTO updateUpiStatus(String upiId, String status) {
         UpiProfile upiProfile = upiRepository.findByUpiId(upiId)
-            .orElseThrow(() -> new ResourceNotFoundException("UPI Profile", "upiId", upiId));
+                .orElseThrow(() -> new ResourceNotFoundException("UPI Profile", "upiId", upiId));
 
         try {
             Status newStatus = Status.valueOf(status.toUpperCase());

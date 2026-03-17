@@ -45,7 +45,18 @@ The security centerpiece is **full sender ownership validation**: even if someon
 
 ---
 
+<<<<<<< HEAD
 ## 🎬 Demo
+=======
+## 📽️ Project Demo
+
+[![Watch the demo](https://img.youtube.com/vi/qOHr7ZWKY7E/0.jpg)](https://www.youtube.com/watch?v=qOHr7ZWKY7E)
+
+👉 [Live Demo Page](https://aryandevcodes.github.io/-Bank-Ledger-Payment-Engine1/)
+
+
+## Ledger-Based Architecture
+>>>>>>> 06b06d21f9123e42d1ff8334d6060bc342a4408d
 
 - ▶️ **Live Demo page:** https://aryandevcodes.github.io/-Bank-Ledger-Payment-Engine1/
 - 📄 **Local demo HTML (video embed):** [demo.html](demo.html)

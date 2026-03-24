@@ -14,8 +14,8 @@
 ![React](https://img.shields.io/badge/React-Frontend-61DAFB?logo=react&logoColor=black)
 ![Vite](https://img.shields.io/badge/Vite-Dev%20Server-646CFF?logo=vite&logoColor=white)
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Open-0ea5e9?style=for-the-badge)](https://aryandevcodes.github.io/-Bank-Ledger-Payment-Engine1/)
-[![Swagger UI](https://img.shields.io/badge/Swagger%20UI-Local-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)](http://localhost:8081/swagger-ui.html)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Open-0ea5e9?style=for-the-badge)](https://aryandevcodes.github.io/Bank-Ledger-Payment-Engine/)
+[![Swagger UI](https://img.shields.io/badge/Swagger%20UI-Local-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)](http://localhost:8080/swagger-ui.html)
 
 </div>
 
@@ -25,6 +25,7 @@
 
 - [What this project is](#-what-this-project-is)
 - [Demo](#-demo)
+- [Architecture Diagrams](#-architecture-diagrams)
 - [Key Features](#-key-features)
 - [Tech Stack](#-tech-stack)
 - [Quick Start (4–5 steps)](#-quick-start-45-steps)
@@ -45,23 +46,38 @@ The security centerpiece is **full sender ownership validation**: even if someon
 
 ---
 
-<<<<<<< HEAD
-## 🎬 Demo
-=======
+
 ## 📽️ Project Demo
 
 [![Watch the demo](https://img.youtube.com/vi/qOHr7ZWKY7E/0.jpg)](https://www.youtube.com/watch?v=qOHr7ZWKY7E)
 
-👉 [Live Demo Page](https://aryandevcodes.github.io/-Bank-Ledger-Payment-Engine1/)
+👉 [Live Demo Page](https://aryandevcodes.github.io/Bank-Ledger-Payment-Engine/)
 
+---
 
-## Ledger-Based Architecture
->>>>>>> 06b06d21f9123e42d1ff8334d6060bc342a4408d
+## 🗺️ Architecture Diagrams
 
-- ▶️ **Live Demo page:** https://aryandevcodes.github.io/-Bank-Ledger-Payment-Engine1/
-- 📄 **Local demo HTML (video embed):** [demo.html](demo.html)
+> Diagram assets live in [demo/docs/](demo/docs).
 
-[![Watch the demo](https://img.youtube.com/vi/qOHr7ZWKY7E/0.jpg)](https://www.youtube.com/watch?v=qOHr7ZWKY7E)
+### System architecture
+
+![System Architecture](demo/docs/system-architecture-diagram.png)
+
+### Database relations (ERD)
+
+![Database Relation Diagram](demo/docs/database-relation-diagram.png)
+
+### Ledger engine (double-entry)
+
+![Ledger Engine Diagram](demo/docs/ledger-engine-diagram.png)
+
+### Complete payment flow
+
+![Complete Payment Flow](demo/docs/complete-payment-flow.png)
+
+### Idempotency flow
+
+![Idempotency Flow](demo/docs/idempotency-flow.png)
 
 ---
 
@@ -96,8 +112,6 @@ The security centerpiece is **full sender ownership validation**: even if someon
 
 ## 🚀 Quick Start (4–5 steps)
 
-> Vite is configured to run on **8080** in this repo ([bank-frontend/vite.config.ts](bank-frontend/vite.config.ts)). Spring Boot also defaults to 8080, so start the backend on **8081** to avoid the port clash.
-
 ### 1) Prerequisites
 
 - Java 21
@@ -110,21 +124,21 @@ Update the database configuration in `src/main/resources/application.yml`.
 
 > Tip: use environment variables in real deployments. This repo’s default `application.yml` is aimed at local development.
 
-### 3) Start Spring Boot (port 8081)
+### 3) Start Spring Boot (port 8080)
 
 Windows:
 
 ```powershell
-.\mvnw.cmd spring-boot:run -Dspring-boot.run.arguments=--server.port=8081
+.\mvnw.cmd spring-boot:run
 ```
 
 macOS/Linux:
 
 ```bash
-./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8081
+./mvnw spring-boot:run
 ```
 
-Backend base URL: `http://localhost:8081`
+Backend base URL: `http://localhost:8080`
 
 ### 4) Start the React frontend
 
@@ -136,7 +150,7 @@ npm install
 Create `bank-frontend/.env.local`:
 
 ```bash
-VITE_API_BASE_URL=http://localhost:8081
+VITE_API_BASE_URL=http://localhost:8080
 VITE_ENABLE_MOCKS=false
 ```
 
@@ -146,12 +160,12 @@ Run:
 npm run dev
 ```
 
-Frontend URL: `http://localhost:8080`
+Frontend URL: `http://localhost:8081`
 
 ### 5) Open Swagger and try endpoints
 
-- Swagger UI: `http://localhost:8081/swagger-ui.html`
-- OpenAPI JSON: `http://localhost:8081/v3/api-docs`
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
+- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
 
 ---
 
@@ -177,8 +191,8 @@ Critical protection against **Insecure Direct Object References (IDOR)**:
 
 ## 📚 API Documentation
 
-- Swagger UI (runtime): `http://localhost:8081/swagger-ui.html`
-- OpenAPI JSON (runtime): `http://localhost:8081/v3/api-docs`
+- Swagger UI (runtime): `http://localhost:8080/swagger-ui.html`
+- OpenAPI JSON (runtime): `http://localhost:8080/v3/api-docs`
 
 Bundled specs:
 
@@ -271,10 +285,18 @@ bank-frontend/
 ## 🧯 Troubleshooting
 
 - **Frontend shows empty data** → confirm backend is running and `VITE_API_BASE_URL` points to it
-- **Port conflicts** → keep frontend on 8080 and backend on 8081 (or change Vite port)
+- **Port conflicts** → keep frontend on 8081 and backend on 8080 (or change Vite port)
 - **Database connection fails** → verify PostgreSQL is up and `application.yml` credentials match
 
 ---
 
 ## 📎 Extra Docs (in this repo)
-- Project report: `PROJECT_REPORT.md`
+- Project report: [PROJECT_REPORT.md](PROJECT_REPORT.md)
+- Customer API guide: [CUSTOMER_API_GUIDE.md](CUSTOMER_API_GUIDE.md)
+- Complete documentation: [COMPLETE_DOCUMENTATION.md](COMPLETE_DOCUMENTATION.md)
+
+---
+
+## 📄 License
+
+No license file is included in this repository.

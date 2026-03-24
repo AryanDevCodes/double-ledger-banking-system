@@ -64,6 +64,25 @@ This is a **production-grade Banking Management System** built with Spring Boot 
 └─────────────────────────────────────────────┘
 ```
 
+### Architecture & Flow Diagrams
+
+> Diagram assets are stored in `demo/docs/` and embedded here for the report.
+
+#### System architecture
+![System Architecture](demo/docs/system-architecture-diagram.png)
+
+#### Database relations (ERD)
+![Database Relation Diagram](demo/docs/database-relation-diagram.png)
+
+#### Ledger engine (double-entry)
+![Ledger Engine Diagram](demo/docs/ledger-engine-diagram.png)
+
+#### Complete payment flow
+![Complete Payment Flow](demo/docs/complete-payment-flow.png)
+
+#### Idempotency flow
+![Idempotency Flow](demo/docs/idempotency-flow.png)
+
 ### Design Patterns Implemented
 1. **Repository Pattern** - Data access abstraction
 2. **Service Layer Pattern** - Business logic separation

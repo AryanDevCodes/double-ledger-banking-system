@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-The dev server defaults to http://localhost:8080. Ensure the backend is reachable at `VITE_API_BASE_URL`.
+The dev server defaults to http://localhost:8081. Ensure the backend is reachable at `VITE_API_BASE_URL`.
 
 ## Environment
 
@@ -77,4 +77,4 @@ Deploy the `dist/` directory to your hosting target. If serving behind a differe
 
 - Empty data: confirm backend is up and `VITE_API_BASE_URL` is correct.
 - Auth loops: check tokens in localStorage and backend CORS/HTTPS settings.
-- Port conflict: adjust `server.port` in `vite.config.ts`.
+- Port conflict (frontend): adjust `server.port` in `vite.config.ts`.

@@ -69,18 +69,85 @@ This is a **production-grade Banking Management System** built with Spring Boot 
 > Diagram assets are stored in `demo/docs/` and embedded here for the report.
 
 #### System architecture
+
+This diagram summarizes the end-to-end execution path and the “correctness boundary”:
+
+1. **Client (Postman / Frontend)** calls `/transaction` (transfer) or `/upi/pay` (UPI).
+2. **JWT authentication** gates protected endpoints before business logic runs.
+3. **Controllers** delegate requests to the service layer.
+4. **Service layer** orchestrates the use-case (validation, locking, status transitions).
+5. **Core engine primitives** enforce reliability:
+    - Idempotency handling
+    - Transaction validation
+    - Double-entry ledger processing
+    - Debit = Credit enforcement (system invariant)
+6. **Persistence (PostgreSQL)** stores immutable financial truth in an **append-only ledger** and maintains transaction/payment status.
+7. The bracket on the right highlights the **atomic transaction boundary**: either ledger entries + state updates commit together, or the operation rolls back.
+
 ![System Architecture](demo/docs/system-architecture-diagram.png)
 
 #### Database relations (ERD)
+
+This ERD explains how auditability and idempotency are achieved:
+
+- `banks → account` (one bank to many accounts)
+- `account → upi_profiles` (UPI profile links via `linked_account_id`)
+- `upi_profiles → upi_payment_obj` (payment execution is tracked with a persisted object including `idempotency_key` and `transaction_id`)
+- `upi_payment_obj → transactions` (UPI payment ties to the canonical transaction record)
+- `transactions → ledger` (ledger entries reference the transaction via `reference_id (transaction_id)`)
+
+Key point emphasized in the diagram: **balance is NOT stored** as the primary source of truth; it is derived from ledger entries to prevent drift.
+
 ![Database Relation Diagram](demo/docs/database-relation-diagram.png)
 
 #### Ledger engine (double-entry)
+
+This diagram captures the accounting invariant that drives correctness:
+
+1. **Input**: `from_account`, `to_account`, `amount`
+2. **Validate**: `amount > 0` and both accounts exist
+3. **Process**:
+    - Create **DEBIT** ledger entry for the sender
+    - Create **CREDIT** ledger entry for the receiver
+4. **Check (invariant)**: `Sum(DEBIT) == Sum(CREDIT)` (must always hold)
+5. **Store**: append entries to the ledger table (append-only)
+
+Result: balances can be computed as credits minus debits, providing auditability and resilience against partial update bugs.
+
 ![Ledger Engine Diagram](demo/docs/ledger-engine-diagram.png)
 
 #### Complete payment flow
+
+This is the “happy path + failure path” of payment execution:
+
+1. User initiates payment (UPI / transfer)
+2. API validates input
+3. **Idempotency check** (`upi_payment_obj`):
+    - If key exists: return the previous stored result (no double-debit)
+4. Create transaction record with `status = PROCESSING`
+5. Validate account existence (`from_account_id`, `to_account_id`)
+6. Execute **double-entry ledger processing** (DEBIT sender + CREDIT receiver)
+7. Append ledger entries (append-only)
+8. Update transaction status: `SUCCESS` / `FAILED`
+9. Update `upi_payment_obj` with final status + reference `transaction_id`
+10. Return response
+
+Failure behavior (shown in red in the diagram): on error the system **rolls back**, marks the transaction as **FAILED**, and persists a failure reason so retries are safe and diagnosable.
+
 ![Complete Payment Flow](demo/docs/complete-payment-flow.png)
 
 #### Idempotency flow
+
+This decision tree explains how safe retries are implemented:
+
+1. Request arrives with an `idempotency_key`
+2. Check for existing record in `upi_payment_obj`
+3. If it exists: return stored response
+4. Else: execute payment, then store key + result
+5. Return result to the caller
+
+This prevents duplicate payments caused by timeouts, retries, or network failures.
+
 ![Idempotency Flow](demo/docs/idempotency-flow.png)
 
 ### Design Patterns Implemented

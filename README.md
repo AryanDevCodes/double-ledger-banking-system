@@ -46,12 +46,12 @@ The security centerpiece is **full sender ownership validation**: even if someon
 
 ---
 
+## 🎬 Demo
 
-## 📽️ Project Demo
+- ▶️ **Live Demo page:** https://aryandevcodes.github.io/Bank-Ledger-Payment-Engine/
+- 📄 **Local demo HTML (video embed):** [demo/index.html](demo/index.html)
 
 [![Watch the demo](https://img.youtube.com/vi/qOHr7ZWKY7E/0.jpg)](https://www.youtube.com/watch?v=qOHr7ZWKY7E)
-
-👉 [Live Demo Page](https://aryandevcodes.github.io/Bank-Ledger-Payment-Engine/)
 
 ---
 

@@ -249,38 +249,7 @@ npm run test
 
 </details>
 
----
 
-## 🧩 Project Structure
-
-<details>
-<summary><b>Backend (Spring Boot)</b></summary>
-
-```text
-src/main/java/com/bank/
-  controller/    REST APIs
-  service/       business logic
-  repository/    persistence
-  entity/        JPA entities
-  ledger/        ledger subsystem
-```
-
-</details>
-
-<details>
-<summary><b>Frontend (React)</b></summary>
-
-```text
-bank-frontend/
-  src/pages
-  src/components
-  src/contexts
-  src/lib
-```
-
-</details>
-
----
 
 ## 🧯 Troubleshooting
 
@@ -292,11 +261,6 @@ bank-frontend/
 
 ## 📎 Extra Docs (in this repo)
 - Project report: [PROJECT_REPORT.md](PROJECT_REPORT.md)
-- Customer API guide: [CUSTOMER_API_GUIDE.md](CUSTOMER_API_GUIDE.md)
-- Complete documentation: [COMPLETE_DOCUMENTATION.md](COMPLETE_DOCUMENTATION.md)
-
 ---
 
-## 📄 License
 
-No license file is included in this repository.

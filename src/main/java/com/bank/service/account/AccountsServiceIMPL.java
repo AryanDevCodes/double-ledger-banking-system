@@ -114,7 +114,7 @@ public class AccountsServiceIMPL implements AccountsService {
                     .customerStatus(
                             dto.getCustomer().getCustomerStatus() != null ? dto.getCustomer().getCustomerStatus()
                                     : Status.ACTIVE)
-                .user(userResult.user())
+                    .user(userResult.user())
                     .build();
             customer = customerRepository.save(customer);
         } else if (customer.getUser() == null) {
@@ -180,7 +180,8 @@ public class AccountsServiceIMPL implements AccountsService {
             throw new InvalidDataException("Account number cannot be null", "accountNumber", null);
         }
         if (dto == null) {
-            throw new InvalidDataException("Compliance payload cannot be null", "accountComplianceUpdateRequestDTO", null);
+            throw new InvalidDataException("Compliance payload cannot be null", "accountComplianceUpdateRequestDTO",
+                    null);
         }
 
         Account account = accountRepository.findByAccountNumber(accountNumber);
@@ -269,7 +270,8 @@ public class AccountsServiceIMPL implements AccountsService {
 
     private UserCreationResult resolveOrCreateUser(AccountRequestDTO dto) {
         String requestedUsername = dto.getCustomer().getUsername();
-        String username = StringUtils.hasText(requestedUsername) ? requestedUsername.trim() : dto.getCustomer().getEmail();
+        String username = StringUtils.hasText(requestedUsername) ? requestedUsername.trim()
+                : dto.getCustomer().getEmail();
         if (!StringUtils.hasText(username)) {
             throw new InvalidDataException("Username or email is required to create linked user", "username",
                     requestedUsername);

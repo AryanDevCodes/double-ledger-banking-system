@@ -18,9 +18,9 @@ public interface AccountMapper {
     @Mapping(target = "currencyCode", ignore = true)
     @Mapping(target = "receivedTransactions", ignore = true)
     @Mapping(target = "sentTransactions", ignore = true)
-    Account toEntity( AccountRequestDTO dto );
+    Account toEntity(AccountRequestDTO dto);
 
-    @Mapping(target = "bankId",source = "bank.id")
+    @Mapping(target = "bankId", source = "bank.id")
     @Mapping(target = "bankName", source = "bank.bankName")
     @Mapping(target = "customerId", source = "customer.id")
     @Mapping(target = "customerName", source = "customer.fullName")
@@ -31,5 +31,5 @@ public interface AccountMapper {
     @Mapping(target = "userId", source = "customer.user.id")
     @Mapping(target = "username", source = "customer.user.username")
     @Mapping(target = "temporaryPassword", ignore = true)
-    AccountResponseDTO toResponseDTO( Account account );
+    AccountResponseDTO toResponseDTO(Account account);
 }

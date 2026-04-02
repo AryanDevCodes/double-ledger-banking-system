@@ -20,6 +20,8 @@ public class AccountResponseDTO {
     private String bankName;
     private String customerId;
     private String customerName;
+    private Status kycStatus;
+    private Status customerStatus;
     private Integer age;
     private String address;
 

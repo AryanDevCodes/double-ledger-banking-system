@@ -2,6 +2,7 @@ package com.bank.controller;
 
 import com.bank.dto.account.AccountRequestDTO;
 import com.bank.dto.account.AccountResponseDTO;
+import com.bank.dto.account.AccountComplianceUpdateRequestDTO;
 import com.bank.security.JwtUtil;
 import com.bank.service.account.AccountsService;
 import lombok.RequiredArgsConstructor;
@@ -64,6 +65,13 @@ public class AccountController {
     public ResponseEntity<AccountResponseDTO> updateAccount(@PathVariable String accNumber,
             @RequestBody AccountRequestDTO dto) {
         return ResponseEntity.ok(accountsService.updateAccount(accNumber, dto));
+    }
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_CUSTOMER_MANAGER')")
+    @PatchMapping("/{accNumber}/compliance")
+    public ResponseEntity<AccountResponseDTO> updateAccountCompliance(@PathVariable String accNumber,
+            @RequestBody AccountComplianceUpdateRequestDTO dto) {
+        return ResponseEntity.ok(accountsService.updateAccountCompliance(accNumber, dto));
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")

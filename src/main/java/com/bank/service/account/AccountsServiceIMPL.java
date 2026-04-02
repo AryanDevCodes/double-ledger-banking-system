@@ -2,6 +2,7 @@ package com.bank.service.account;
 
 import com.bank.dto.account.AccountRequestDTO;
 import com.bank.dto.account.AccountResponseDTO;
+import com.bank.dto.account.AccountComplianceUpdateRequestDTO;
 import com.bank.entity.Account;
 import com.bank.entity.Bank;
 import com.bank.entity.Customer;
@@ -170,6 +171,40 @@ public class AccountsServiceIMPL implements AccountsService {
         }
 
         return accountMapper.toResponseDTO(accountRepository.save(account));
+    }
+
+    @Override
+    @Transactional
+    public AccountResponseDTO updateAccountCompliance(String accountNumber, AccountComplianceUpdateRequestDTO dto) {
+        if (accountNumber == null || accountNumber.isBlank()) {
+            throw new InvalidDataException("Account number cannot be null", "accountNumber", null);
+        }
+        if (dto == null) {
+            throw new InvalidDataException("Compliance payload cannot be null", "accountComplianceUpdateRequestDTO", null);
+        }
+
+        Account account = accountRepository.findByAccountNumber(accountNumber);
+        if (account == null) {
+            throw new ResourceNotFoundException("Account", "accountNumber", accountNumber);
+        }
+
+        if (dto.getAccountStatus() != null) {
+            account.setStatus(dto.getAccountStatus());
+        }
+
+        Customer customer = account.getCustomer();
+        if (customer != null) {
+            if (dto.getKycStatus() != null) {
+                customer.setKycStatus(dto.getKycStatus());
+            }
+            if (dto.getCustomerStatus() != null) {
+                customer.setCustomerStatus(dto.getCustomerStatus());
+            }
+            customerRepository.save(customer);
+        }
+
+        Account updated = accountRepository.save(account);
+        return accountMapper.toResponseDTO(updated);
     }
 
     @Override

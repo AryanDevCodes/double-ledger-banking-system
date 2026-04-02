@@ -63,11 +63,19 @@ export interface AccountResponseDTO {
   bankName: string;
   customerId: string;
   customerName: string;
+  kycStatus?: Status;
+  customerStatus?: Status;
   age?: number;
   address?: string;
   userId?: number;
   username?: string;
   temporaryPassword?: string;
+}
+
+export interface AccountComplianceUpdateRequestDTO {
+  accountStatus?: Status;
+  kycStatus?: Status;
+  customerStatus?: Status;
 }
 
 // Transaction

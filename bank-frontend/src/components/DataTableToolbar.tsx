@@ -43,6 +43,8 @@ interface DataTableToolbarProps {
   className?: string;
 }
 
+const ALL_FILTER_VALUE = "__all__";
+
 export default function DataTableToolbar({
   searchPlaceholder = "Search...",
   searchValue,
@@ -59,8 +61,8 @@ export default function DataTableToolbar({
   const activeFilterCount = Object.values(activeFilters).filter(Boolean).length;
 
   return (
-    <div className={cn("space-y-3", className)}>
-      <div className="flex flex-col sm:flex-row gap-3">
+    <div className={cn("space-y-2.5", className)}>
+      <div className="flex flex-col sm:flex-row gap-2.5">
         {/* Search */}
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -68,11 +70,11 @@ export default function DataTableToolbar({
             placeholder={searchPlaceholder}
             value={searchValue}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-9"
+            className="pl-9 h-9 bg-background/70 shadow-sm"
           />
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {/* Filter Toggle */}
           {filters.length > 0 && (
             <Button
@@ -103,20 +105,20 @@ export default function DataTableToolbar({
 
       {/* Filter Row */}
       {showFilters && filters.length > 0 && (
-        <div className="flex flex-wrap gap-3 p-4 bg-muted/30 rounded-lg">
+        <div className="flex flex-wrap gap-2.5 p-3 rounded-lg border border-border/60 bg-card/70 shadow-sm backdrop-blur-sm">
           {filters.map((filter) => (
             <div key={filter.key} className="flex flex-col gap-1.5">
               <label className="text-xs text-muted-foreground">{filter.label}</label>
               {filter.type === "select" && filter.options && (
                 <Select
-                  value={(activeFilters[filter.key] as string) || ""}
-                  onValueChange={(value) => onFilterChange?.(filter.key, value || undefined)}
+                  value={(activeFilters[filter.key] as string) || ALL_FILTER_VALUE}
+                  onValueChange={(value) => onFilterChange?.(filter.key, value === ALL_FILTER_VALUE ? undefined : value)}
                 >
                   <SelectTrigger className="w-[160px] h-9">
                     <SelectValue placeholder="All" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All</SelectItem>
+                    <SelectItem value={ALL_FILTER_VALUE}>All</SelectItem>
                     {filter.options.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}

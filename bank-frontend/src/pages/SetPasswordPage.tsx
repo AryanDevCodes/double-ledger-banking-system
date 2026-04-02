@@ -1,105 +1,180 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
-import { Lock, ShieldCheck } from "lucide-react";
+import { Lock, ShieldCheck, Eye, EyeOff } from "lucide-react";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { PasswordStrength } from "@/components/PasswordStrength";
+import { ThemeToggle } from "@/components/ThemeToggle";
+
+const passwordSchema = z
+  .object({
+    currentPassword: z.string().optional(),
+    newPassword: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(/[A-Z]/, "Add at least one uppercase letter")
+      .regex(/[a-z]/, "Add at least one lowercase letter")
+      .regex(/\d/, "Add at least one number"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+type PasswordValues = z.infer<typeof passwordSchema>;
 
 export default function SetPasswordPage() {
   const { changePassword, passwordChangeRequired } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
-  const [loading, setLoading] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (form.newPassword !== form.confirmPassword) return;
-    setLoading(true);
+  const form = useForm<PasswordValues>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
+
+  const onSubmit = async (values: PasswordValues) => {
     try {
-      await changePassword(form.currentPassword, form.newPassword);
+      await changePassword(values.currentPassword || "", values.newPassword);
       navigate("/dashboard");
     } finally {
-      setLoading(false);
+      // state handled by react-hook-form
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <Card className="w-full max-w-md border-gray-200 shadow-xl">
-        <CardHeader className="space-y-2 text-center border-b bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/50 p-4">
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
+      <Card className="w-full max-w-md border-border/60 shadow-xl bg-card/95">
+        <CardHeader className="space-y-2 text-center border-b border-border/60 bg-muted/30">
           <div className="flex justify-center mb-2">
             <div className="p-3 bg-primary/10 rounded-full">
               <ShieldCheck className="h-10 w-10 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-gray-900">Set Your Password</CardTitle>
-          <CardDescription className="text-sm text-gray-600">
+          <CardTitle className="text-2xl font-bold">Set Your Password</CardTitle>
+          <CardDescription className="text-sm text-muted-foreground">
             For security, please set a new password before continuing.
           </CardDescription>
         </CardHeader>
-        <form onSubmit={onSubmit}>
-          <CardContent className="space-y-4 pt-6">
-            <div className="space-y-2">
-              <Label htmlFor="currentPassword" className="text-sm font-medium text-gray-700">
-                Current Password {passwordChangeRequired ? "(optional for first login)" : ""}
-              </Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  id="currentPassword"
-                  type="password"
-                  placeholder={passwordChangeRequired ? "Leave blank if none" : "Your current password"}
-                  className="pl-10 border-gray-300"
-                  value={form.currentPassword}
-                  onChange={(e) => setForm({ ...form, currentPassword: e.target.value })}
-                  disabled={loading}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="newPassword" className="text-sm font-medium text-gray-700">New Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  id="newPassword"
-                  type="password"
-                  placeholder="New password"
-                  className="pl-10 border-gray-300"
-                  value={form.newPassword}
-                  onChange={(e) => setForm({ ...form, newPassword: e.target.value })}
-                  required
-                  disabled={loading}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">Confirm New Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="Repeat new password"
-                  className="pl-10 border-gray-300"
-                  value={form.confirmPassword}
-                  onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-                  required
-                  disabled={loading}
-                />
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-3 border-t bg-gray-50 pt-6">
-            <Button type="submit" className="w-full" disabled={loading || form.newPassword !== form.confirmPassword}>
-              {loading ? "Updating..." : "Update Password"}
-            </Button>
-            {form.newPassword !== form.confirmPassword && (
-              <p className="text-xs text-center text-destructive">Passwords do not match.</p>
-            )}
-          </CardFooter>
-        </form>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <CardContent className="space-y-4 pt-6">
+              <FormField
+                control={form.control}
+                name="currentPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Current Password {passwordChangeRequired ? "(optional for first login)" : ""}
+                    </FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type="password"
+                          placeholder={passwordChangeRequired ? "Leave blank if none" : "Your current password"}
+                          className="pl-10"
+                          disabled={form.formState.isSubmitting}
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormDescription>Required if you already set a password.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="newPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>New Password</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type={showNewPassword ? "text" : "password"}
+                          placeholder="New password"
+                          className="pl-10 pr-10"
+                          disabled={form.formState.isSubmitting}
+                          {...field}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-1 top-1/2 -translate-y-1/2"
+                          onClick={() => setShowNewPassword((prev) => !prev)}
+                          aria-label={showNewPassword ? "Hide password" : "Show password"}
+                        >
+                          {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </FormControl>
+                    <FormDescription>Use 8+ characters with upper, lower, and a number.</FormDescription>
+                    <PasswordStrength password={field.value} />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm New Password</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="Repeat new password"
+                          className="pl-10 pr-10"
+                          disabled={form.formState.isSubmitting}
+                          {...field}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-1 top-1/2 -translate-y-1/2"
+                          onClick={() => setShowConfirmPassword((prev) => !prev)}
+                          aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                        >
+                          {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+            <CardFooter className="flex flex-col space-y-3 border-t border-border/60 bg-muted/30 pt-6">
+              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? "Updating..." : "Update Password"}
+              </Button>
+            </CardFooter>
+          </form>
+        </Form>
       </Card>
     </div>
   );

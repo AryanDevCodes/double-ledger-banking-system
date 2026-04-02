@@ -5,7 +5,7 @@
 /**
  * Convert array of objects to CSV string
  */
-export function exportToCSV<T extends Record<string, any>>(
+export function exportToCSV<T extends Record<string, unknown>>(
   data: T[],
   filename: string,
   columns?: { key: keyof T; label: string }[]
@@ -15,7 +15,12 @@ export function exportToCSV<T extends Record<string, any>>(
   }
 
   // Determine columns
-  const cols = columns || Object.keys(data[0]).map((key) => ({ key, label: key }));
+  const cols =
+    columns ??
+    Object.keys(data[0]).map((key) => ({
+      key: key as keyof T,
+      label: key,
+    }));
 
   // Create CSV header
   const header = cols.map((col) => `"${col.label}"`).join(",");
@@ -44,7 +49,7 @@ export function exportToCSV<T extends Record<string, any>>(
 /**
  * Export table data to Excel format (HTML table that Excel can open)
  */
-export function exportToExcel<T extends Record<string, any>>(
+export function exportToExcel<T extends Record<string, unknown>>(
   data: T[],
   filename: string,
   sheetName: string = "Sheet1",
@@ -54,10 +59,15 @@ export function exportToExcel<T extends Record<string, any>>(
     throw new Error("No data to export");
   }
 
-  const cols = columns || Object.keys(data[0]).map((key) => ({ key, label: key }));
+  const cols =
+    columns ??
+    Object.keys(data[0]).map((key) => ({
+      key: key as keyof T,
+      label: key,
+    }));
 
   // Create HTML table
-  let html = `
+  const html = `
     <html>
       <head>
         <meta charset="utf-8">
@@ -82,7 +92,7 @@ export function exportToExcel<T extends Record<string, any>>(
                   `<tr>${cols
                     .map((col) => {
                       const value = row[col.key];
-                      return `<td>${value !== null && value !== undefined ? value : ""}</td>`;
+                      return `<td>${value !== null && value !== undefined ? String(value) : ""}</td>`;
                     })
                     .join("")}</tr>`
               )
@@ -100,7 +110,7 @@ export function exportToExcel<T extends Record<string, any>>(
 /**
  * Generate and download PDF report (simplified - creates a printable HTML page)
  */
-export function exportToPDF<T extends Record<string, any>>(
+export function exportToPDF<T extends Record<string, unknown>>(
   data: T[],
   title: string,
   columns?: { key: keyof T; label: string }[]
@@ -109,7 +119,12 @@ export function exportToPDF<T extends Record<string, any>>(
     throw new Error("No data to export");
   }
 
-  const cols = columns || Object.keys(data[0]).map((key) => ({ key, label: key }));
+  const cols =
+    columns ??
+    Object.keys(data[0]).map((key) => ({
+      key: key as keyof T,
+      label: key,
+    }));
 
   // Create printable HTML
   const html = `
@@ -193,7 +208,7 @@ export function exportToPDF<T extends Record<string, any>>(
                   `<tr>${cols
                     .map((col) => {
                       const value = row[col.key];
-                      return `<td>${value !== null && value !== undefined ? value : ""}</td>`;
+                      return `<td>${value !== null && value !== undefined ? String(value) : ""}</td>`;
                     })
                     .join("")}</tr>`
               )

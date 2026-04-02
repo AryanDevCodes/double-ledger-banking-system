@@ -6,6 +6,7 @@ import type {
   CustomerResponseDTO,
   AccountRequestDTO,
   AccountResponseDTO,
+  AccountComplianceUpdateRequestDTO,
   TransactionRequestDTO,
   TransactionResponseDTO,
   UpiRegisterRequestDTO,
@@ -185,6 +186,12 @@ export const accountApi = {
   
   update: (accNumber: string, data: AccountRequestDTO) =>
     apiRequest<AccountResponseDTO>(`/account/${accNumber}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
+  updateCompliance: (accNumber: string, data: AccountComplianceUpdateRequestDTO) =>
+    apiRequest<AccountResponseDTO>(`/account/${accNumber}/compliance`, {
       method: "PATCH",
       body: JSON.stringify(data),
     }),

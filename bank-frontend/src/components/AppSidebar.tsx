@@ -9,7 +9,8 @@ import {
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import { getDashboardRoute, getVisibleNavItems, NAVIGATION_ITEMS } from "@/lib/rbac";
+import { useBrand } from "@/contexts/BrandContext";
+import { getDashboardRoute, getVisibleNavItems } from "@/lib/rbac";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +32,7 @@ export default function AppSidebar({ collapsed: controlledCollapsed, onCollapsed
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { brandName, consoleTagline } = useBrand();
 
   const handleToggle = () => {
     const newValue = !collapsed;
@@ -70,19 +72,19 @@ export default function AppSidebar({ collapsed: controlledCollapsed, onCollapsed
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen flex flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300",
+        "fixed left-0 top-0 z-40 h-screen flex flex-col border-r border-sidebar-border/80 bg-sidebar/95 backdrop-blur-sm transition-all duration-300",
         collapsed ? "w-[68px]" : "w-[240px]"
       )}
     >
       {/* Logo */}
-      <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-4">
+      <div className="flex h-14 items-center gap-3 border-b border-sidebar-border/80 px-3.5">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm">
           B
         </div>
         {!collapsed && (
           <div className="animate-fade-in">
-            <p className="text-sm font-semibold text-sidebar-primary-foreground">BankSys</p>
-            <p className="text-[10px] text-sidebar-muted">Management Suite</p>
+            <p className="text-sm font-semibold text-sidebar-primary-foreground">{brandName}</p>
+            <p className="text-[10px] text-sidebar-muted">{consoleTagline}</p>
           </div>
         )}
       </div>
@@ -90,7 +92,7 @@ export default function AppSidebar({ collapsed: controlledCollapsed, onCollapsed
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto">
         {/* Main Navigation */}
-        <div className="px-3 py-4">
+        <div className="px-3 py-3">
           {!collapsed && (
             <h3 className="px-3 mb-3 text-xs font-semibold text-sidebar-muted uppercase tracking-wider">
               Main Menu
@@ -98,16 +100,18 @@ export default function AppSidebar({ collapsed: controlledCollapsed, onCollapsed
           )}
           <div className="space-y-1">
             {mainItems.map((item) => {
-              const isActive = location.pathname === item.path;
+              const to = item.path === "/dashboard" ? dashboardPath : item.path;
+              const isActive = location.pathname === to;
               const IconComponent = item.icon;
               return (
                 <NavLink
                   key={item.path}
-                  to={item.path === "/dashboard" ? dashboardPath : item.path}
+                  to={to}
+                  title={collapsed ? item.label : undefined}
                   className={cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                     isActive
-                      ? "bg-sidebar-accent text-sidebar-primary shadow-sm"
+                      ? "bg-sidebar-accent text-sidebar-primary ring-1 ring-sidebar-ring/25"
                       : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   )}
                 >
@@ -121,7 +125,7 @@ export default function AppSidebar({ collapsed: controlledCollapsed, onCollapsed
 
         {/* Compliance & Security Section */}
         {complianceItems.length > 0 && (
-          <div className="px-3 py-4 border-t border-sidebar-border/50">
+          <div className="px-3 py-3 border-t border-sidebar-border/50">
             {!collapsed && (
               <h3 className="px-3 mb-3 text-xs font-semibold text-sidebar-muted uppercase tracking-wider">
                 Compliance
@@ -129,16 +133,18 @@ export default function AppSidebar({ collapsed: controlledCollapsed, onCollapsed
             )}
             <div className="space-y-1">
               {complianceItems.map((item) => {
-                const isActive = location.pathname === item.path;
+                const to = item.path === "/dashboard" ? dashboardPath : item.path;
+                const isActive = location.pathname === to;
                 const IconComponent = item.icon;
                 return (
                   <NavLink
                     key={item.path}
-                    to={item.path}
+                    to={to}
+                    title={collapsed ? item.label : undefined}
                     className={cn(
-                      "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                      "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                       isActive
-                        ? "bg-sidebar-accent text-sidebar-primary shadow-sm"
+                        ? "bg-sidebar-accent text-sidebar-primary ring-1 ring-sidebar-ring/25"
                         : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     )}
                   >
@@ -153,7 +159,7 @@ export default function AppSidebar({ collapsed: controlledCollapsed, onCollapsed
         
         {/* Role Dashboards Section */}
         {roleItems.length > 0 && (
-          <div className="px-3 py-4 border-t border-sidebar-border/50">
+          <div className="px-3 py-3 border-t border-sidebar-border/50">
             {!collapsed && (
               <h3 className="px-3 mb-3 text-xs font-semibold text-sidebar-muted uppercase tracking-wider">
                 Dashboards
@@ -161,16 +167,18 @@ export default function AppSidebar({ collapsed: controlledCollapsed, onCollapsed
             )}
             <div className="space-y-1">
               {roleItems.map((item) => {
-                const isActive = location.pathname === item.path;
+                const to = item.path === "/dashboard" ? dashboardPath : item.path;
+                const isActive = location.pathname === to;
                 const IconComponent = item.icon;
                 return (
                   <NavLink
                     key={item.path}
-                    to={item.path}
+                    to={to}
+                    title={collapsed ? item.label : undefined}
                     className={cn(
-                      "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                      "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                       isActive
-                        ? "bg-sidebar-accent text-sidebar-primary shadow-sm"
+                        ? "bg-sidebar-accent text-sidebar-primary ring-1 ring-sidebar-ring/25"
                         : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     )}
                   >
@@ -185,11 +193,12 @@ export default function AppSidebar({ collapsed: controlledCollapsed, onCollapsed
       </nav>
 
       {/* User Profile Section */}
-      <div className="border-t border-sidebar-border p-3">
+      <div className="border-t border-sidebar-border/80 p-2.5">
         {collapsed ? (
           <button
             onClick={handleLogout}
             className="flex items-center justify-center w-full h-10 rounded-md text-sidebar-muted hover:text-destructive hover:bg-sidebar-accent transition-colors"
+            aria-label="Log out"
             title="Logout"
           >
             <LogOut className="h-[18px] w-[18px]" />
@@ -197,10 +206,10 @@ export default function AppSidebar({ collapsed: controlledCollapsed, onCollapsed
         ) : (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-3 w-full rounded-md px-3 py-2 hover:bg-sidebar-accent transition-colors">
+              <button className="flex items-center gap-3 w-full rounded-md px-2.5 py-2 hover:bg-sidebar-accent transition-colors">
                 <Avatar className="h-8 w-8">
                   <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
-                    {user ? getInitials(user.fullName) : 'U'}
+                    {user?.fullName ? getInitials(user.fullName) : 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 text-left min-w-0">
@@ -237,7 +246,8 @@ export default function AppSidebar({ collapsed: controlledCollapsed, onCollapsed
       {/* Collapse toggle */}
       <button
         onClick={handleToggle}
-        className="flex items-center justify-center h-12 border-t border-sidebar-border text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+        className="flex items-center justify-center h-10 border-t border-sidebar-border/80 text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
         {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
       </button>

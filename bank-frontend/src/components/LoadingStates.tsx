@@ -40,12 +40,12 @@ interface CardSkeletonProps {
 
 export function StatCardSkeleton({ className }: CardSkeletonProps) {
   return (
-    <div className={cn("glass-card p-5", className)}>
-      <div className="flex items-start justify-between mb-3">
+    <div className={cn("glass-card p-4", className)}>
+      <div className="flex items-start justify-between mb-2.5">
         <Skeleton className="h-4 w-20" />
-        <Skeleton className="h-9 w-9 rounded-lg" />
+        <Skeleton className="h-8 w-8 rounded-lg" />
       </div>
-      <Skeleton className="h-8 w-24 mb-2" />
+      <Skeleton className="h-7 w-24 mb-2" />
       <Skeleton className="h-3 w-16" />
     </div>
   );

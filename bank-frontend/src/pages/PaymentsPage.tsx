@@ -1,6 +1,11 @@
-import { useState, useEffect, useRef } from "react";
-import { Send, History, Smartphone, CreditCard, ArrowUpRight, ArrowDownLeft, RefreshCcw, Download, FileSpreadsheet, FileText, Wallet, TrendingUp, TrendingDown, CheckCircle2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Send, History, Smartphone, CreditCard, ArrowUpRight, ArrowDownLeft, RefreshCcw, Wallet, TrendingUp, TrendingDown, CheckCircle2 } from "lucide-react";
 import PageWrapper from "@/components/PageWrapper";
+import PageHeader from "@/components/PageHeader";
+import ExportMenu from "@/components/ExportMenu";
 import StatCard from "@/components/StatCard";
 import DataTableToolbar from "@/components/DataTableToolbar";
 import EmptyState from "@/components/EmptyState";
@@ -13,25 +18,58 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
-import { accountApi, transactionApi, upiApi } from "@/lib/api-client";
+import { accountApi, transactionApi, upiApi, ApiError } from "@/lib/api-client";
 import { exportToCSV, exportToExcel, exportToPDF } from "@/lib/export";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROLES } from "@/lib/rbac";
 import type { AccountResponseDTO, TransactionResponseDTO, UpiProfileResponseDTO } from "@/types/api";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { TableSkeleton } from "@/components/LoadingStates";
+
+const upiPaymentSchema = z.object({
+  fromUpi: z.string().min(1, "Select a sender UPI"),
+  toUpi: z.string().min(3, "Enter a valid receiver UPI"),
+  amount: z
+    .string()
+    .min(1, "Amount is required")
+    .refine((value) => !isNaN(Number(value)) && Number(value) > 0, "Amount must be greater than 0"),
+});
+
+const bankTransferSchema = z.object({
+  senderAccount: z.string().min(1, "Select sender account"),
+  receiverAccount: z.string().min(1, "Select receiver account"),
+  amount: z
+    .string()
+    .min(1, "Amount is required")
+    .refine((value) => !isNaN(Number(value)) && Number(value) > 0, "Amount must be greater than 0"),
+}).refine((data) => data.senderAccount !== data.receiverAccount, {
+  message: "Sender and receiver cannot be the same",
+  path: ["receiverAccount"],
+});
+
+const upiRegistrationSchema = z.object({
+  upiId: z.string().min(3, "UPI ID is required"),
+  accountNumber: z.string().min(1, "Select an account"),
+});
+
+type UpiPaymentValues = z.infer<typeof upiPaymentSchema>;
+type BankTransferValues = z.infer<typeof bankTransferSchema>;
+type UpiRegistrationValues = z.infer<typeof upiRegistrationSchema>;
+
+type PaymentTransaction = TransactionResponseDTO & {
+  transactionType?: string;
+  timestamp?: string;
+  id?: string | number;
+  fromAccountNumber?: string;
+  toAccountNumber?: string;
+};
 
 export default function PaymentsPage() {
   const { user } = useAuth();
   const [accounts, setAccounts] = useState<AccountResponseDTO[]>([]);
-  const [transactions, setTransactions] = useState<TransactionResponseDTO[]>([]);
+  const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
   const [upiProfiles, setUpiProfiles] = useState<UpiProfileResponseDTO[]>([]);
   const [loading, setLoading] = useState(false);
   const [historySearch, setHistorySearch] = useState("");
@@ -41,29 +79,37 @@ export default function PaymentsPage() {
     date: undefined,
   });
 
-  // UPI Payment Form
-  const [upiPayment, setUpiPayment] = useState({
-    fromUpi: "",
-    toUpi: "",
-    amount: "",
-    idempotencyKey: "",
+  const upiPaymentForm = useForm<UpiPaymentValues>({
+    resolver: zodResolver(upiPaymentSchema),
+    defaultValues: { fromUpi: "", toUpi: "", amount: "" },
   });
 
-  const [upiRegistration, setUpiRegistration] = useState({
-    upiId: "",
-    accountNumber: "",
+  const upiRegistrationForm = useForm<UpiRegistrationValues>({
+    resolver: zodResolver(upiRegistrationSchema),
+    defaultValues: { upiId: "", accountNumber: "" },
   });
 
-  // Bank Transfer Form
-  const [bankTransfer, setBankTransfer] = useState({
-    senderAccount: "",
-    receiverAccount: "",
-    amount: "",
+  const bankTransferForm = useForm<BankTransferValues>({
+    resolver: zodResolver(bankTransferSchema),
+    defaultValues: { senderAccount: "", receiverAccount: "", amount: "" },
   });
 
-  const lastFromUpiRef = useRef<string>("");
+  const getErrorMessage = (error: unknown, fallback: string) => {
+    if (error instanceof ApiError) {
+      const data: unknown = error.data;
+      if (data && typeof data === "object" && "message" in data) {
+        const messageValue = (data as Record<string, unknown>).message;
+        if (typeof messageValue === "string" && messageValue.trim().length > 0) return messageValue;
+      }
+    }
+    if (error instanceof Error && error.message.trim().length > 0) return error.message;
+    return fallback;
+  };
 
-  const isCustomer = user?.roles.includes(ROLES.USER);
+  const roles = user?.roles || [];
+  const staffRoleSet = new Set<string>([ROLES.ADMIN, ROLES.MANAGER, ROLES.CUSTOMER_MANAGER, ROLES.AUDITOR]);
+  const isCustomerOnly = roles.includes(ROLES.USER) && !roles.some((role) => staffRoleSet.has(role));
+  const canInitiatePayments = isCustomerOnly;
 
   useEffect(() => {
     loadData();
@@ -90,20 +136,11 @@ export default function PaymentsPage() {
     return `${userPrefix}${bankPart}${datePart}${randomPart}`;
   };
 
-  useEffect(() => {
-    if (!upiPayment.fromUpi) return;
-    if (upiPayment.fromUpi !== lastFromUpiRef.current) {
-      const nextKey = buildIdempotencyKey(upiPayment.fromUpi);
-      setUpiPayment((prev) => ({ ...prev, idempotencyKey: nextKey }));
-      lastFromUpiRef.current = upiPayment.fromUpi;
-    }
-  }, [upiPayment.fromUpi, upiProfiles, user]);
-
   const loadData = async () => {
     try {
       setLoading(true);
       
-      if (isCustomer) {
+      if (isCustomerOnly) {
         // Load customer's data
         const accountsData = await accountApi.getMy();
         const upiByAccount = await Promise.all(
@@ -140,55 +177,58 @@ export default function PaymentsPage() {
     }
   };
 
-  const handleUpiPayment = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleUpiPayment = async (values: UpiPaymentValues) => {
+    if (!canInitiatePayments) {
+      toast.error("Payment initiation is restricted to customer accounts only");
+      return;
+    }
     try {
       setLoading(true);
-      const idempotencyKey =
-        upiPayment.idempotencyKey || (upiPayment.fromUpi ? buildIdempotencyKey(upiPayment.fromUpi) : undefined);
+      const idempotencyKey = values.fromUpi ? buildIdempotencyKey(values.fromUpi) : undefined;
       await upiApi.pay({
-        fromUpi: upiPayment.fromUpi,
-        toUpi: upiPayment.toUpi,
-        amount: parseFloat(upiPayment.amount),
+        fromUpi: values.fromUpi,
+        toUpi: values.toUpi,
+        amount: parseFloat(values.amount),
         idempotencyKey,
       });
       toast.success("UPI payment successful!");
-      setUpiPayment({ fromUpi: "", toUpi: "", amount: "", idempotencyKey: "" });
+      upiPaymentForm.reset();
       loadData();
-    } catch (error: any) {
-      toast.error(error.message || "Payment failed");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Payment failed"));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleBankTransfer = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleBankTransfer = async (values: BankTransferValues) => {
+    if (!canInitiatePayments) {
+      toast.error("Payment initiation is restricted to customer accounts only");
+      return;
+    }
     try {
       setLoading(true);
       await transactionApi.create({
-        senderAccount: bankTransfer.senderAccount,
-        receiverAccount: bankTransfer.receiverAccount,
-        amount: parseFloat(bankTransfer.amount),
+        senderAccount: values.senderAccount,
+        receiverAccount: values.receiverAccount,
+        amount: parseFloat(values.amount),
       });
       toast.success("Transfer successful!");
-      setBankTransfer({ senderAccount: "", receiverAccount: "", amount: "" });
+      bankTransferForm.reset();
       loadData();
-    } catch (error: any) {
-      toast.error(error.message || "Transfer failed");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Transfer failed"));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUpiRegistration = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!upiRegistration.upiId || !upiRegistration.accountNumber) {
-      toast.error("Please provide UPI ID and account");
+  const handleUpiRegistration = async (values: UpiRegistrationValues) => {
+    if (!canInitiatePayments) {
+      toast.error("UPI registration is restricted to customer accounts only");
       return;
     }
-
-    const countForAccount = upiProfiles.filter((p) => p.accountNumber === upiRegistration.accountNumber).length;
+    const countForAccount = upiProfiles.filter((p) => p.accountNumber === values.accountNumber).length;
     if (countForAccount >= 4) {
       toast.error("UPI limit reached for this account (max 4)");
       return;
@@ -197,30 +237,32 @@ export default function PaymentsPage() {
     try {
       setLoading(true);
       await upiApi.register({
-        upiId: upiRegistration.upiId,
-        accountNumber: upiRegistration.accountNumber,
+        upiId: values.upiId,
+        accountNumber: values.accountNumber,
       });
       toast.success("UPI ID registered");
-      setUpiRegistration({ upiId: "", accountNumber: "" });
+      upiRegistrationForm.reset();
       loadData();
-    } catch (error: any) {
-      const message = error?.data?.message || error?.message || "Failed to register UPI ID";
-      toast.error(message);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Failed to register UPI ID"));
     } finally {
       setLoading(false);
     }
   };
 
   const handleUpiStatusToggle = async (upiId: string, currentStatus: string) => {
+    if (!canInitiatePayments) {
+      toast.error("UPI status changes are restricted to customer accounts only");
+      return;
+    }
     try {
       setLoading(true);
       const nextStatus = currentStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE";
       await upiApi.updateStatus(upiId, nextStatus);
       toast.success("UPI status updated");
       loadData();
-    } catch (error: any) {
-      const message = error?.data?.message || error?.message || "Failed to update status";
-      toast.error(message);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Failed to update status"));
     } finally {
       setLoading(false);
     }
@@ -248,7 +290,7 @@ export default function PaymentsPage() {
   };
 
   const historySearchTerm = historySearch.trim().toLowerCase();
-  const filteredHistory = transactions.filter((txn: any) => {
+  const filteredHistory = transactions.filter((txn) => {
     const dateValue = txn.transactionDate || txn.timestamp;
     const type = txn.transactionType || "TRANSFER";
     const fromAccount = txn.senderAccountNumber || txn.fromAccountNumber || "-";
@@ -277,17 +319,17 @@ export default function PaymentsPage() {
   });
 
   const totalSent = transactions
-    .filter((t: any) => (t.transactionType || "TRANSFER") !== "CREDIT")
-    .reduce((sum, t: any) => sum + (t.amount || 0), 0);
+    .filter((t) => (t.transactionType || "TRANSFER") !== "CREDIT")
+    .reduce((sum, t) => sum + (t.amount || 0), 0);
   const totalReceived = transactions
-    .filter((t: any) => (t.transactionType || "TRANSFER") === "CREDIT")
-    .reduce((sum, t: any) => sum + (t.amount || 0), 0);
-  const successCount = transactions.filter((t: any) => t.status === "SUCCESS").length;
+    .filter((t) => (t.transactionType || "TRANSFER") === "CREDIT")
+    .reduce((sum, t) => sum + (t.amount || 0), 0);
+  const successCount = transactions.filter((t) => t.status === "SUCCESS").length;
   const successRate = transactions.length ? Math.round((successCount / transactions.length) * 100) : 0;
 
   const handleExportHistory = (format: "csv" | "excel" | "pdf") => {
     try {
-      const exportData = filteredHistory.map((txn: any) => {
+      const exportData = filteredHistory.map((txn) => {
         const dateValue = txn.transactionDate || txn.timestamp;
         const type = txn.transactionType || "TRANSFER";
         const fromAccount = txn.senderAccountNumber || txn.fromAccountNumber || "-";
@@ -320,17 +362,19 @@ export default function PaymentsPage() {
   };
 
   return (
+    <>
     <PageWrapper>
-      <div className="page-header flex items-center justify-between">
-        <div>
-          <h1 className="page-title">Payments & Transfers</h1>
-          <p className="page-subtitle">Send money via UPI or bank transfer</p>
-        </div>
-        <Button variant="outline" size="sm" onClick={loadData} disabled={loading}>
-          <RefreshCcw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
-      </div>
+      <PageHeader
+        title="Payments & Transfers"
+        subtitle={canInitiatePayments ? "Send money via UPI or bank transfer" : "View payment history and account activity"}
+        icon={<Send className="h-5 w-5" />}
+        actions={
+          <Button variant="outline" size="sm" onClick={loadData} disabled={loading}>
+            <RefreshCcw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        }
+      />
 
       <Tabs defaultValue="pay" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3 max-w-md">
@@ -350,6 +394,17 @@ export default function PaymentsPage() {
 
         {/* Send Money Tab */}
         <TabsContent value="pay" className="space-y-6">
+          {!canInitiatePayments && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Payment initiation restricted</CardTitle>
+                <CardDescription>
+                  Authorities can review payment history and monitoring data, but cannot initiate UPI or bank transfers from user accounts.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          )}
+
           <div className="grid gap-4 md:grid-cols-4">
             <StatCard
               title="Total Sent"
@@ -376,6 +431,7 @@ export default function PaymentsPage() {
               icon={<Wallet className="h-5 w-5" />}
             />
           </div>
+          {canInitiatePayments && (
           <div className="grid md:grid-cols-2 gap-6">
             {/* UPI Payment */}
             <Card>
@@ -387,60 +443,73 @@ export default function PaymentsPage() {
                 <CardDescription>Send money using UPI ID</CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleUpiPayment} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>From UPI ID</Label>
-                    <Select
-                      value={upiPayment.fromUpi}
-                      onValueChange={(value) => setUpiPayment({ ...upiPayment, fromUpi: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your UPI" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {activeUpiProfiles.map((upi) => (
-                          <SelectItem key={upi.upiId} value={upi.upiId}>
-                            {upi.upiId}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>To UPI ID</Label>
-                    <Input
-                      placeholder="receiver@upi"
-                      value={upiPayment.toUpi}
-                      onChange={(e) => setUpiPayment({ ...upiPayment, toUpi: e.target.value })}
-                      required
+                <Form {...upiPaymentForm}>
+                  <form onSubmit={upiPaymentForm.handleSubmit(handleUpiPayment)} className="space-y-4">
+                    <FormField
+                      control={upiPaymentForm.control}
+                      name="fromUpi"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>From UPI ID</FormLabel>
+                          <FormControl>
+                            <Select value={field.value} onValueChange={field.onChange}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select your UPI" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {activeUpiProfiles.map((upi) => (
+                                  <SelectItem key={upi.upiId} value={upi.upiId}>
+                                    {upi.upiId}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
 
-                  <div className="space-y-2">
-                    <Label>Amount (₹)</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="1"
-                      placeholder="0.00"
-                      value={upiPayment.amount}
-                      onChange={(e) => setUpiPayment({ ...upiPayment, amount: e.target.value })}
-                      required
+                    <FormField
+                      control={upiPaymentForm.control}
+                      name="toUpi"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>To UPI ID</FormLabel>
+                          <FormControl>
+                            <Input placeholder="receiver@upi" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
 
-                  <Button type="submit" className="w-full" disabled={loading || activeUpiProfiles.length === 0 || !upiPayment.fromUpi}>
-                    <Send className="h-4 w-4 mr-2" />
-                    Send via UPI
-                  </Button>
+                    <FormField
+                      control={upiPaymentForm.control}
+                      name="amount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Amount (₹)</FormLabel>
+                          <FormControl>
+                            <Input type="number" step="0.01" min="1" placeholder="0.00" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  {upiProfiles.length === 0 && (
-                    <p className="text-sm text-gray-500 text-center">
-                      No UPI profiles found. Register one in the UPI tab.
-                    </p>
-                  )}
-                </form>
+                    <Button type="submit" className="w-full" disabled={loading || activeUpiProfiles.length === 0 || !upiPaymentForm.watch("fromUpi") }>
+                      <Send className="h-4 w-4 mr-2" />
+                      Send via UPI
+                    </Button>
+
+                    {upiProfiles.length === 0 && (
+                      <p className="text-sm text-gray-500 text-center">
+                        No UPI profiles found. Register one in the UPI tab.
+                      </p>
+                    )}
+                  </form>
+                </Form>
               </CardContent>
             </Card>
 
@@ -454,57 +523,71 @@ export default function PaymentsPage() {
                 <CardDescription>Transfer between accounts</CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleBankTransfer} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>From Account</Label>
-                    <Select
-                      value={bankTransfer.senderAccount}
-                      onValueChange={(value) => setBankTransfer({ ...bankTransfer, senderAccount: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select account" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {accounts.map((acc) => (
-                          <SelectItem key={acc.accountNumber} value={acc.accountNumber}>
-                            {acc.accountNumber} - {formatCurrency(acc.balance)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>To Account Number</Label>
-                    <Input
-                      placeholder="Account number"
-                      value={bankTransfer.receiverAccount}
-                      onChange={(e) => setBankTransfer({ ...bankTransfer, receiverAccount: e.target.value })}
-                      required
+                <Form {...bankTransferForm}>
+                  <form onSubmit={bankTransferForm.handleSubmit(handleBankTransfer)} className="space-y-4">
+                    <FormField
+                      control={bankTransferForm.control}
+                      name="senderAccount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>From Account</FormLabel>
+                          <FormControl>
+                            <Select value={field.value} onValueChange={field.onChange}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select account" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {accounts.map((acc) => (
+                                  <SelectItem key={acc.accountNumber} value={acc.accountNumber}>
+                                    {acc.accountNumber} - {formatCurrency(acc.balance)}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
 
-                  <div className="space-y-2">
-                    <Label>Amount (₹)</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="1"
-                      placeholder="0.00"
-                      value={bankTransfer.amount}
-                      onChange={(e) => setBankTransfer({ ...bankTransfer, amount: e.target.value })}
-                      required
+                    <FormField
+                      control={bankTransferForm.control}
+                      name="receiverAccount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>To Account Number</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Account number" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
 
-                  <Button type="submit" className="w-full" disabled={loading || accounts.length === 0}>
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    Transfer Funds
-                  </Button>
-                </form>
+                    <FormField
+                      control={bankTransferForm.control}
+                      name="amount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Amount (₹)</FormLabel>
+                          <FormControl>
+                            <Input type="number" step="0.01" min="1" placeholder="0.00" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button type="submit" className="w-full" disabled={loading || accounts.length === 0}>
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Transfer Funds
+                    </Button>
+                  </form>
+                </Form>
               </CardContent>
             </Card>
           </div>
+          )}
 
           {/* Quick Balance Overview */}
           <Card>
@@ -526,37 +609,22 @@ export default function PaymentsPage() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        {/* Transaction History Tab */}
-        <TabsContent value="history" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold">Transaction History</h2>
-              <p className="text-sm text-muted-foreground">Search, filter, and export your payments</p>
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => handleExportHistory("csv")}>
-                  <FileText className="h-4 w-4 mr-2" /> Export as CSV
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleExportHistory("excel")}>
-                  <FileSpreadsheet className="h-4 w-4 mr-2" /> Export as Excel
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => handleExportHistory("pdf")}>
-                  <FileText className="h-4 w-4 mr-2" /> Export as PDF
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          {/* Transaction History */}
           <Card>
+            <CardHeader className="flex flex-row items-start justify-between space-y-0">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <History className="h-5 w-5 text-primary" />
+                  Transaction History
+                </CardTitle>
+                <CardDescription>UPI payments and bank transfers</CardDescription>
+              </div>
+              <ExportMenu
+                onExport={handleExportHistory}
+                disabled={loading || filteredHistory.length === 0}
+              />
+            </CardHeader>
             <CardContent>
               <div className="pb-4">
                 <DataTableToolbar
@@ -568,7 +636,7 @@ export default function PaymentsPage() {
                       key: "status",
                       label: "Status",
                       type: "select",
-                      options: Array.from(new Set(transactions.map((t: any) => t.status).filter(Boolean))).map((v) => ({
+                      options: Array.from(new Set(transactions.map((t) => t.status).filter(Boolean))).map((v) => ({
                         label: v,
                         value: v,
                       })),
@@ -577,7 +645,7 @@ export default function PaymentsPage() {
                       key: "type",
                       label: "Type",
                       type: "select",
-                      options: Array.from(new Set(transactions.map((t: any) => t.transactionType || "TRANSFER"))).map((v) => ({
+                      options: Array.from(new Set(transactions.map((t) => t.transactionType || "TRANSFER"))).map((v) => ({
                         label: v,
                         value: v,
                       })),
@@ -589,7 +657,10 @@ export default function PaymentsPage() {
                   onClearFilters={() => setHistoryFilters({ status: undefined, type: undefined, date: undefined })}
                 />
               </div>
-              {filteredHistory.length === 0 ? (
+
+              {loading ? (
+                <TableSkeleton columns={6} rows={6} className="p-2" />
+              ) : filteredHistory.length === 0 ? (
                 <EmptyState type={historySearch ? "search" : "transactions"} />
               ) : (
                 <Table>
@@ -604,7 +675,7 @@ export default function PaymentsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredHistory.map((txn: any) => {
+                    {filteredHistory.map((txn) => {
                       const dateValue = txn.transactionDate || txn.timestamp;
                       const type = txn.transactionType || "TRANSFER";
                       const fromAccount = txn.senderAccountNumber || txn.fromAccountNumber || "-";
@@ -623,22 +694,14 @@ export default function PaymentsPage() {
                               {type}
                             </div>
                           </TableCell>
-                          <TableCell>
-                            {formatParty(txn.senderName, fromAccount)}
-                          </TableCell>
-                          <TableCell>
-                            {formatParty(txn.receiverName, toAccount)}
-                          </TableCell>
-                          <TableCell className={
-                            type === "CREDIT" ? "text-green-600 font-semibold" : "text-red-600 font-semibold"
-                          }>
+                          <TableCell>{formatParty(txn.senderName, fromAccount)}</TableCell>
+                          <TableCell>{formatParty(txn.receiverName, toAccount)}</TableCell>
+                          <TableCell className={type === "CREDIT" ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
                             {type === "CREDIT" ? "+" : "-"}
                             {formatCurrency(txn.amount)}
                           </TableCell>
                           <TableCell>
-                            <Badge variant={txn.status === "SUCCESS" ? "default" : "destructive"}>
-                              {txn.status}
-                            </Badge>
+                            <Badge variant={txn.status === "SUCCESS" ? "default" : "destructive"}>{txn.status}</Badge>
                           </TableCell>
                         </TableRow>
                       );
@@ -659,42 +722,57 @@ export default function PaymentsPage() {
                 <CardDescription>Create a new UPI ID linked to your account</CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleUpiRegistration} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>UPI ID</Label>
-                    <Input
-                      placeholder="yourname@mybank"
-                      value={upiRegistration.upiId}
-                      onChange={(e) => setUpiRegistration({ ...upiRegistration, upiId: e.target.value })}
-                      required
+                <Form {...upiRegistrationForm}>
+                  <form onSubmit={upiRegistrationForm.handleSubmit(handleUpiRegistration)} className="space-y-4">
+                    <FormField
+                      control={upiRegistrationForm.control}
+                      name="upiId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>UPI ID</FormLabel>
+                          <FormControl>
+                            <Input placeholder="yourname@mybank" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Link Account</Label>
-                    <Select
-                      value={upiRegistration.accountNumber}
-                      onValueChange={(value) => setUpiRegistration({ ...upiRegistration, accountNumber: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select account" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {accounts.map((acc) => (
-                          <SelectItem key={acc.accountNumber} value={acc.accountNumber}>
-                            {acc.accountNumber} • {acc.bankName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button type="submit" className="w-full" disabled={loading || accounts.length === 0}>
-                    <Smartphone className="h-4 w-4 mr-2" />
-                    Register UPI ID
-                  </Button>
-                  {accounts.length === 0 && (
-                    <p className="text-xs text-gray-500">You need at least one active account to register UPI.</p>
-                  )}
-                </form>
+                    <FormField
+                      control={upiRegistrationForm.control}
+                      name="accountNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Link Account</FormLabel>
+                          <FormControl>
+                            <Select value={field.value} onValueChange={field.onChange}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select account" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {accounts.map((acc) => (
+                                  <SelectItem key={acc.accountNumber} value={acc.accountNumber}>
+                                    {acc.accountNumber} • {acc.bankName}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit" className="w-full" disabled={loading || accounts.length === 0 || !canInitiatePayments}>
+                      <Smartphone className="h-4 w-4 mr-2" />
+                      Register UPI ID
+                    </Button>
+                    {accounts.length === 0 && (
+                      <p className="text-xs text-gray-500">You need at least one active account to register UPI.</p>
+                    )}
+                    {!canInitiatePayments && (
+                      <p className="text-xs text-gray-500">Only customer accounts can register UPI IDs.</p>
+                    )}
+                  </form>
+                </Form>
               </CardContent>
             </Card>
 
@@ -734,7 +812,7 @@ export default function PaymentsPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleUpiStatusToggle(upi.upiId, upi.status)}
-                            disabled={loading}
+                            disabled={loading || !canInitiatePayments}
                           >
                             <RefreshCcw className="h-4 w-4 mr-2" />
                             {upi.status === "ACTIVE" ? "Deactivate" : "Activate"}
@@ -750,5 +828,7 @@ export default function PaymentsPage() {
         </TabsContent>
       </Tabs>
     </PageWrapper>
+    </>
   );
+  
 }

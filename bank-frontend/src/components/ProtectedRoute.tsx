@@ -1,6 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { ReactNode } from 'react';
+import { DashboardSkeleton } from '@/components/LoadingStates';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -13,10 +14,9 @@ export default function ProtectedRoute({ children, requiredRoles }: ProtectedRou
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
+      <div className="min-h-screen bg-background px-4 py-8">
+        <div className="mx-auto max-w-6xl">
+          <DashboardSkeleton />
         </div>
       </div>
     );

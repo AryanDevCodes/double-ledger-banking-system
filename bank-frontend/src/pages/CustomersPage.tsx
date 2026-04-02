@@ -1,5 +1,10 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import PageWrapper from "@/components/PageWrapper";
+import PageHeader from "@/components/PageHeader";
+import ExportMenu from "@/components/ExportMenu";
 import StatusBadge from "@/components/StatusBadge";
 import StatCard from "@/components/StatCard";
 import DataTableToolbar from "@/components/DataTableToolbar";
@@ -9,18 +14,33 @@ import { exportToCSV, exportToExcel, exportToPDF } from "@/lib/export";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Users, Download, MoreHorizontal, Eye, Pencil, RefreshCw, FileText, FileSpreadsheet, ShieldCheck, UserCheck } from "lucide-react";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { TableSkeleton } from "@/components/LoadingStates";
+import { Plus, Users, MoreHorizontal, Eye, Pencil, RefreshCw, ShieldCheck, UserCheck } from "lucide-react";
 import type { CustomerResponseDTO } from "@/types/api";
 import { toast } from "sonner";
+
+const customerSchema = z.object({
+  fullName: z.string().min(2, "Full name is required"),
+  email: z.string().email("Enter a valid email"),
+  phoneNumber: z.string().min(7, "Phone number is required"),
+  address: z.string().optional(),
+  age: z
+    .string()
+    .optional()
+    .refine((value) => !value || (!isNaN(Number(value)) && Number(value) >= 0 && Number(value) <= 120), {
+      message: "Enter a valid age",
+    }),
+});
+
+type CustomerValues = z.infer<typeof customerSchema>;
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<CustomerResponseDTO[]>([]);
@@ -32,7 +52,16 @@ export default function CustomersPage() {
   });
   const [open, setOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<CustomerResponseDTO | null>(null);
-  const [form, setForm] = useState({ fullName: "", email: "", phoneNumber: "", address: "", age: "" });
+  const form = useForm<CustomerValues>({
+    resolver: zodResolver(customerSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      phoneNumber: "",
+      address: "",
+      age: "",
+    },
+  });
 
   useEffect(() => {
     loadCustomers();
@@ -64,16 +93,11 @@ export default function CustomersPage() {
   });
 
   const resetForm = () => {
-    setForm({ fullName: "", email: "", phoneNumber: "", address: "", age: "" });
+    form.reset({ fullName: "", email: "", phoneNumber: "", address: "", age: "" });
     setEditingCustomer(null);
   };
 
-  const handleAdd = async () => {
-    if (!form.fullName || !form.email || !form.phoneNumber) {
-      toast.error("Please fill all required fields");
-      return;
-    }
-    
+  const handleSubmit = async (values: CustomerValues) => {
     try {
       if (editingCustomer) {
         await customerApi.update(
@@ -81,11 +105,11 @@ export default function CustomersPage() {
           editingCustomer.email,
           editingCustomer.phoneNumber,
           {
-            fullName: form.fullName,
-            email: form.email,
-            phoneNumber: form.phoneNumber,
-            address: form.address || undefined,
-            age: form.age ? parseInt(form.age) : undefined,
+            fullName: values.fullName,
+            email: values.email,
+            phoneNumber: values.phoneNumber,
+            address: values.address || undefined,
+            age: values.age ? parseInt(values.age) : undefined,
           }
         );
         toast.success("Customer updated successfully");
@@ -104,7 +128,7 @@ export default function CustomersPage() {
 
   const handleEdit = (customer: CustomerResponseDTO) => {
     setEditingCustomer(customer);
-    setForm({
+    form.reset({
       fullName: customer.fullName,
       email: customer.email,
       phoneNumber: customer.phoneNumber,
@@ -155,63 +179,105 @@ export default function CustomersPage() {
 
   return (
     <PageWrapper>
-      <div className="page-header flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="page-title flex items-center gap-2">
-            <Users className="h-6 w-6" />
-            Customers
-          </h1>
-          <p className="page-subtitle">Customer lifecycle management</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={loadCustomers} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleExport("csv")}>
-                <FileText className="h-4 w-4 mr-2" /> Export as CSV
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExport("excel")}>
-                <FileSpreadsheet className="h-4 w-4 mr-2" /> Export as Excel
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleExport("pdf")}>
-                <FileText className="h-4 w-4 mr-2" /> Export as PDF
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm(); }}>
-            <DialogTrigger asChild>
-              <Button><Plus className="h-4 w-4 mr-2" /> Add Customer</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{editingCustomer ? "Edit Customer" : "Add New Customer"}</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-2">
-                {([ ["fullName", "Full Name *"], ["email", "Email *"], ["phoneNumber", "Phone *"], ["address", "Address"], ["age", "Age"] ] as const).map(([field, label]) => (
-                  <div key={field} className="space-y-1.5">
-                    <Label>{label}</Label>
-                    <Input value={form[field]} onChange={(e) => setForm({ ...form, [field]: e.target.value })} type={field === "age" ? "number" : "text"} />
-                  </div>
-                ))}
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => { setOpen(false); resetForm(); }}>Cancel</Button>
-                <Button onClick={handleAdd}>{editingCustomer ? "Save Changes" : "Create Customer"}</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
+      <PageHeader
+        title="Customers"
+        subtitle="Customer lifecycle management"
+        icon={<Users className="h-5 w-5" />}
+        actions={
+          <>
+            <Button variant="outline" size="sm" onClick={loadCustomers} disabled={loading}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+            <ExportMenu onExport={handleExport} disabled={loading || filtered.length === 0} />
+            <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm(); }}>
+              <DialogTrigger asChild>
+                <Button><Plus className="h-4 w-4 mr-2" /> Add Customer</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{editingCustomer ? "Edit Customer" : "Add New Customer"}</DialogTitle>
+                </DialogHeader>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-4 py-2">
+                  <FormField
+                    control={form.control}
+                    name="fullName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Full Name *</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email *</FormLabel>
+                        <FormControl>
+                          <Input type="email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="phoneNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone *</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Address</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="age"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Age</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => { setOpen(false); resetForm(); }}>Cancel</Button>
+                    <Button type="submit" disabled={form.formState.isSubmitting}>
+                      {form.formState.isSubmitting ? "Saving..." : editingCustomer ? "Save Changes" : "Create Customer"}
+                    </Button>
+                  </DialogFooter>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+          </>
+        }
+      />
 
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard
@@ -250,7 +316,9 @@ export default function CustomersPage() {
           />
         </div>
         
-        {filtered.length === 0 ? (
+        {loading ? (
+          <TableSkeleton columns={7} rows={6} className="p-2" />
+        ) : filtered.length === 0 ? (
           <EmptyState 
             type={search || Object.values(activeFilters).some(Boolean) ? "search" : "customers"} 
             action={!search ? { label: "Add Customer", onClick: () => setOpen(true) } : undefined}

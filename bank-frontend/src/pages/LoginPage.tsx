@@ -1,107 +1,189 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building2, Lock, User } from 'lucide-react';
+import { Building2, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { useBrand } from '@/contexts/BrandContext';
+
+const loginSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters").max(50, "Username is too long"),
+  password: z
+    .string()
+    .max(100, "Password is too long")
+    .refine((value) => value.length === 0 || value.length >= 6, {
+      message: "Password must be at least 6 characters",
+    }),
+  remember: z.boolean().default(false),
+});
+
+type LoginValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
+  const { brandName } = useBrand();
   const navigate = useNavigate();
+  const isDevMode = import.meta.env.DEV;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    
+  const form = useForm<LoginValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+      remember: false,
+    },
+  });
+
+  useEffect(() => {
+    const rememberMe = localStorage.getItem("rememberMe") === "true";
+    const rememberedUsername = localStorage.getItem("rememberedUsername") || "";
+    if (rememberMe) {
+      form.setValue("remember", true);
+      form.setValue("username", rememberedUsername);
+    }
+  }, [form]);
+
+  const handleSubmit = async (values: LoginValues) => {
     try {
-      const needsPasswordChange = await login(username, password);
-      navigate(needsPasswordChange ? '/set-password' : '/dashboard');
+      const needsPasswordChange = await login(values.username, values.password || "");
+      if (values.remember) {
+        localStorage.setItem("rememberMe", "true");
+        localStorage.setItem("rememberedUsername", values.username);
+      } else {
+        localStorage.removeItem("rememberMe");
+        localStorage.removeItem("rememberedUsername");
+      }
+      navigate(needsPasswordChange ? "/set-password" : "/dashboard");
     } catch (error) {
       // Error handled in AuthContext
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <Card className="w-full max-w-md border-gray-200">
-        <CardHeader className="space-y-2 text-center border-b bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/50 p-4">
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
+      <Card className="w-full max-w-md border-border/60 bg-card/95 shadow-xl">
+        <CardHeader className="space-y-2 text-center border-b border-border/60 bg-muted/30">
           <div className="flex justify-center mb-2">
-            <div className="p-3 bg-teal-100 rounded-full">
-              <Building2 className="h-10 w-10 text-teal-600" />
+            <div className="p-3 bg-primary/15 rounded-full">
+              <Building2 className="h-10 w-10 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-gray-900">SecureBank Login</CardTitle>
-          <CardDescription className="text-sm text-gray-600">
+          <CardTitle className="text-2xl font-bold">{brandName} Login</CardTitle>
+          <CardDescription className="text-sm text-muted-foreground">
             Enter your credentials to access your account
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4 pt-6">
-            <div className="space-y-2">
-              <Label htmlFor="username" className="text-sm font-medium text-gray-700">
-                Username
-              </Label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder="Enter username"
-                  className="pl-10 border-gray-300"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required
-                  disabled={loading}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-                Password (leave blank if first login)
-              </Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter password"
-                  className="pl-10 border-gray-300"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading}
-                />
-              </div>
-            </div>
-            
-            <div className="bg-blue-50 border border-blue-200 rounded p-3 space-y-2">
-              <p className="text-xs font-semibold text-blue-900">Test Credentials:</p>
-              <div className="space-y-1 text-xs text-blue-800">
-                <p>Admin: <strong>admin</strong> / <strong>admin123</strong></p>
-                <p>Manager: <strong>manager</strong> / <strong>manager123</strong></p>
-                <p>User: <strong>user</strong> / <strong>user123</strong></p>
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4 border-t bg-gray-50 pt-6">
-            <Button
-              type="submit"
-              className="w-full bg-teal-600 hover:bg-teal-700"
-              disabled={loading}
-            >
-              {loading ? 'Signing in...' : 'Sign In'}
-            </Button>
-            <p className="text-xs text-center text-gray-600">
-              Need access? Contact your bank administrator.
-            </p>
-          </CardFooter>
-        </form>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)}>
+            <CardContent className="space-y-4 pt-6">
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Enter username"
+                          className="pl-10"
+                          autoComplete="username"
+                          autoFocus
+                          disabled={form.formState.isSubmitting}
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Enter password (optional for first login)"
+                          className="pl-10 pr-10"
+                          autoComplete="current-password"
+                          disabled={form.formState.isSubmitting}
+                          {...field}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-1 top-1/2 -translate-y-1/2"
+                          onClick={() => setShowPassword((prev) => !prev)}
+                          aria-label={showPassword ? "Hide password" : "Show password"}
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </FormControl>
+                    <FormDescription>Leave blank if this is your first login.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="remember"
+                render={({ field }) => (
+                  <FormItem className="flex items-center space-x-2">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={(checked) => field.onChange(checked === true)}
+                        disabled={form.formState.isSubmitting}
+                      />
+                    </FormControl>
+                    <FormLabel className="text-sm font-normal">Remember username</FormLabel>
+                  </FormItem>
+                )}
+              />
+
+              {isDevMode && (
+                <div className="bg-muted/50 border border-border rounded p-3 space-y-2">
+                  <p className="text-xs font-semibold text-foreground">Test Credentials:</p>
+                  <div className="space-y-1 text-xs text-muted-foreground">
+                    <p>Admin: <strong>admin</strong> / <strong>admin123</strong></p>
+                    <p>Manager: <strong>manager</strong> / <strong>manager123</strong></p>
+                    <p>User: <strong>user</strong> / <strong>user123</strong></p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+            <CardFooter className="flex flex-col space-y-4 border-t border-border/60 bg-muted/30 pt-6">
+              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? "Signing in..." : "Sign In"}
+              </Button>
+              <p className="text-xs text-center text-muted-foreground">
+                Need access? Contact your bank administrator.
+              </p>
+            </CardFooter>
+          </form>
+        </Form>
       </Card>
     </div>
   );

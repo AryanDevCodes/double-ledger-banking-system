@@ -35,7 +35,7 @@ public class TransactionController {
         return ResponseEntity.ok(transactionService.getAllTransactions(accountNumber, email));
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_USER')")
+    @PreAuthorize("hasRole('ROLE_USER')")
     @PostMapping
     public ResponseEntity<TransactionResponseDTO> createTransaction(
             @RequestBody TransactionRequestDTO transactionRequestDTO) {

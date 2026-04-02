@@ -8,15 +8,16 @@ interface StatCardProps {
   icon: ReactNode;
   trend?: { value: string; positive: boolean };
   className?: string;
+  compact?: boolean;
 }
 
-export default function StatCard({ title, value, subtitle, icon, trend, className }: StatCardProps) {
+export default function StatCard({ title, value, subtitle, icon, trend, className, compact = true }: StatCardProps) {
   return (
     <div className={cn("stat-card", className)}>
       <div className="flex items-start justify-between">
         <div className="space-y-1">
-          <p className="text-sm text-muted-foreground">{title}</p>
-          <p className="text-2xl font-bold tracking-tight">{value}</p>
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em]">{title}</p>
+          <p className={cn("font-semibold tracking-tight", compact ? "text-xl" : "text-2xl")}>{value}</p>
           {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
           {trend && (
             <p className={cn("text-xs font-medium", trend.positive ? "text-success" : "text-destructive")}>
@@ -24,7 +25,10 @@ export default function StatCard({ title, value, subtitle, icon, trend, classNam
             </p>
           )}
         </div>
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <div className={cn(
+          "flex shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20 shadow-sm",
+          compact ? "h-9 w-9" : "h-10 w-10"
+        )}>
           {icon}
         </div>
       </div>

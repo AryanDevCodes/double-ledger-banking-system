@@ -17,6 +17,9 @@ import com.bank.service.transaction.mapper.TransactionMapper;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -174,6 +177,8 @@ public class TransactionServiceIMPL implements TransactionService {
 
         Account senderRef = resolveSenderAccount(dto);
         Account receiverRef = resolveReceiverAccount(dto);
+
+        enforceSenderOwnership(senderRef);
 
         if (senderRef.getId().equals(receiverRef.getId())) {
             throw new InvalidDataException("Sender and receiver cannot be the same account");
@@ -363,5 +368,27 @@ public class TransactionServiceIMPL implements TransactionService {
         Account receiver = first.getId().equals(receiverId) ? first : second;
 
         return new LockedAccounts(sender, receiver);
+    }
+
+    private void enforceSenderOwnership(Account senderAccount) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AccessDeniedException("Authentication required to create transaction");
+        }
+
+        String principal = authentication.getName();
+        if (principal == null || principal.isBlank()) {
+            throw new AccessDeniedException("Authenticated principal is invalid");
+        }
+
+        String ownerUsername = senderAccount.getCustomer() != null && senderAccount.getCustomer().getUser() != null
+                ? senderAccount.getCustomer().getUser().getUsername()
+                : null;
+        String ownerEmail = senderAccount.getCustomer() != null ? senderAccount.getCustomer().getEmail() : null;
+
+        boolean isOwner = principal.equalsIgnoreCase(ownerUsername) || principal.equalsIgnoreCase(ownerEmail);
+        if (!isOwner) {
+            throw new AccessDeniedException("You can only transfer funds from your own account");
+        }
     }
 }

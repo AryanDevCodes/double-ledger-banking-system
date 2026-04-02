@@ -1,4 +1,5 @@
 import PageWrapper from "@/components/PageWrapper";
+import PageHeader from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -7,10 +8,11 @@ export default function AuditLogsPage() {
   return (
     <PageWrapper>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Audit Logs</h1>
-          <p className="text-muted-foreground">System activity and compliance tracking</p>
-        </div>
+        <PageHeader
+          title="Audit Logs"
+          subtitle="System activity and compliance tracking"
+          icon={<FileText className="h-5 w-5" />}
+        />
 
         <Alert>
           <AlertCircle className="h-4 w-4" />

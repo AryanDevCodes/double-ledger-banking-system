@@ -3,6 +3,7 @@ import { Building2, Users, CreditCard, ArrowLeftRight, Smartphone, TrendingUp, S
 import StatCard from "@/components/StatCard";
 import StatusBadge from "@/components/StatusBadge";
 import PageWrapper from "@/components/PageWrapper";
+import PageHeader from "@/components/PageHeader";
 import { bankApi, customerApi, accountApi, upiApi, transactionApi } from "@/lib/api-client";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -13,7 +14,31 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROLES } from "@/lib/rbac";
+import { StatCardSkeleton, TableSkeleton } from "@/components/LoadingStates";
 import type { BankResponseDTO, CustomerResponseDTO, AccountResponseDTO, UpiProfileResponseDTO, TransactionResponseDTO } from "@/types/api";
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  Legend,
+} from "recharts";
+
+type DashboardTransaction = TransactionResponseDTO & {
+  transactionType?: string;
+  timestamp?: string;
+  id?: string | number;
+  fromAccountNumber?: string;
+  toAccountNumber?: string;
+};
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -21,7 +46,7 @@ export default function Dashboard() {
   const [customers, setCustomers] = useState<CustomerResponseDTO[]>([]);
   const [accounts, setAccounts] = useState<AccountResponseDTO[]>([]);
   const [upiProfiles, setUpiProfiles] = useState<UpiProfileResponseDTO[]>([]);
-  const [transactions, setTransactions] = useState<TransactionResponseDTO[]>([]);
+  const [transactions, setTransactions] = useState<DashboardTransaction[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -99,6 +124,7 @@ export default function Dashboard() {
     !roles.includes(ROLES.MANAGER) &&
     !roles.includes(ROLES.CUSTOMER_MANAGER) &&
     !roles.includes(ROLES.AUDITOR);
+  const locale = typeof navigator !== "undefined" ? navigator.language : "en-US";
 
   const upiByAccount = new Map<string, string[]>();
   upiProfiles.forEach((profile) => {
@@ -107,6 +133,43 @@ export default function Dashboard() {
     }
     upiByAccount.get(profile.accountNumber)?.push(profile.upiId);
   });
+
+  const monthlyTransactionData = (() => {
+    const monthMap = new Map<string, { month: string; volume: number; count: number }>();
+    transactions.forEach((txn) => {
+      const rawDate = txn.transactionDate || txn.timestamp;
+      if (!rawDate) return;
+      const dt = new Date(rawDate);
+      if (Number.isNaN(dt.getTime())) return;
+      const key = `${dt.getFullYear()}-${dt.getMonth()}`;
+      const label = dt.toLocaleString(locale, { month: "short" });
+      const current = monthMap.get(key) || { month: label, volume: 0, count: 0 };
+      current.volume += txn.amount || 0;
+      current.count += 1;
+      monthMap.set(key, current);
+    });
+
+    return Array.from(monthMap.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .slice(-6)
+      .map(([, value]) => value);
+  })();
+
+  const statusDistributionData = [
+    { name: "Success", value: transactions.filter((t) => t.status === "SUCCESS" || t.status === "COMPLETED").length, color: "hsl(var(--success))" },
+    { name: "Pending", value: transactions.filter((t) => t.status === "PENDING" || t.status === "PROCESSING").length, color: "hsl(var(--warning))" },
+    { name: "Failed", value: transactions.filter((t) => t.status === "FAILED").length, color: "hsl(var(--destructive))" },
+  ].filter((item) => item.value > 0);
+
+  const bankDistributionData = Array.from(
+    accounts.reduce((acc, item) => {
+      acc.set(item.bankName, (acc.get(item.bankName) || 0) + 1);
+      return acc;
+    }, new Map<string, number>())
+  )
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([bank, count]) => ({ bank, accounts: count }));
 
   const formatParty = (name: string | undefined, accountNumber: string) => {
     const upiIds = upiByAccount.get(accountNumber) || [];
@@ -121,38 +184,33 @@ export default function Dashboard() {
 
   return (
     <PageWrapper>
-      <div className="page-header flex items-center justify-between">
-        <div>
-          <h1 className="page-title">Dashboard</h1>
-          <p className="page-subtitle">
-            {isCustomer
-              ? "Your account summary and recent activity"
-              : isAuditor
-                ? "Compliance insights and risk overview"
-                : "Real-time overview of the banking system"}
-          </p>
-        </div>
-        <div className="flex gap-2">
+      <PageHeader
+        title="Dashboard"
+        subtitle={
+          isCustomer
+            ? "Your account summary and recent activity"
+            : isAuditor
+              ? "Compliance insights and risk overview"
+              : "Real-time overview of the banking system"
+        }
+        icon={<TrendingUp className="h-5 w-5" />}
+        actions={
           <Button variant="outline" size="sm" onClick={loadData} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Stats */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="glass-card p-5">
-              <Skeleton className="h-4 w-20 mb-3" />
-              <Skeleton className="h-8 w-16 mb-2" />
-              <Skeleton className="h-3 w-24" />
-            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <StatCardSkeleton key={i} />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
           {isCustomer ? (
             <>
               <StatCard
@@ -181,8 +239,8 @@ export default function Dashboard() {
                 title="Total Sent"
                 value={formatCurrency(
                   transactions
-                    .filter((t: any) => (t.transactionType || "TRANSFER") !== "CREDIT")
-                    .reduce((sum, t: any) => sum + t.amount, 0)
+                    .filter((t) => (t.transactionType || "TRANSFER") !== "CREDIT")
+                    .reduce((sum, t) => sum + t.amount, 0)
                 )}
                 icon={<TrendingUp className="h-5 w-5" />}
               />
@@ -190,8 +248,8 @@ export default function Dashboard() {
                 title="Total Received"
                 value={formatCurrency(
                   transactions
-                    .filter((t: any) => (t.transactionType || "TRANSFER") === "CREDIT")
-                    .reduce((sum, t: any) => sum + t.amount, 0)
+                    .filter((t) => (t.transactionType || "TRANSFER") === "CREDIT")
+                    .reduce((sum, t) => sum + t.amount, 0)
                 )}
                 icon={<Activity className="h-5 w-5" />}
               />
@@ -238,13 +296,141 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Analytics */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-6">
+        <div className="glass-card p-4 xl:col-span-2">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold">Transaction Volume (Last 6 Months)</h3>
+            <span className="text-xs text-muted-foreground">Trend</span>
+          </div>
+          <div className="h-[260px]">
+            {loading ? (
+              <div className="space-y-3 p-2">
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-[210px] w-full" />
+              </div>
+            ) : monthlyTransactionData.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
+                No transaction trend data available
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={monthlyTransactionData} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="txnVolumeFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.35} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.04} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip
+                    formatter={(value: number) => [formatCurrency(value), "Volume"]}
+                    contentStyle={{
+                      borderRadius: "10px",
+                      border: "1px solid hsl(var(--border))",
+                      backgroundColor: "hsl(var(--card))",
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="volume"
+                    stroke="hsl(var(--primary))"
+                    fill="url(#txnVolumeFill)"
+                    strokeWidth={2.2}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+
+        <div className="glass-card p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold">Transaction Health</h3>
+            <span className="text-xs text-muted-foreground">Status</span>
+          </div>
+          <div className="h-[260px]">
+            {loading ? (
+              <div className="space-y-3 p-2">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-[210px] w-full" />
+              </div>
+            ) : statusDistributionData.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-sm text-muted-foreground">No data</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={statusDistributionData}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={54}
+                    outerRadius={84}
+                    paddingAngle={4}
+                  >
+                    {statusDistributionData.map((entry) => (
+                      <Cell key={entry.name} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: "10px",
+                      border: "1px solid hsl(var(--border))",
+                      backgroundColor: "hsl(var(--card))",
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {!isCustomer && (
+        <div className="glass-card p-4 mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold">Top Banks by Account Count</h3>
+            <span className="text-xs text-muted-foreground">Distribution</span>
+          </div>
+          <div className="h-[250px]">
+            {loading ? (
+              <Skeleton className="h-full w-full" />
+            ) : bankDistributionData.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
+                No bank distribution data available
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={bankDistributionData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="bank" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip
+                    formatter={(value: number) => [value, "Accounts"]}
+                    contentStyle={{
+                      borderRadius: "10px",
+                      border: "1px solid hsl(var(--border))",
+                      backgroundColor: "hsl(var(--card))",
+                    }}
+                  />
+                  <Bar dataKey="accounts" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+      )}
+
 
       {/* Alerts & Compliance Row */}
       {!isCustomer && (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         {/* Compliance Quick Stats */}
-        <div className="glass-card p-6 hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between mb-6">
+        <div className="glass-card p-5 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-emerald-500" />
               Compliance Status
@@ -268,13 +454,13 @@ export default function Dashboard() {
                 </div>
                 <Progress value={kycCompliance} className="h-2" />
               </div>
-              <div className="grid grid-cols-2 gap-4 pt-2">
-                <div className="p-4 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950 dark:to-emerald-900 rounded-lg">
-                  <p className="text-2xl font-bold text-emerald-600">{customers.filter(c => c.kycStatus === "COMPLETED").length}</p>
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <div className="p-3.5 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950 dark:to-emerald-900 rounded-lg">
+                  <p className="text-xl font-bold text-emerald-600">{customers.filter(c => c.kycStatus === "COMPLETED").length}</p>
                   <p className="text-xs text-muted-foreground mt-1">Verified KYC</p>
                 </div>
-                <div className="p-4 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900 rounded-lg">
-                  <p className="text-2xl font-bold text-amber-600">{pendingKyc}</p>
+                <div className="p-3.5 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900 rounded-lg">
+                  <p className="text-xl font-bold text-amber-600">{pendingKyc}</p>
                   <p className="text-xs text-muted-foreground mt-1">Pending Reviews</p>
                 </div>
               </div>
@@ -283,8 +469,8 @@ export default function Dashboard() {
         </div>
 
         {/* Alerts */}
-        <div className="glass-card p-6 hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between mb-6">
+        <div className="glass-card p-5 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-amber-500" />
               System Alerts
@@ -331,19 +517,15 @@ export default function Dashboard() {
 
 
       {/* Recent Accounts / My Accounts */}
-      <div className="glass-card hover:shadow-lg transition-shadow">
-        <div className="p-5 border-b border-border flex items-center justify-between bg-gradient-to-r from-primary/5 to-transparent">
-          <h2 className="text-lg font-semibold">{isCustomer ? "My Accounts" : "Recent Accounts"}</h2>
+      <div className="glass-card hover:shadow-md transition-shadow">
+        <div className="p-4 border-b border-border flex items-center justify-between bg-gradient-to-r from-primary/5 to-transparent">
+          <h2 className="text-base font-semibold">{isCustomer ? "My Accounts" : "Recent Accounts"}</h2>
           <Button variant="ghost" size="sm" asChild>
             <Link to="/accounts">{isCustomer ? "Manage Accounts" : "View All Accounts"}</Link>
           </Button>
         </div>
         {loading ? (
-          <div className="p-4 space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full" />
-            ))}
-          </div>
+          <TableSkeleton columns={5} rows={5} />
         ) : accounts.length === 0 ? (
           <div className="p-12 text-center text-muted-foreground">
             <CreditCard className="h-12 w-12 mx-auto mb-3 opacity-50" />
@@ -378,22 +560,18 @@ export default function Dashboard() {
       </div>
 
       {/* Recent Activity */}
-      <div className="glass-card hover:shadow-lg transition-shadow mt-6">
-        <div className="p-5 border-b border-border flex items-center justify-between bg-gradient-to-r from-primary/5 to-transparent">
+      <div className="glass-card hover:shadow-md transition-shadow mt-5">
+        <div className="p-4 border-b border-border flex items-center justify-between bg-gradient-to-r from-primary/5 to-transparent">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-            <h2 className="text-lg font-semibold">Recent Activity</h2>
+            <h2 className="text-base font-semibold">Recent Activity</h2>
           </div>
           <Button variant="ghost" size="sm" asChild>
             <Link to="/transactions">View All Transactions</Link>
           </Button>
         </div>
         {loading ? (
-          <div className="p-4 space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full" />
-            ))}
-          </div>
+          <TableSkeleton columns={5} rows={5} />
         ) : transactions.length === 0 ? (
           <div className="p-12 text-center text-muted-foreground">
             <ArrowLeftRight className="h-12 w-12 mx-auto mb-3 opacity-50" />
@@ -411,7 +589,7 @@ export default function Dashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {transactions.slice(0, 6).map((txn: any) => {
+              {transactions.slice(0, 6).map((txn) => {
                 const dateValue = txn.transactionDate || txn.timestamp;
                 const fromAccount = txn.senderAccountNumber || txn.fromAccountNumber || "-";
                 const toAccount = txn.receiverAccountNumber || txn.toAccountNumber || "-";

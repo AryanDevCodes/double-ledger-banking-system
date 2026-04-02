@@ -1,5 +1,10 @@
-import { useState, useEffect } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import PageWrapper from "@/components/PageWrapper";
+import PageHeader from "@/components/PageHeader";
+import ExportMenu from "@/components/ExportMenu";
 import StatusBadge from "@/components/StatusBadge";
 import StatCard from "@/components/StatCard";
 import DataTableToolbar from "@/components/DataTableToolbar";
@@ -9,47 +14,71 @@ import { formatCurrency, formatDateTime } from "@/lib/format";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { StatCardSkeleton, TableSkeleton } from "@/components/LoadingStates";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Plus, ArrowRight, RefreshCw, AlertTriangle, CheckCircle2, Download, FileSpreadsheet, FileText, Receipt, TrendingUp, CheckCircle } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import type { TransactionResponseDTO, AccountResponseDTO } from "@/types/api";
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle2,
+  Plus,
+  Receipt,
+  RefreshCw,
+  TrendingUp,
+} from "lucide-react";
+import type { AccountResponseDTO, TransactionResponseDTO } from "@/types/api";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { ROLES } from "@/lib/rbac";
+
+const transferSchema = z
+  .object({
+    senderAccount: z.string().min(1, "Sender account is required"),
+    receiverAccount: z.string().min(1, "Receiver account is required"),
+    amount: z
+      .string()
+      .min(1, "Amount is required")
+      .refine((value) => !Number.isNaN(Number(value)) && Number(value) > 0, "Amount must be greater than 0")
+      .refine((value) => Number(value) <= 10000000, "Amount cannot exceed ₹10,000,000"),
+  })
+  .refine((data) => data.senderAccount !== data.receiverAccount, {
+    message: "Sender and receiver cannot be the same",
+    path: ["receiverAccount"],
+  });
+
+type TransferValues = z.infer<typeof transferSchema>;
 
 export default function TransactionsPage() {
+  const { user } = useAuth();
+  const canCreateTransfer = (user?.roles || []).includes(ROLES.USER);
   const [transactions, setTransactions] = useState<TransactionResponseDTO[]>([]);
   const [accounts, setAccounts] = useState<AccountResponseDTO[]>([]);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   const [search, setSearch] = useState("");
   const [activeFilters, setActiveFilters] = useState<Record<string, string | Date | undefined>>({
     status: undefined,
     date: undefined,
   });
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ senderAccount: "", receiverAccount: "", amount: "" });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState<number>(() => {
+    if (typeof window === "undefined") return 10;
+    const saved = Number(localStorage.getItem("sb.transactions.rowsPerPage") || "10");
+    return [10, 20, 50].includes(saved) ? saved : 10;
+  });
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const form = useForm<TransferValues>({
+    resolver: zodResolver(transferSchema),
+    defaultValues: { senderAccount: "", receiverAccount: "", amount: "" },
+  });
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [transactionsData, accountsData] = await Promise.all([
-        transactionApi.getAll(),
-        accountApi.getAll()
-      ]);
+      const [transactionsData, accountsData] = await Promise.all([transactionApi.getAll(), accountApi.getAll()]);
       setTransactions(transactionsData);
       setAccounts(accountsData);
     } catch (error) {
@@ -60,98 +89,117 @@ export default function TransactionsPage() {
     }
   };
 
+  useEffect(() => {
+    loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const senderAccountNumber = form.watch("senderAccount");
+  const receiverAccountNumber = form.watch("receiverAccount");
+  const amountString = form.watch("amount");
+
+  const senderAccount = useMemo(
+    () => (senderAccountNumber ? accounts.find((a) => a.accountNumber === senderAccountNumber) ?? null : null),
+    [accounts, senderAccountNumber]
+  );
+  const receiverAccount = useMemo(
+    () => (receiverAccountNumber ? accounts.find((a) => a.accountNumber === receiverAccountNumber) ?? null : null),
+    [accounts, receiverAccountNumber]
+  );
+
   const searchTerm = search.trim().toLowerCase();
-  const filtered = transactions.filter((t) => {
-    const matchesSearch =
-      !searchTerm ||
-      t.senderName?.toLowerCase().includes(searchTerm) ||
-      t.receiverName?.toLowerCase().includes(searchTerm) ||
-      t.senderAccountNumber?.toLowerCase().includes(searchTerm) ||
-      t.receiverAccountNumber?.toLowerCase().includes(searchTerm) ||
-      String(t.transactionId).includes(searchTerm);
-    const matchesStatus = !activeFilters.status || t.status === activeFilters.status;
-    const filterDate = activeFilters.date as Date | undefined;
-    const matchesDate = !filterDate
-      ? true
-      : new Date(t.transactionDate).toDateString() === filterDate.toDateString();
-    return matchesSearch && matchesStatus && matchesDate;
-  });
+  const filtered = useMemo(() => {
+    return transactions.filter((t) => {
+      const matchesSearch =
+        !searchTerm ||
+        t.senderName?.toLowerCase().includes(searchTerm) ||
+        t.receiverName?.toLowerCase().includes(searchTerm) ||
+        t.senderAccountNumber?.toLowerCase().includes(searchTerm) ||
+        t.receiverAccountNumber?.toLowerCase().includes(searchTerm) ||
+        String(t.transactionId).includes(searchTerm);
 
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!form.senderAccount) {
-      newErrors.senderAccount = "Sender account is required";
-    }
-    if (!form.receiverAccount) {
-      newErrors.receiverAccount = "Receiver account is required";
-    }
-    if (form.senderAccount && form.receiverAccount && form.senderAccount === form.receiverAccount) {
-      newErrors.receiverAccount = "Sender and receiver cannot be the same";
-    }
-    if (!form.amount) {
-      newErrors.amount = "Amount is required";
-    } else {
-      const amount = parseFloat(form.amount);
-      if (isNaN(amount) || amount <= 0) {
-        newErrors.amount = "Amount must be greater than 0";
-      } else if (amount > 10000000) {
-        newErrors.amount = "Amount cannot exceed ₹10,000,000";
-      }
-      
-      // Check sender balance
-      if (form.senderAccount) {
-        const sender = accounts.find(a => a.accountNumber === form.senderAccount);
-        if (sender && amount > sender.balance) {
-          newErrors.amount = `Insufficient balance (Available: ${formatCurrency(sender.balance)})`;
-        }
-      }
-    }
+      const matchesStatus = !activeFilters.status || t.status === activeFilters.status;
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+      const filterDate = activeFilters.date as Date | undefined;
+      const dateValue = t.transactionDate;
+      const matchesDate =
+        !filterDate || !dateValue ? true : new Date(dateValue).toDateString() === filterDate.toDateString();
 
-  const handleAdd = async () => {
-    if (!validateForm()) {
+      return matchesSearch && matchesStatus && matchesDate;
+    });
+  }, [transactions, searchTerm, activeFilters]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / rowsPerPage));
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, activeFilters.status, activeFilters.date, rowsPerPage]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("sb.transactions.rowsPerPage", String(rowsPerPage));
+    }
+  }, [rowsPerPage]);
+
+  const paginatedTransactions = useMemo(() => {
+    const start = (currentPage - 1) * rowsPerPage;
+    return filtered.slice(start, start + rowsPerPage);
+  }, [filtered, currentPage, rowsPerPage]);
+
+  const statusOptions = useMemo(() => {
+    return Array.from(new Set(transactions.map((t) => t.status).filter(Boolean))).map((v) => ({
+      label: v,
+      value: v,
+    }));
+  }, [transactions]);
+
+  const totalVolume = useMemo(() => transactions.reduce((sum, t) => sum + t.amount, 0), [transactions]);
+  const successCount = useMemo(
+    () => transactions.filter((t) => t.status === "SUCCESS" || t.status === "COMPLETED").length,
+    [transactions]
+  );
+  const successRate = transactions.length ? Math.round((successCount / transactions.length) * 100) : 0;
+  const avgAmount = transactions.length ? totalVolume / transactions.length : 0;
+  const rangeStart = filtered.length === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1;
+  const rangeEnd = Math.min(currentPage * rowsPerPage, filtered.length);
+
+  const handleAdd = async (values: TransferValues) => {
+    const sender = accounts.find((a) => a.accountNumber === values.senderAccount);
+    const receiver = accounts.find((a) => a.accountNumber === values.receiverAccount);
+    const amount = parseFloat(values.amount);
+
+    if (sender && amount > sender.balance) {
+      form.setError("amount", {
+        type: "validate",
+        message: `Insufficient balance (Available: ${formatCurrency(sender.balance)})`,
+      });
       return;
     }
 
-    const sender = accounts.find((a) => a.accountNumber === form.senderAccount);
-    const receiver = accounts.find((a) => a.accountNumber === form.receiverAccount);
-
     try {
-      setSubmitting(true);
       await transactionApi.create({
-        senderAccount: form.senderAccount,
-        receiverAccount: form.receiverAccount,
-        amount: parseFloat(form.amount),
+        senderAccount: values.senderAccount,
+        receiverAccount: values.receiverAccount,
+        amount,
         senderBankName: sender?.bankName,
         receiverBankName: receiver?.bankName,
       });
-      setForm({ senderAccount: "", receiverAccount: "", amount: "" });
-      setErrors({});
-      setOpen(false);
       toast.success("Transaction completed successfully");
-      loadData(); // Refresh to get updated data
-    } catch (error: any) {
-      toast.error(error?.message || "Transaction failed");
+      form.reset();
+      setOpen(false);
+      await loadData();
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Transaction failed";
+      toast.error(message);
       console.error(error);
-    } finally {
-      setSubmitting(false);
     }
   };
-
-  const senderAccount = form.senderAccount ? accounts.find(a => a.accountNumber === form.senderAccount) : null;
-  const receiverAccount = form.receiverAccount ? accounts.find(a => a.accountNumber === form.receiverAccount) : null;
-  const totalVolume = transactions.reduce((sum, t) => sum + t.amount, 0);
-  const successCount = transactions.filter((t) => t.status === "SUCCESS").length;
-  const successRate = transactions.length ? Math.round((successCount / transactions.length) * 100) : 0;
-  const avgAmount = transactions.length ? totalVolume / transactions.length : 0;
-  const statusOptions = Array.from(new Set(transactions.map((t) => t.status).filter(Boolean))).map((v) => ({
-    label: v,
-    value: v,
-  }));
 
   const handleExport = (format: "csv" | "excel" | "pdf") => {
     try {
@@ -163,16 +211,21 @@ export default function TransactionsPage() {
         "Receiver Account": t.receiverAccountNumber,
         Amount: t.amount,
         Status: t.status,
-        Date: formatDateTime(t.transactionDate),
+        Date: t.transactionDate ? formatDateTime(t.transactionDate) : "-",
       }));
 
       if (format === "csv") {
         exportToCSV(exportData, `transactions-${new Date().toISOString().split("T")[0]}.csv`);
       } else if (format === "excel") {
-        exportToExcel(exportData, `transactions-${new Date().toISOString().split("T")[0]}.xlsx`, "Transactions");
+        exportToExcel(
+          exportData,
+          `transactions-${new Date().toISOString().split("T")[0]}.xlsx`,
+          "Transactions"
+        );
       } else {
         exportToPDF(exportData, "Transactions Report");
       }
+
       toast.success(`Exported ${filtered.length} transactions to ${format.toUpperCase()}`);
     } catch (error) {
       toast.error("Failed to export transactions");
@@ -182,213 +235,196 @@ export default function TransactionsPage() {
 
   return (
     <PageWrapper>
-      <div className="page-header flex items-center justify-between">
-        <div>
-          <h1 className="page-title">Transactions</h1>
-          <p className="page-subtitle">Real-time transaction history and transfers</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={loadData} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleExport("csv")}>
-                <FileText className="h-4 w-4 mr-2" /> Export as CSV
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExport("excel")}>
-                <FileSpreadsheet className="h-4 w-4 mr-2" /> Export as Excel
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleExport("pdf")}>
-                <FileText className="h-4 w-4 mr-2" /> Export as PDF
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Dialog open={open} onOpenChange={(isOpen) => {
-            setOpen(isOpen);
-            if (!isOpen) {
-              setForm({ senderAccount: "", receiverAccount: "", amount: "" });
-              setErrors({});
-            }
-          }}>
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600">
-                <Plus className="h-4 w-4 mr-2" /> New Transfer
-              </Button>
-            </DialogTrigger>
+      <PageHeader
+        title="Transactions"
+        subtitle="Real-time transaction history and transfers"
+        icon={<Receipt className="h-5 w-5" />}
+        actions={
+          <>
+            <Button variant="outline" size="sm" onClick={loadData} disabled={loading}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+            <ExportMenu onExport={handleExport} disabled={loading || filtered.length === 0} />
+            {canCreateTransfer && (
+            <Dialog
+              open={open}
+              onOpenChange={(isOpen) => {
+                setOpen(isOpen);
+                if (!isOpen) form.reset();
+              }}
+            >
+              <DialogTrigger asChild>
+                <Button className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600">
+                  <Plus className="h-4 w-4 mr-2" /> New Transfer
+                </Button>
+              </DialogTrigger>
+
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Create Transaction</DialogTitle>
               </DialogHeader>
-              <div className="grid gap-6 py-4">
-                {/* Sender Account */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Sender Account *</Label>
-                  <Select 
-                    value={form.senderAccount} 
-                    onValueChange={(v) => {
-                      setForm({ ...form, senderAccount: v });
-                      setErrors({ ...errors, senderAccount: "" });
-                    }}
-                  >
-                    <SelectTrigger className={errors.senderAccount ? "border-destructive" : ""}>
-                      <SelectValue placeholder="Select sender account" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {accounts.filter(a => a.status === "ACTIVE" && a.balance > 0).map((a) => (
-                        <SelectItem key={a.accountNumber} value={a.accountNumber}>
-                          <div className="flex items-center justify-between gap-4">
-                            <span className="font-mono text-xs">{a.accountNumber}</span>
-                            <span className="text-muted-foreground">—</span>
-                            <span>{a.customerName}</span>
-                            <span className="text-muted-foreground">—</span>
-                            <span className="font-semibold text-emerald-600">{formatCurrency(a.balance)}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.senderAccount && (
-                    <p className="text-xs text-destructive flex items-center gap-1">
-                      <AlertTriangle className="h-3 w-3" />
-                      {errors.senderAccount}
-                    </p>
-                  )}
-                  {senderAccount && (
-                    <Alert className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
-                      <AlertDescription className="text-xs">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div><span className="text-muted-foreground">Customer:</span> <span className="font-medium">{senderAccount.customerName}</span></div>
-                          <div><span className="text-muted-foreground">Bank:</span> <span className="font-medium">{senderAccount.bankName}</span></div>
-                          <div><span className="text-muted-foreground">Balance:</span> <span className="font-semibold text-emerald-600">{formatCurrency(senderAccount.balance)}</span></div>
-                          <div><span className="text-muted-foreground">Status:</span> <StatusBadge status={senderAccount.status} /></div>
-                        </div>
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                </div>
 
-                {/* Receiver Account */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Receiver Account *</Label>
-                  <Select 
-                    value={form.receiverAccount} 
-                    onValueChange={(v) => {
-                      setForm({ ...form, receiverAccount: v });
-                      setErrors({ ...errors, receiverAccount: "" });
-                    }}
-                  >
-                    <SelectTrigger className={errors.receiverAccount ? "border-destructive" : ""}>
-                      <SelectValue placeholder="Select receiver account" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {accounts.filter(a => a.status === "ACTIVE" && a.accountNumber !== form.senderAccount).map((a) => (
-                        <SelectItem key={a.accountNumber} value={a.accountNumber}>
-                          <div className="flex items-center gap-3">
-                            <span className="font-mono text-xs">{a.accountNumber}</span>
-                            <span className="text-muted-foreground">—</span>
-                            <span>{a.customerName}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.receiverAccount && (
-                    <p className="text-xs text-destructive flex items-center gap-1">
-                      <AlertTriangle className="h-3 w-3" />
-                      {errors.receiverAccount}
-                    </p>
-                  )}
-                  {receiverAccount && (
-                    <Alert className="bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800">
-                      <AlertDescription className="text-xs">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div><span className="text-muted-foreground">Customer:</span> <span className="font-medium">{receiverAccount.customerName}</span></div>
-                          <div><span className="text-muted-foreground">Bank:</span> <span className="font-medium">{receiverAccount.bankName}</span></div>
-                        </div>
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                </div>
-
-                {/* Amount */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Amount (₹) *</Label>
-                  <Input 
-                    type="number" 
-                    placeholder="Enter amount" 
-                    value={form.amount} 
-                    onChange={(e) => {
-                      setForm({ ...form, amount: e.target.value });
-                      setErrors({ ...errors, amount: "" });
-                    }}
-                    className={errors.amount ? "border-destructive" : ""}
-                    min="0.01"
-                    step="0.01"
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleAdd)} className="grid gap-6 py-4">
+                  <FormField
+                    control={form.control}
+                    name="senderAccount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Sender Account *</FormLabel>
+                        <FormControl>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <SelectTrigger className={form.formState.errors.senderAccount ? "border-destructive" : ""}>
+                              <SelectValue placeholder="Select sender account" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {accounts
+                                .filter((a) => a.status === "ACTIVE" && a.balance > 0)
+                                .map((a) => (
+                                  <SelectItem key={a.accountNumber} value={a.accountNumber}>
+                                    <div className="flex items-center justify-between gap-4">
+                                      <span className="font-mono text-xs">{a.accountNumber}</span>
+                                      <span className="text-muted-foreground">—</span>
+                                      <span>{a.customerName}</span>
+                                      <span className="text-muted-foreground">—</span>
+                                      <span className="font-semibold text-emerald-600">{formatCurrency(a.balance)}</span>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                  {errors.amount && (
-                    <p className="text-xs text-destructive flex items-center gap-1">
-                      <AlertTriangle className="h-3 w-3" />
-                      {errors.amount}
-                    </p>
-                  )}
-                  {form.amount && !errors.amount && parseFloat(form.amount) > 0 && (
-                    <Alert className="bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                      <AlertDescription className="text-xs">
-                        Transfer amount: <span className="font-bold text-emerald-600">{formatCurrency(parseFloat(form.amount))}</span>
+
+                  <FormField
+                    control={form.control}
+                    name="receiverAccount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Receiver Account *</FormLabel>
+                        <FormControl>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <SelectTrigger className={form.formState.errors.receiverAccount ? "border-destructive" : ""}>
+                              <SelectValue placeholder="Select receiver account" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {accounts
+                                .filter((a) => a.status === "ACTIVE")
+                                .map((a) => (
+                                  <SelectItem key={a.accountNumber} value={a.accountNumber}>
+                                    <div className="flex items-center justify-between gap-4">
+                                      <span className="font-mono text-xs">{a.accountNumber}</span>
+                                      <span className="text-muted-foreground">—</span>
+                                      <span>{a.customerName}</span>
+                                      <span className="text-muted-foreground">—</span>
+                                      <span className="font-semibold text-emerald-600">{formatCurrency(a.balance)}</span>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="amount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Amount *</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
+                            <Input type="number" step="0.01" min="0" placeholder="0.00" className="pl-7" {...field} />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {senderAccount && receiverAccount && amountString && !form.formState.errors.amount && (
+                    <Alert className="bg-muted/50">
+                      <AlertDescription>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium">Transfer Summary</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {senderAccount.customerName} → {receiverAccount.customerName}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-lg font-semibold">₹{parseFloat(amountString).toLocaleString()}</p>
+                            <p className="text-xs text-muted-foreground">Estimated completion: Instant</p>
+                          </div>
+                        </div>
                       </AlertDescription>
                     </Alert>
                   )}
-                </div>
 
-                <Button 
-                  onClick={handleAdd} 
-                  disabled={submitting || !form.senderAccount || !form.receiverAccount || !form.amount}
-                  className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600"
-                >
-                  {submitting ? "Processing..." : "Execute Transfer"}
-                </Button>
-              </div>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setOpen(false)}
+                      disabled={form.formState.isSubmitting}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={form.formState.isSubmitting}>
+                      {form.formState.isSubmitting ? "Processing..." : "Process Transfer"}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
             </DialogContent>
           </Dialog>
-        </div>
-      </div>
+            )}
+          </>
+        }
+      />
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <StatCard
-          title="Total Transactions"
-          value={transactions.length}
-          subtitle="All time"
-          icon={<Receipt className="h-5 w-5" />}
-        />
-        <StatCard
-          title="Total Volume"
-          value={formatCurrency(totalVolume)}
-          subtitle="All time"
-          icon={<TrendingUp className="h-5 w-5" />}
-        />
-        <StatCard
-          title="Success Rate"
-          value={`${successRate}%`}
-          subtitle={`${successCount} successful`}
-          icon={<CheckCircle className="h-5 w-5" />}
-        />
-        <StatCard
-          title="Average Amount"
-          value={formatCurrency(avgAmount)}
-          subtitle="Per transaction"
-          icon={<ArrowRight className="h-5 w-5" />}
-        />
-      </div>
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <StatCardSkeleton key={i} />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <StatCard
+            title="Total Transactions"
+            value={transactions.length}
+            subtitle="All time"
+            icon={<Receipt className="h-5 w-5" />}
+          />
+          <StatCard
+            title="Total Volume"
+            value={formatCurrency(totalVolume)}
+            subtitle="All time"
+            icon={<TrendingUp className="h-5 w-5" />}
+          />
+          <StatCard
+            title="Success Rate"
+            value={`${successRate}%`}
+            subtitle={`${successCount} successful`}
+            icon={<CheckCircle2 className="h-5 w-5" />}
+          />
+          <StatCard
+            title="Average Amount"
+            value={formatCurrency(avgAmount)}
+            subtitle="Per transaction"
+            icon={<ArrowRight className="h-5 w-5" />}
+          />
+        </div>
+      )}
 
       <div className="glass-card hover:shadow-lg transition-shadow">
         <div className="p-4 border-b border-border bg-gradient-to-r from-primary/5 to-transparent">
@@ -405,15 +441,38 @@ export default function TransactionsPage() {
             onClearFilters={() => setActiveFilters({ status: undefined, date: undefined })}
           />
         </div>
+
         {loading ? (
-          <div className="p-4 space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full" />
-            ))}
-          </div>
+          <TableSkeleton columns={7} rows={6} className="p-2" />
         ) : (
-          <Table>
-            <TableHeader>
+          <>
+          <div className="px-4 py-2.5 border-b border-border/60 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between text-xs text-muted-foreground">
+            <p>
+              Showing <span className="font-medium text-foreground">{rangeStart}</span>–<span className="font-medium text-foreground">{rangeEnd}</span> of <span className="font-medium text-foreground">{filtered.length}</span> transactions
+            </p>
+            <div className="flex items-center gap-2">
+              <span>Rows per page</span>
+              <Select
+                value={String(rowsPerPage)}
+                onValueChange={(value) => setRowsPerPage(Number(value))}
+              >
+                <SelectTrigger className="h-8 w-[84px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[10, 20, 50].map((size) => (
+                    <SelectItem key={size} value={String(size)}>
+                      {size}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+          <Table className="min-w-[900px]">
+            <TableHeader className="sticky top-0 z-10 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
               <TableRow>
                 <TableHead>TXN ID</TableHead>
                 <TableHead>Sender</TableHead>
@@ -425,7 +484,7 @@ export default function TransactionsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((tx) => (
+              {paginatedTransactions.map((tx) => (
                 <TableRow key={tx.transactionId} className="hover:bg-muted/50 transition-colors">
                   <TableCell className="font-mono text-xs font-semibold">TXN_{tx.transactionId}</TableCell>
                   <TableCell>
@@ -434,26 +493,63 @@ export default function TransactionsPage() {
                       <p className="text-[11px] text-muted-foreground font-mono">{tx.senderAccountNumber}</p>
                     </div>
                   </TableCell>
-                  <TableCell><ArrowRight className="h-4 w-4 text-muted-foreground" /></TableCell>
+                  <TableCell>
+                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                  </TableCell>
                   <TableCell>
                     <div>
                       <p className="text-sm font-medium">{tx.receiverName}</p>
                       <p className="text-[11px] text-muted-foreground font-mono">{tx.receiverAccountNumber}</p>
                     </div>
                   </TableCell>
-                  <TableCell className="text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400">{formatCurrency(tx.amount)}</TableCell>
-                  <TableCell><StatusBadge status={tx.status} /></TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{formatDateTime(tx.transactionDate)}</TableCell>
+                  <TableCell className="text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                    {formatCurrency(tx.amount)}
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge status={tx.status} />
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {tx.transactionDate ? formatDateTime(tx.transactionDate) : "-"}
+                  </TableCell>
                 </TableRow>
               ))}
-              {filtered.length === 0 && !loading && (
-                <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
-                  <ArrowRight className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No transactions found</p>
-                </TableCell></TableRow>
+
+              {filtered.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                    <ArrowRight className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>No transactions found</p>
+                  </TableCell>
+                </TableRow>
               )}
             </TableBody>
           </Table>
+          </div>
+
+          <div className="px-4 py-3 border-t border-border/60 flex items-center justify-end gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1 || filtered.length === 0}
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Previous
+            </Button>
+            <span className="text-xs text-muted-foreground px-1">
+              Page <span className="font-medium text-foreground">{currentPage}</span> of <span className="font-medium text-foreground">{totalPages}</span>
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage >= totalPages || filtered.length === 0}
+            >
+              Next
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+          </>
         )}
       </div>
     </PageWrapper>

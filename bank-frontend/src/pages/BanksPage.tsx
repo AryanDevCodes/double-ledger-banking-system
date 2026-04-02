@@ -1,5 +1,10 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import PageWrapper from "@/components/PageWrapper";
+import PageHeader from "@/components/PageHeader";
+import ExportMenu from "@/components/ExportMenu";
 import EmptyState from "@/components/EmptyState";
 import { Can } from "@/components/PermissionGate";
 import { bankApi } from "@/lib/api-client";
@@ -7,9 +12,8 @@ import { exportToCSV, exportToExcel, exportToPDF } from "@/lib/export";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Search, Pencil, Building2, Download, MoreHorizontal, Eye, RefreshCw, FileSpreadsheet, FileText } from "lucide-react";
+import { Plus, Search, Pencil, Building2, MoreHorizontal, Eye, RefreshCw } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,8 +21,24 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { TableSkeleton } from "@/components/LoadingStates";
 import type { BankResponseDTO } from "@/types/api";
 import { toast } from "sonner";
+
+const bankSchema = z.object({
+  bankName: z.string().min(2, "Bank name is required"),
+  branch: z.string().min(2, "Branch is required"),
+  ifscCode: z
+    .string()
+    .min(8, "IFSC code is required")
+    .regex(/^[A-Za-z]{4}0[A-Za-z0-9]{6}$/, "Enter a valid IFSC code"),
+  branchAddress: z.string().min(5, "Branch address is required"),
+  city: z.string().optional(),
+  state: z.string().optional(),
+});
+
+type BankValues = z.infer<typeof bankSchema>;
 
 export default function BanksPage() {
   const [banks, setBanks] = useState<BankResponseDTO[]>([]);
@@ -26,7 +46,18 @@ export default function BanksPage() {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editingBank, setEditingBank] = useState<BankResponseDTO | null>(null);
-  const [form, setForm] = useState({ bankName: "", branch: "", ifscCode: "", city: "", state: "", branchAddress: "" });
+
+  const form = useForm<BankValues>({
+    resolver: zodResolver(bankSchema),
+    defaultValues: {
+      bankName: "",
+      branch: "",
+      ifscCode: "",
+      city: "",
+      state: "",
+      branchAddress: "",
+    },
+  });
 
   useEffect(() => {
     loadBanks();
@@ -50,35 +81,37 @@ export default function BanksPage() {
   );
 
   const resetForm = () => {
-    setForm({ bankName: "", branch: "", ifscCode: "", city: "", state: "", branchAddress: "" });
+    form.reset({
+      bankName: "",
+      branch: "",
+      ifscCode: "",
+      city: "",
+      state: "",
+      branchAddress: "",
+    });
     setEditingBank(null);
   };
 
-  const handleAdd = async () => {
-    if (!form.bankName || !form.branch || !form.ifscCode || !form.branchAddress) {
-      toast.error("Please fill all required fields");
-      return;
-    }
-
+  const handleSubmit = async (values: BankValues) => {
     try {
       if (editingBank) {
         await bankApi.update(editingBank.id, {
-          bankName: form.bankName,
-          branch: form.branch,
-          ifscCode: form.ifscCode,
-          city: form.city,
-          state: form.state,
-          branchAddress: form.branchAddress,
+          bankName: values.bankName,
+          branch: values.branch,
+          ifscCode: values.ifscCode,
+          city: values.city,
+          state: values.state,
+          branchAddress: values.branchAddress,
         });
         toast.success("Bank updated successfully");
       } else {
         await bankApi.create({
-          bankName: form.bankName,
-          branch: form.branch,
-          ifscCode: form.ifscCode,
-          city: form.city,
-          state: form.state,
-          branchAddress: form.branchAddress,
+          bankName: values.bankName,
+          branch: values.branch,
+          ifscCode: values.ifscCode,
+          city: values.city,
+          state: values.state,
+          branchAddress: values.branchAddress,
         });
         toast.success("Bank created successfully");
       }
@@ -93,7 +126,7 @@ export default function BanksPage() {
 
   const handleEdit = (bank: BankResponseDTO) => {
     setEditingBank(bank);
-    setForm({
+    form.reset({
       bankName: bank.bankName,
       branch: bank.branch,
       ifscCode: bank.ifscCode,
@@ -133,72 +166,124 @@ export default function BanksPage() {
 
   return (
     <PageWrapper>
-      <div className="page-header flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="page-title flex items-center gap-2">
-            <Building2 className="h-6 w-6" />
-            Banks
-          </h1>
-          <p className="page-subtitle">Manage registered banks and branches</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={loadBanks} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleExport('csv')}>
-                <FileText className="h-4 w-4 mr-2" />
-                Export as CSV
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExport('excel')}>
-                <FileSpreadsheet className="h-4 w-4 mr-2" />
-                Export as Excel
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleExport('pdf')}>
-                <FileText className="h-4 w-4 mr-2" />
-                Export as PDF
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Can permission="BANKS_CREATE">
-            <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm(); }}>
-              <DialogTrigger asChild>
-                <Button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
-                  <Plus className="h-4 w-4 mr-2" /> Add Bank
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>{editingBank ? "Edit Bank" : "Create New Bank"}</DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-4 py-2">
-                  {(["bankName", "branch", "ifscCode", "branchAddress", "city", "state"] as const).map((field) => (
-                    <div key={field} className="space-y-1.5">
-                      <Label className="capitalize">{field.replace(/([A-Z])/g, " $1")}{["bankName","branch","ifscCode","branchAddress"].includes(field) ? " *" : ""}</Label>
-                      <Input value={form[field]} onChange={(e) => setForm({ ...form, [field]: e.target.value })} />
-                    </div>
-                  ))}
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => { setOpen(false); resetForm(); }}>Cancel</Button>
-                  <Button onClick={handleAdd} className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
-                    {editingBank ? "Save Changes" : "Create Bank"}
+      <PageHeader
+        title="Banks"
+        subtitle="Manage registered banks and branches"
+        icon={<Building2 className="h-5 w-5" />}
+        actions={
+          <>
+            <Button variant="outline" size="sm" onClick={loadBanks} disabled={loading}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+            <ExportMenu onExport={handleExport} disabled={loading || filtered.length === 0} />
+            <Can permission="BANKS_CREATE">
+              <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm(); }}>
+                <DialogTrigger asChild>
+                  <Button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
+                    <Plus className="h-4 w-4 mr-2" /> Add Bank
                   </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </Can>
-        </div>
-      </div>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>{editingBank ? "Edit Bank" : "Create New Bank"}</DialogTitle>
+                  </DialogHeader>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-4 py-2">
+                    <FormField
+                      control={form.control}
+                      name="bankName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Bank Name *</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="branch"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Branch *</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="ifscCode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>IFSC Code *</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="branchAddress"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Branch Address *</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <FormField
+                        control={form.control}
+                        name="city"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>City</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="state"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>State</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <DialogFooter className="pt-2">
+                      <Button type="button" variant="outline" onClick={() => { setOpen(false); resetForm(); }}>Cancel</Button>
+                      <Button type="submit" className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600" disabled={form.formState.isSubmitting}>
+                        {form.formState.isSubmitting ? "Saving..." : editingBank ? "Save Changes" : "Create Bank"}
+                      </Button>
+                    </DialogFooter>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+            </Can>
+          </>
+        }
+      />
 
       <div className="glass-card">
         <div className="p-4 border-b border-border">
@@ -208,9 +293,11 @@ export default function BanksPage() {
           </div>
         </div>
         
-        {filtered.length === 0 ? (
-          <EmptyState 
-            type={search ? "search" : "banks"} 
+        {loading ? (
+          <TableSkeleton columns={7} rows={6} className="p-2" />
+        ) : filtered.length === 0 ? (
+          <EmptyState
+            type={search ? "search" : "banks"}
             action={!search ? { label: "Add Bank", onClick: () => setOpen(true) } : undefined}
           />
         ) : (

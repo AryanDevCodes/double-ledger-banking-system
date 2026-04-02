@@ -79,7 +79,7 @@ public class UpiController {
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_USER')")
+    @PreAuthorize("hasRole('ROLE_USER')")
     @PostMapping("/pay")
     public ResponseEntity<TransactionResponseDTO> executeUpiPayment(
             @RequestBody UpiPayRequestDTO dto) {

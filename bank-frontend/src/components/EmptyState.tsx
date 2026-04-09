@@ -83,10 +83,10 @@ export default function EmptyState({
 
   return (
     <div className={cn(
-      "flex flex-col items-center justify-center py-12 px-4 text-center",
+      "flex flex-col items-center justify-center py-12 px-4 text-center rounded-2xl border border-border/60 bg-muted/20",
       className
     )}>
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted/50 border border-border/60 shadow-sm mb-4">
+      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 shadow-md">
         {icon || <Icon className="h-8 w-8 text-muted-foreground" />}
       </div>
       

@@ -226,6 +226,7 @@ This prevents duplicate payments caused by timeouts, retries, or network failure
 - ✅ Multi-currency support (default: INR)
 - ✅ **Initial deposit via ledger entry**
 - ✅ Account status tracking
+- ✅ Compliance status management (`accountStatus`, `kycStatus`, `customerStatus`)
 - ✅ Complete CRUD operations
 - ✅ Smart customer linking
 
@@ -241,6 +242,7 @@ This prevents duplicate payments caused by timeouts, retries, or network failure
 | GET | `/account/name/{bankName}` | Get accounts by bank | ✅ |
 | POST | `/account/{bankName}` | Create account | ✅ |
 | PATCH | `/account/{accountNumber}` | Update account | ✅ |
+| PATCH | `/account/{accountNumber}/compliance` | Update account + KYC/customer compliance status | ✅ |
 | DELETE | `/account/{accountNumber}` | Delete account | ✅ |
 
 ---
@@ -255,6 +257,8 @@ This prevents duplicate payments caused by timeouts, retries, or network failure
 - ✅ **Transaction Snapshot** - Denormalized data for historical accuracy
 - ✅ **Helper Methods** - 40% cognitive load reduction
 - ✅ **Value Objects** - `LockedAccounts` record for type safety
+- ✅ **Customer-only Initiation** - `POST /transaction` restricted to `ROLE_USER`
+- ✅ **Sender Ownership Enforcement** - Authenticated principal must own sender account
 
 **Refactored Implementation (2026):**
 
@@ -315,7 +319,7 @@ public TransactionResponseDTO makeTransaction(TransactionRequestDTO dto) {
 **API Endpoints:**
 | Method | Endpoint | Description | Status |
 |--------|----------|-------------|---------|
-| POST | `/transaction` | Create transaction | ✅ |
+| POST | `/transaction` | Create transaction (ROLE_USER only) | ✅ |
 | GET | `/transaction` | Get transaction history | ✅ |
 
 **Transaction States:**
@@ -411,7 +415,7 @@ WHERE account_id = :accountId;
 | GET | `/upi/account/{accountNumber}` | Get by account | ✅ |
 | PATCH | `/upi/{upiId}/status` | Update status | ✅ |
 | DELETE | `/upi/{upiId}` | Soft delete | ✅ |
-| POST | `/upi/pay` | Execute payment | ✅ |
+| POST | `/upi/pay` | Execute payment (ROLE_USER only) | ✅ |
 
 #### UPI Payment Execution ⭐ ADVANCED
 
@@ -500,7 +504,7 @@ public TransactionResponseDTO executeUpiPayment(UpiPayRequestDTO dto) {
    ├─ FAILED → Throw exception with failure reason
    └─ INITIATED → Continue
 4. Transition to PROCESSING (persisted to DB)
-5. 🔴 TODO: Verify caller owns fromUpi (SECURITY)
+5. ✅ Enforce role + ownership checks before debit path
 6. Resolve UPI IDs to accounts
 7. Execute transaction through ledger
 8. Mark as COMPLETED with transaction ID
@@ -531,28 +535,28 @@ private String failureReason;
 - ✅ Support debugging - Customer support sees exact error
 - ✅ Dispute resolution - Clear audit trail
 
-#### 3. 🔴 Security TODO: Ownership Validation (CRITICAL)
+#### 3. ✅ Ownership Validation & Role Hardening (Implemented)
 
-**Current Issue:** No verification that caller owns fromUpi account
+**Implemented Controls:**
+- `POST /transaction` is restricted to `ROLE_USER`.
+- `POST /upi/pay` is restricted to `ROLE_USER`.
+- `TransactionServiceIMPL.enforceSenderOwnership(...)` blocks transfers when the authenticated principal does not own the sender account.
 
-**Attack Vector:** Anyone can initiate payments from any UPI ID = **Account Drain Attack**
+**Security Impact:**
+- Prevents unauthorized debits from known account numbers or UPI IDs.
+- Reduces IDOR-style payment abuse by combining endpoint role checks + service-layer ownership checks.
 
-**Required Implementation:**
-```java
-// UpiResolver.java
-public Account resolveAndVerifyOwnership(String upiId, User currentUser) {
-    Account account = resolveActiveAccount(upiId);
-    
-    if (!account.getCustomer().getId().equals(currentUser.getCustomerId())) {
-        throw new SecurityException("User does not own UPI account");
-    }
-    
-    return account;
-}
-```
+### 🆕 Backend Changes Applied in This Chat Session (April 2026)
 
-**Status:** ✅ Documented in code with TODO markers  
-**Priority:** 🔴 CRITICAL - Must implement before production
+1. **Transaction initiation hardened**
+    - Controller restriction updated to customer-only initiation (`ROLE_USER`) for `POST /transaction`.
+2. **UPI payment initiation hardened**
+    - Controller restriction updated to customer-only initiation (`ROLE_USER`) for `POST /upi/pay`.
+3. **Sender ownership enforced in core transfer service**
+    - Ownership validation added before ledger write path in transaction service.
+4. **Compliance/KYC update API introduced**
+    - Added `PATCH /account/{accountNumber}/compliance` for account + KYC/customer compliance updates.
+    - Added request DTO for compliance payload and mapper-backed response enrichment.
 
 ### Existing Security Features
 

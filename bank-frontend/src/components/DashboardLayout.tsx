@@ -157,7 +157,7 @@ export default function DashboardLayout() {
       </div>
 
       <div className={cn("min-h-screen flex flex-col transition-all duration-300", sidebarCollapsed ? "md:pl-[68px]" : "md:pl-[240px]")}>
-        <header className="sticky top-0 z-40 border-b border-border/60 bg-background/75 backdrop-blur supports-[backdrop-filter]:bg-background/55">
+        <header className="sticky top-0 z-40 border-b border-border/60 bg-background/65 backdrop-blur-xl supports-[backdrop-filter]:bg-background/45">
           <div className="h-14 px-4 lg:px-6 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 min-w-0">
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -166,7 +166,7 @@ export default function DashboardLayout() {
                     <Menu className="h-4 w-4" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="p-0 w-[280px]">
+                <SheetContent side="left" className="w-[280px] p-0 border-r border-border/60 bg-sidebar/95 backdrop-blur-xl">
                   <div className="h-14 px-4 border-b border-border/60 flex items-center gap-2">
                     <Building2 className="h-5 w-5 text-primary" />
                     <div>
@@ -211,7 +211,7 @@ export default function DashboardLayout() {
               <Input
                 ref={searchInputRef}
                 placeholder="Search modules..."
-                className="h-8 pl-9 pr-16"
+                className="h-9 pl-9 pr-16 rounded-xl bg-card/70"
                 value={moduleSearch}
                 onChange={(e) => setModuleSearch(e.target.value)}
                 onKeyDown={(e) => {
@@ -248,13 +248,13 @@ export default function DashboardLayout() {
               </Button>
 
               {!!moduleSearch && (
-                <div className="absolute top-10 left-0 right-0 z-50 rounded-md border border-border/70 bg-popover shadow-lg">
+                <div className="absolute top-11 left-0 right-0 z-50 rounded-xl border border-border/70 bg-popover/95 backdrop-blur-xl shadow-xl">
                   {searchMatches.length > 0 ? (
                     <div className="py-1">
                       {searchMatches.map((match) => (
                         <button
                           key={match.to}
-                          className="w-full px-3 py-2 text-left text-sm hover:bg-muted"
+                          className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/70"
                           onClick={() => {
                             navigate(match.to);
                             setModuleSearch("");
@@ -279,7 +279,7 @@ export default function DashboardLayout() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 relative"
+                    className="h-9 w-9 relative rounded-xl"
                     aria-label="View notifications"
                   >
                     <Bell className="h-4 w-4" />
@@ -290,7 +290,7 @@ export default function DashboardLayout() {
                     )}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-80">
+                  <DropdownMenuContent align="end" className="w-80 rounded-xl border-border/70 bg-popover/95 backdrop-blur-xl">
                   <DropdownMenuLabel className="flex items-center justify-between">
                     <span>Notifications</span>
                     <span className="text-xs font-normal text-muted-foreground">{unreadCount} new</span>
@@ -316,7 +316,7 @@ export default function DashboardLayout() {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-9 rounded-full px-1.5">
+                  <Button variant="ghost" className="h-9 rounded-full px-1.5 hover:bg-muted/70">
                     <Avatar className="h-7 w-7 border border-primary/30">
                       <AvatarFallback className="bg-primary/15 text-primary text-xs font-semibold">
                         {userInitials}
@@ -325,7 +325,7 @@ export default function DashboardLayout() {
                     <ChevronDown className="ml-1 h-3.5 w-3.5 text-muted-foreground hidden sm:block" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent align="end" className="w-56 rounded-xl border-border/70 bg-popover/95 backdrop-blur-xl">
                   <DropdownMenuLabel>
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium">{user?.fullName || user?.username}</p>
@@ -353,11 +353,11 @@ export default function DashboardLayout() {
           </div>
         </header>
 
-        <main id="main-content" className="flex-1 px-3 sm:px-4 lg:px-6 py-4" tabIndex={-1}>
+        <main id="main-content" className="flex-1 px-3 py-4 sm:px-4 lg:px-6" tabIndex={-1}>
           <Outlet />
         </main>
 
-        <footer className="border-t border-border/60 bg-background/60">
+        <footer className="border-t border-border/60 bg-background/40 backdrop-blur-xl">
           <div className="px-4 lg:px-6 py-3">
             <p className="text-center text-xs text-muted-foreground">© 2026 {brandName}. Enterprise Banking Platform.</p>
           </div>

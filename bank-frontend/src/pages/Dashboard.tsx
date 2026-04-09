@@ -298,7 +298,7 @@ export default function Dashboard() {
 
       {/* Analytics */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-6">
-        <div className="glass-card p-4 xl:col-span-2">
+        <div className="glass-elevated p-4 xl:col-span-2">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold">Transaction Volume (Last 6 Months)</h3>
             <span className="text-xs text-muted-foreground">Trend</span>
@@ -346,7 +346,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="glass-card p-4">
+        <div className="glass-elevated p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold">Transaction Health</h3>
             <span className="text-xs text-muted-foreground">Status</span>
@@ -390,7 +390,7 @@ export default function Dashboard() {
       </div>
 
       {!isCustomer && (
-        <div className="glass-card p-4 mb-6">
+        <div className="glass-elevated p-4 mb-6">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold">Top Banks by Account Count</h3>
             <span className="text-xs text-muted-foreground">Distribution</span>
@@ -429,7 +429,7 @@ export default function Dashboard() {
       {!isCustomer && (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         {/* Compliance Quick Stats */}
-        <div className="glass-card p-5 hover:shadow-md transition-shadow">
+        <div className="glass-elevated p-5 transition-shadow">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-emerald-500" />
@@ -455,11 +455,11 @@ export default function Dashboard() {
                 <Progress value={kycCompliance} className="h-2" />
               </div>
               <div className="grid grid-cols-2 gap-3 pt-2">
-                <div className="p-3.5 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950 dark:to-emerald-900 rounded-lg">
+                <div className="p-3.5 rounded-xl border border-emerald-300/40 bg-gradient-to-br from-emerald-50/95 to-emerald-100/80 dark:from-emerald-950/45 dark:to-emerald-900/35">
                   <p className="text-xl font-bold text-emerald-600">{customers.filter(c => c.kycStatus === "COMPLETED").length}</p>
                   <p className="text-xs text-muted-foreground mt-1">Verified KYC</p>
                 </div>
-                <div className="p-3.5 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900 rounded-lg">
+                <div className="p-3.5 rounded-xl border border-amber-300/40 bg-gradient-to-br from-amber-50/95 to-amber-100/80 dark:from-amber-950/45 dark:to-amber-900/35">
                   <p className="text-xl font-bold text-amber-600">{pendingKyc}</p>
                   <p className="text-xs text-muted-foreground mt-1">Pending Reviews</p>
                 </div>
@@ -469,7 +469,7 @@ export default function Dashboard() {
         </div>
 
         {/* Alerts */}
-        <div className="glass-card p-5 hover:shadow-md transition-shadow">
+        <div className="glass-elevated p-5 transition-shadow">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-amber-500" />
@@ -484,7 +484,7 @@ export default function Dashboard() {
           ) : (
             <div className="space-y-3">
               {pendingKyc > 0 ? (
-                <div className="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800 hover:shadow-md transition-shadow">
+                <div className="flex items-start gap-3 rounded-xl border border-amber-300/40 bg-amber-50/90 p-4 dark:border-amber-700/60 dark:bg-amber-950/20">
                   <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
                   <div className="flex-1">
                     <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">
@@ -494,7 +494,7 @@ export default function Dashboard() {
                   </div>
                 </div>
               ) : (
-                <div className="flex items-start gap-3 p-4 bg-emerald-50 dark:bg-emerald-950/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                <div className="flex items-start gap-3 rounded-xl border border-emerald-300/40 bg-emerald-50/90 p-4 dark:border-emerald-700/60 dark:bg-emerald-950/20">
                   <ShieldCheck className="h-5 w-5 text-emerald-500 mt-0.5 flex-shrink-0" />
                   <div className="flex-1">
                     <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">All Systems Operational</p>
@@ -502,7 +502,7 @@ export default function Dashboard() {
                   </div>
                 </div>
               )}
-              <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div className="flex items-start gap-3 rounded-xl border border-blue-300/40 bg-blue-50/90 p-4 dark:border-blue-700/60 dark:bg-blue-950/20">
                 <Users className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">{customers.length} Active Customers</p>
@@ -517,8 +517,8 @@ export default function Dashboard() {
 
 
       {/* Recent Accounts / My Accounts */}
-      <div className="glass-card hover:shadow-md transition-shadow">
-        <div className="p-4 border-b border-border flex items-center justify-between bg-gradient-to-r from-primary/5 to-transparent">
+      <div className="glass-elevated transition-shadow">
+        <div className="flex items-center justify-between border-b border-border/70 bg-gradient-to-r from-primary/10 to-transparent p-4">
           <h2 className="text-base font-semibold">{isCustomer ? "My Accounts" : "Recent Accounts"}</h2>
           <Button variant="ghost" size="sm" asChild>
             <Link to="/accounts">{isCustomer ? "Manage Accounts" : "View All Accounts"}</Link>
@@ -560,8 +560,8 @@ export default function Dashboard() {
       </div>
 
       {/* Recent Activity */}
-      <div className="glass-card hover:shadow-md transition-shadow mt-5">
-        <div className="p-4 border-b border-border flex items-center justify-between bg-gradient-to-r from-primary/5 to-transparent">
+      <div className="glass-elevated mt-5 transition-shadow">
+        <div className="flex items-center justify-between border-b border-border/70 bg-gradient-to-r from-primary/10 to-transparent p-4">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5 text-emerald-500" />
             <h2 className="text-base font-semibold">Recent Activity</h2>

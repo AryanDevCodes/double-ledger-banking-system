@@ -192,9 +192,9 @@ export default function CustomersPage() {
             <ExportMenu onExport={handleExport} disabled={loading || filtered.length === 0} />
             <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm(); }}>
               <DialogTrigger asChild>
-                <Button><Plus className="h-4 w-4 mr-2" /> Add Customer</Button>
+                <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 shadow-md hover:from-cyan-600 hover:to-blue-700"><Plus className="h-4 w-4 mr-2" /> Add Customer</Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="border-border/70 bg-card/95 backdrop-blur-xl">
                 <DialogHeader>
                   <DialogTitle>{editingCustomer ? "Edit Customer" : "Add New Customer"}</DialogTitle>
                 </DialogHeader>
@@ -266,8 +266,8 @@ export default function CustomersPage() {
                     )}
                   />
                   <DialogFooter>
-                    <Button type="button" variant="outline" onClick={() => { setOpen(false); resetForm(); }}>Cancel</Button>
-                    <Button type="submit" disabled={form.formState.isSubmitting}>
+                    <Button type="button" variant="outline" className="rounded-xl" onClick={() => { setOpen(false); resetForm(); }}>Cancel</Button>
+                    <Button type="submit" className="bg-gradient-to-r from-cyan-500 to-blue-600 shadow-md hover:from-cyan-600 hover:to-blue-700" disabled={form.formState.isSubmitting}>
                       {form.formState.isSubmitting ? "Saving..." : editingCustomer ? "Save Changes" : "Create Customer"}
                     </Button>
                   </DialogFooter>
@@ -300,8 +300,8 @@ export default function CustomersPage() {
         />
       </div>
 
-      <div className="glass-card">
-        <div className="p-4 border-b border-border">
+      <div className="glass-elevated transition-shadow">
+        <div className="border-b border-border/70 bg-gradient-to-r from-primary/10 to-transparent p-4">
           <DataTableToolbar
             searchPlaceholder="Search customers..."
             searchValue={search}
@@ -325,7 +325,7 @@ export default function CustomersPage() {
           />
         ) : (
           <Table>
-            <TableHeader>
+            <TableHeader className="bg-card/80 backdrop-blur-xl">
               <TableRow>
                 <TableHead>ID</TableHead>
                 <TableHead>Name</TableHead>
@@ -339,7 +339,7 @@ export default function CustomersPage() {
             </TableHeader>
             <TableBody>
               {filtered.map((c) => (
-                <TableRow key={c.id}>
+                <TableRow key={c.id} className="hover:bg-muted/35 transition-colors">
                   <TableCell className="font-mono text-xs">{c.id}</TableCell>
                   <TableCell className="font-medium">{c.fullName}</TableCell>
                   <TableCell className="text-sm">{c.email}</TableCell>
@@ -350,11 +350,11 @@ export default function CustomersPage() {
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" className="rounded-xl">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent align="end" className="rounded-xl border-border/70 bg-popover/95 backdrop-blur-xl">
                         <DropdownMenuItem onClick={() => toast.info(`Viewing ${c.fullName}`)}>
                           <Eye className="h-4 w-4 mr-2" />
                           View Details

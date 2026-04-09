@@ -149,8 +149,8 @@ export default function SecurityPage() {
         )}
 
         <div className="grid lg:grid-cols-2 gap-6">
-          <Card className="glass-card">
-            <CardHeader>
+          <Card className="glass-elevated transition-shadow">
+            <CardHeader className="border-b border-border/70 bg-gradient-to-r from-primary/10 to-transparent">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Activity className="h-5 w-5 text-primary" />
                 Active Sessions
@@ -171,8 +171,8 @@ export default function SecurityPage() {
             </CardContent>
           </Card>
 
-          <Card className="glass-card">
-            <CardHeader>
+          <Card className="glass-elevated transition-shadow">
+            <CardHeader className="border-b border-border/70 bg-gradient-to-r from-primary/10 to-transparent">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Shield className="h-5 w-5 text-primary" />
                 Access Logs

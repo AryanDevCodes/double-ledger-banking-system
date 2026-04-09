@@ -14,7 +14,7 @@ export default function AuditLogsPage() {
           icon={<FileText className="h-5 w-5" />}
         />
 
-        <Alert>
+        <Alert className="border-border/70 bg-card/70 backdrop-blur-xl">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             Audit logging features coming soon. This page will display system events, user actions, and compliance reports.
@@ -22,8 +22,8 @@ export default function AuditLogsPage() {
         </Alert>
 
         <div className="grid md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
+          <Card className="glass-elevated transition-shadow">
+            <CardHeader className="border-b border-border/70 bg-gradient-to-r from-primary/10 to-transparent">
               <CardTitle className="text-lg flex items-center gap-2">
                 <FileText className="h-5 w-5 text-primary" />
                 Total Logs
@@ -35,15 +35,15 @@ export default function AuditLogsPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
+          <Card className="glass-elevated transition-shadow">
+            <CardHeader className="border-b border-border/70 bg-gradient-to-r from-primary/10 to-transparent">
               <CardTitle className="text-lg flex items-center gap-2">
                 <AlertCircle className="h-5 w-5 text-primary" />
                 Compliance Status
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-green-600">Compliant</p>
+              <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">Compliant</p>
               <p className="text-sm text-muted-foreground">All systems operational</p>
             </CardContent>
           </Card>

@@ -377,7 +377,7 @@ export default function PaymentsPage() {
       />
 
       <Tabs defaultValue="pay" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 max-w-md">
+        <TabsList className="grid w-full max-w-md grid-cols-3 rounded-xl border border-border/70 bg-card/70 p-1 backdrop-blur-xl">
           <TabsTrigger value="pay">
             <Send className="h-4 w-4 mr-2" />
             Send Money
@@ -395,7 +395,7 @@ export default function PaymentsPage() {
         {/* Send Money Tab */}
         <TabsContent value="pay" className="space-y-6">
           {!canInitiatePayments && (
-            <Card>
+            <Card className="border-border/70 bg-card/80 backdrop-blur-xl">
               <CardHeader>
                 <CardTitle>Payment initiation restricted</CardTitle>
                 <CardDescription>
@@ -434,7 +434,7 @@ export default function PaymentsPage() {
           {canInitiatePayments && (
           <div className="grid md:grid-cols-2 gap-6">
             {/* UPI Payment */}
-            <Card>
+            <Card className="border-border/70 bg-card/80 backdrop-blur-xl shadow-md">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Smartphone className="h-5 w-5 text-teal-500" />
@@ -504,7 +504,7 @@ export default function PaymentsPage() {
                     </Button>
 
                     {upiProfiles.length === 0 && (
-                      <p className="text-sm text-gray-500 text-center">
+                      <p className="text-sm text-muted-foreground text-center">
                         No UPI profiles found. Register one in the UPI tab.
                       </p>
                     )}
@@ -514,7 +514,7 @@ export default function PaymentsPage() {
             </Card>
 
             {/* Bank Transfer */}
-            <Card>
+            <Card className="border-border/70 bg-card/80 backdrop-blur-xl shadow-md">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CreditCard className="h-5 w-5 text-blue-500" />
@@ -590,7 +590,7 @@ export default function PaymentsPage() {
           )}
 
           {/* Quick Balance Overview */}
-          <Card>
+          <Card className="border-border/70 bg-card/80 backdrop-blur-xl">
             <CardHeader>
               <CardTitle>Your Accounts</CardTitle>
               <CardDescription>Quick balance overview</CardDescription>
@@ -598,8 +598,8 @@ export default function PaymentsPage() {
             <CardContent>
               <div className="grid gap-4 md:grid-cols-3">
                 {accounts.map((acc) => (
-                  <div key={acc.accountNumber} className="p-4 border rounded-lg">
-                    <div className="text-sm text-gray-500">{acc.accountNumber}</div>
+                  <div key={acc.accountNumber} className="rounded-xl border border-border/70 bg-muted/25 p-4">
+                    <div className="text-sm text-muted-foreground">{acc.accountNumber}</div>
                     <div className="text-2xl font-bold">{formatCurrency(acc.balance)}</div>
                     <Badge variant={acc.status === "ACTIVE" ? "default" : "secondary"}>
                       {acc.status}
@@ -611,7 +611,7 @@ export default function PaymentsPage() {
           </Card>
 
           {/* Transaction History */}
-          <Card>
+          <Card className="border-border/70 bg-card/80 backdrop-blur-xl">
             <CardHeader className="flex flex-row items-start justify-between space-y-0">
               <div>
                 <CardTitle className="flex items-center gap-2">
@@ -682,7 +682,7 @@ export default function PaymentsPage() {
                       const toAccount = txn.receiverAccountNumber || txn.toAccountNumber || "-";
 
                       return (
-                        <TableRow key={txn.transactionId || txn.id}>
+                        <TableRow key={txn.transactionId || txn.id} className="hover:bg-muted/35 transition-colors">
                           <TableCell>{dateValue ? formatDateTime(dateValue) : "-"}</TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
@@ -696,7 +696,7 @@ export default function PaymentsPage() {
                           </TableCell>
                           <TableCell>{formatParty(txn.senderName, fromAccount)}</TableCell>
                           <TableCell>{formatParty(txn.receiverName, toAccount)}</TableCell>
-                          <TableCell className={type === "CREDIT" ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
+                          <TableCell className={type === "CREDIT" ? "font-semibold text-emerald-600 dark:text-emerald-400" : "font-semibold text-rose-600 dark:text-rose-400"}>
                             {type === "CREDIT" ? "+" : "-"}
                             {formatCurrency(txn.amount)}
                           </TableCell>
@@ -716,7 +716,7 @@ export default function PaymentsPage() {
         {/* UPI Management Tab */}
         <TabsContent value="upi" className="space-y-6">
           <div className="grid lg:grid-cols-2 gap-6">
-            <Card>
+            <Card className="border-border/70 bg-card/80 backdrop-blur-xl shadow-md">
               <CardHeader>
                 <CardTitle>Register UPI ID</CardTitle>
                 <CardDescription>Create a new UPI ID linked to your account</CardDescription>
@@ -766,17 +766,17 @@ export default function PaymentsPage() {
                       Register UPI ID
                     </Button>
                     {accounts.length === 0 && (
-                      <p className="text-xs text-gray-500">You need at least one active account to register UPI.</p>
+                      <p className="text-xs text-muted-foreground">You need at least one active account to register UPI.</p>
                     )}
                     {!canInitiatePayments && (
-                      <p className="text-xs text-gray-500">Only customer accounts can register UPI IDs.</p>
+                      <p className="text-xs text-muted-foreground">Only customer accounts can register UPI IDs.</p>
                     )}
                   </form>
                 </Form>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-border/70 bg-card/80 backdrop-blur-xl shadow-md">
               <CardHeader>
                 <CardTitle>Your UPI IDs</CardTitle>
                 <CardDescription>Activate, deactivate, or remove UPI profiles</CardDescription>
@@ -784,20 +784,20 @@ export default function PaymentsPage() {
               <CardContent>
                 {upiProfiles.length === 0 ? (
                   <div className="text-center py-10">
-                    <Smartphone className="h-10 w-10 mx-auto text-gray-300 mb-3" />
-                    <p className="text-gray-500">No UPI profiles found</p>
+                    <Smartphone className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
+                    <p className="text-muted-foreground">No UPI profiles found</p>
                   </div>
                 ) : (
                   <div className="grid gap-4">
                     {upiProfiles.map((upi) => (
-                      <div key={upi.upiId} className="p-4 border rounded-lg">
+                      <div key={upi.upiId} className="rounded-xl border border-border/70 bg-muted/25 p-4">
                         <div className="flex items-start justify-between gap-4">
                           <div>
                             <div className="font-semibold text-lg">{upi.upiId}</div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-muted-foreground">
                               {upi.accountNumber} • {upi.bankName}
                             </div>
-                            <div className="text-xs text-gray-400">
+                            <div className="text-xs text-muted-foreground/80">
                               {upi.accountHolderName} • {formatDateTime(upi.createdAt)}
                             </div>
                           </div>

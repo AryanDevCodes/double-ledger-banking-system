@@ -33,6 +33,7 @@
 - [Tech Stack](#-tech-stack)
 - [Quick Start (4–5 steps)](#-quick-start-45-steps)
 - [Security Highlights](#-security-highlights-must-read)
+- [Backend Updates (This Session)](#-backend-updates-this-session-april-2026)
 - [API Documentation](#-api-documentation)
 - [Ledger Architecture](#-ledger-architecture-double-entry)
 - [Frontend](#-frontend-react-dashboard)
@@ -297,6 +298,27 @@ Critical protection against **Insecure Direct Object References (IDOR)**:
 - Stateless JWT (Spring Security 6 + JJWT)
 - Protected endpoints require `Authorization: Bearer <token>`
 - `@EnableMethodSecurity` ready for future `@PreAuthorize` role/ownership checks
+
+### 🧩 Backend Updates (This Session, April 2026)
+
+The following backend hardening updates were implemented in this session:
+
+- **Customer-only payment initiation**
+    - `POST /transaction` is restricted to `ROLE_USER`.
+    - `POST /upi/pay` is restricted to `ROLE_USER`.
+    - Result: admin/manager/auditor/customer-manager cannot initiate debits on behalf of customers.
+
+- **Server-side sender ownership enforcement in transfer flow**
+    - `TransactionServiceIMPL.makeTransaction()` now validates authenticated principal ownership of sender account before ledger posting.
+    - Result: even with a valid token, users cannot transfer from accounts they do not own.
+
+- **Compliance/KYC update API added for account workflows**
+    - New endpoint: `PATCH /account/{accNumber}/compliance`
+    - Supports update of `accountStatus`, `kycStatus`, and `customerStatus`.
+    - Implemented through dedicated DTO + service method + mapper response fields.
+
+- **Compliance fields exposed in account responses**
+    - `AccountResponseDTO` now includes customer compliance fields (`kycStatus`, `customerStatus`) for admin/compliance UIs.
 
 ---
 

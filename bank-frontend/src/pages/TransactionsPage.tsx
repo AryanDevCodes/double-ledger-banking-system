@@ -255,12 +255,12 @@ export default function TransactionsPage() {
               }}
             >
               <DialogTrigger asChild>
-                <Button className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600">
+                <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 shadow-md hover:from-cyan-600 hover:to-blue-700">
                   <Plus className="h-4 w-4 mr-2" /> New Transfer
                 </Button>
               </DialogTrigger>
 
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl border-border/70 bg-card/95 backdrop-blur-xl">
               <DialogHeader>
                 <DialogTitle>Create Transaction</DialogTitle>
               </DialogHeader>
@@ -351,7 +351,7 @@ export default function TransactionsPage() {
                   />
 
                   {senderAccount && receiverAccount && amountString && !form.formState.errors.amount && (
-                    <Alert className="bg-muted/50">
+                    <Alert className="bg-muted/35 border-border/70">
                       <AlertDescription>
                         <div className="flex items-center justify-between">
                           <div>
@@ -426,8 +426,8 @@ export default function TransactionsPage() {
         </div>
       )}
 
-      <div className="glass-card hover:shadow-lg transition-shadow">
-        <div className="p-4 border-b border-border bg-gradient-to-r from-primary/5 to-transparent">
+      <div className="glass-elevated transition-shadow">
+        <div className="p-4 border-b border-border/70 bg-gradient-to-r from-primary/10 to-transparent">
           <DataTableToolbar
             searchPlaceholder="Search transactions..."
             searchValue={search}
@@ -472,7 +472,7 @@ export default function TransactionsPage() {
 
           <div className="overflow-x-auto">
           <Table className="min-w-[900px]">
-            <TableHeader className="sticky top-0 z-10 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+            <TableHeader className="sticky top-0 z-10 bg-card/90 backdrop-blur-xl supports-[backdrop-filter]:bg-card/75">
               <TableRow>
                 <TableHead>TXN ID</TableHead>
                 <TableHead>Sender</TableHead>

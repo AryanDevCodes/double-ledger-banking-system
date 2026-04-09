@@ -7,8 +7,7 @@ import {
   Smartphone, 
   Globe, 
   LogOut,
-  Clock,
-  MapPin
+  Clock
 } from "lucide-react";
 import type { SessionInfo } from "@/lib/api-client";
 
@@ -27,7 +26,7 @@ export default function SessionCard({ session, isCurrent = false, onTerminate }:
   return (
     <div className={cn(
       "glass-card p-4 transition-all",
-      isCurrent && "ring-2 ring-primary/50",
+      isCurrent && "ring-2 ring-primary/40 shadow-lg",
       !session.isActive && "opacity-60"
     )}>
       <div className="flex items-start gap-4">
@@ -76,10 +75,10 @@ export default function SessionCard({ session, isCurrent = false, onTerminate }:
 
         {/* Actions */}
         {!isCurrent && session.isActive && onTerminate && (
-          <Button
+            <Button
             variant="ghost"
             size="sm"
-            className="shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+              className="shrink-0 rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive"
             onClick={() => onTerminate(session.id)}
           >
             <LogOut className="h-4 w-4 mr-1" />

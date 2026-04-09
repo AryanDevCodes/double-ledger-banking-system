@@ -72,13 +72,13 @@ export default function AppSidebar({ collapsed: controlledCollapsed, onCollapsed
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen flex flex-col border-r border-sidebar-border/80 bg-sidebar/95 backdrop-blur-sm transition-all duration-300",
+        "fixed left-0 top-0 z-40 h-screen flex flex-col border-r border-sidebar-border/80 bg-sidebar/95 backdrop-blur-xl transition-all duration-300",
         collapsed ? "w-[68px]" : "w-[240px]"
       )}
     >
       {/* Logo */}
       <div className="flex h-14 items-center gap-3 border-b border-sidebar-border/80 px-3.5">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-sm shadow-md">
           B
         </div>
         {!collapsed && (
@@ -109,9 +109,9 @@ export default function AppSidebar({ collapsed: controlledCollapsed, onCollapsed
                   to={to}
                   title={collapsed ? item.label : undefined}
                   className={cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                    "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                     isActive
-                      ? "bg-sidebar-accent text-sidebar-primary ring-1 ring-sidebar-ring/25"
+                      ? "bg-sidebar-accent/90 text-sidebar-primary ring-1 ring-sidebar-ring/30 shadow-sm"
                       : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   )}
                 >
@@ -142,9 +142,9 @@ export default function AppSidebar({ collapsed: controlledCollapsed, onCollapsed
                     to={to}
                     title={collapsed ? item.label : undefined}
                     className={cn(
-                      "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                      "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                       isActive
-                        ? "bg-sidebar-accent text-sidebar-primary ring-1 ring-sidebar-ring/25"
+                        ? "bg-sidebar-accent/90 text-sidebar-primary ring-1 ring-sidebar-ring/30 shadow-sm"
                         : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     )}
                   >
@@ -176,9 +176,9 @@ export default function AppSidebar({ collapsed: controlledCollapsed, onCollapsed
                     to={to}
                     title={collapsed ? item.label : undefined}
                     className={cn(
-                      "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                      "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                       isActive
-                        ? "bg-sidebar-accent text-sidebar-primary ring-1 ring-sidebar-ring/25"
+                        ? "bg-sidebar-accent/90 text-sidebar-primary ring-1 ring-sidebar-ring/30 shadow-sm"
                         : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     )}
                   >
@@ -206,7 +206,7 @@ export default function AppSidebar({ collapsed: controlledCollapsed, onCollapsed
         ) : (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-3 w-full rounded-md px-2.5 py-2 hover:bg-sidebar-accent transition-colors">
+              <button className="flex items-center gap-3 w-full rounded-xl px-2.5 py-2 hover:bg-sidebar-accent transition-colors">
                 <Avatar className="h-8 w-8">
                   <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
                     {user?.fullName ? getInitials(user.fullName) : 'U'}

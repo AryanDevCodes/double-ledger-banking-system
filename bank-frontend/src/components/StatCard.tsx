@@ -16,7 +16,7 @@ export default function StatCard({ title, value, subtitle, icon, trend, classNam
     <div className={cn("stat-card", className)}>
       <div className="flex items-start justify-between">
         <div className="space-y-1">
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em]">{title}</p>
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.1em]">{title}</p>
           <p className={cn("font-semibold tracking-tight", compact ? "text-xl" : "text-2xl")}>{value}</p>
           {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
           {trend && (
@@ -26,7 +26,7 @@ export default function StatCard({ title, value, subtitle, icon, trend, classNam
           )}
         </div>
         <div className={cn(
-          "flex shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20 shadow-sm",
+          "flex shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary ring-1 ring-primary/25 shadow-md",
           compact ? "h-9 w-9" : "h-10 w-10"
         )}>
           {icon}

@@ -180,11 +180,11 @@ export default function BanksPage() {
             <Can permission="BANKS_CREATE">
               <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm(); }}>
                 <DialogTrigger asChild>
-                  <Button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
+                  <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 shadow-md hover:from-cyan-600 hover:to-blue-700">
                     <Plus className="h-4 w-4 mr-2" /> Add Bank
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="border-border/70 bg-card/95 backdrop-blur-xl">
                   <DialogHeader>
                     <DialogTitle>{editingBank ? "Edit Bank" : "Create New Bank"}</DialogTitle>
                   </DialogHeader>
@@ -271,8 +271,8 @@ export default function BanksPage() {
                       />
                     </div>
                     <DialogFooter className="pt-2">
-                      <Button type="button" variant="outline" onClick={() => { setOpen(false); resetForm(); }}>Cancel</Button>
-                      <Button type="submit" className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600" disabled={form.formState.isSubmitting}>
+                      <Button type="button" variant="outline" className="rounded-xl" onClick={() => { setOpen(false); resetForm(); }}>Cancel</Button>
+                      <Button type="submit" className="bg-gradient-to-r from-cyan-500 to-blue-600 shadow-md hover:from-cyan-600 hover:to-blue-700" disabled={form.formState.isSubmitting}>
                         {form.formState.isSubmitting ? "Saving..." : editingBank ? "Save Changes" : "Create Bank"}
                       </Button>
                     </DialogFooter>
@@ -285,11 +285,11 @@ export default function BanksPage() {
         }
       />
 
-      <div className="glass-card">
-        <div className="p-4 border-b border-border">
+      <div className="glass-elevated transition-shadow">
+        <div className="border-b border-border/70 bg-gradient-to-r from-primary/10 to-transparent p-4">
           <div className="relative max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search banks..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Input placeholder="Search banks..." className="h-9 rounded-xl border-border/70 bg-card/70 pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
         </div>
         
@@ -302,7 +302,7 @@ export default function BanksPage() {
           />
         ) : (
           <Table>
-            <TableHeader>
+            <TableHeader className="bg-card/80 backdrop-blur-xl">
               <TableRow>
                 <TableHead>ID</TableHead>
                 <TableHead>Bank Name</TableHead>
@@ -315,7 +315,7 @@ export default function BanksPage() {
             </TableHeader>
             <TableBody>
               {filtered.map((bank) => (
-                <TableRow key={bank.id}>
+                <TableRow key={bank.id} className="hover:bg-muted/35 transition-colors">
                   <TableCell className="font-mono text-xs">{bank.id}</TableCell>
                   <TableCell className="font-medium">{bank.bankName}</TableCell>
                   <TableCell>{bank.branch}</TableCell>
@@ -325,11 +325,11 @@ export default function BanksPage() {
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" className="rounded-xl">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent align="end" className="rounded-xl border-border/70 bg-popover/95 backdrop-blur-xl">
                         <DropdownMenuItem onClick={() => toast.info(`Viewing ${bank.bankName}`)}>
                           <Eye className="h-4 w-4 mr-2" />
                           View Details

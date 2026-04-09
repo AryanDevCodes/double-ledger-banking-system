@@ -324,11 +324,11 @@ export default function UpiPage() {
             <Can permission="UPI_CREATE">
               <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
+                  <Button className="bg-gradient-to-r from-fuchsia-500 to-violet-600 shadow-md hover:from-fuchsia-600 hover:to-violet-700">
                     <Plus className="h-4 w-4 mr-2" /> Register UPI
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="border-border/70 bg-card/95 backdrop-blur-xl">
                   <DialogHeader>
                     <DialogTitle>Register UPI Profile</DialogTitle>
                   </DialogHeader>
@@ -383,7 +383,7 @@ export default function UpiPage() {
                       </p>
                       <Button
                         type="submit"
-                        className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                        className="bg-gradient-to-r from-fuchsia-500 to-violet-600 shadow-md hover:from-fuchsia-600 hover:to-violet-700"
                         disabled={form.formState.isSubmitting}
                       >
                         {form.formState.isSubmitting ? "Registering..." : "Register Profile"}
@@ -411,7 +411,7 @@ export default function UpiPage() {
       </div>
 
       {!canCustomerOperateUpi ? (
-        <div className="glass-card p-4 border-l-4 border-l-amber-500">
+        <div className="glass-elevated border-l-4 border-l-amber-500 p-4">
           <p className="text-sm font-medium">Read-only UPI mode</p>
           <p className="text-xs text-muted-foreground mt-1">
             Staff roles can audit UPI profiles and exports, but cannot register UPI IDs, change status, or generate QR codes.
@@ -420,16 +420,16 @@ export default function UpiPage() {
       ) : null}
 
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="glass-card p-4">
+        <div className="glass-elevated p-4">
           <p className="text-xs text-muted-foreground">Average UPI per account</p>
           <p className="text-2xl font-semibold mt-1">{avgUpiPerAccount}</p>
         </div>
-        <div className="glass-card p-4">
+        <div className="glass-elevated p-4">
           <p className="text-xs text-muted-foreground">Accounts near UPI limit</p>
           <p className="text-2xl font-semibold mt-1">{nearLimitAccounts}</p>
           <p className="text-xs text-muted-foreground mt-1">3 or more UPI IDs</p>
         </div>
-        <div className="glass-card p-4">
+        <div className="glass-elevated p-4">
           <p className="text-xs text-muted-foreground mb-2">UPI capacity utilization</p>
           <Progress value={accounts.length ? Math.min(100, (profiles.length / (accounts.length * 4)) * 100) : 0} />
           <p className="text-xs text-muted-foreground mt-2">
@@ -439,7 +439,7 @@ export default function UpiPage() {
       </div>
 
       <Tabs defaultValue="profiles" className="space-y-6">
-        <TabsList className={`grid w-full max-w-md ${canGenerateQr ? "grid-cols-2" : "grid-cols-1"}`}>
+        <TabsList className={`grid w-full max-w-md rounded-xl border border-border/70 bg-card/70 p-1 backdrop-blur-xl ${canGenerateQr ? "grid-cols-2" : "grid-cols-1"}`}>
           <TabsTrigger value="profiles">UPI Profiles</TabsTrigger>
           {canGenerateQr ? (
             <TabsTrigger value="qr">
@@ -449,8 +449,8 @@ export default function UpiPage() {
         </TabsList>
 
         <TabsContent value="profiles" className="space-y-4">
-          <div className="glass-card">
-            <div className="p-4 border-b border-border">
+          <div className="glass-elevated">
+            <div className="p-4 border-b border-border/70 bg-gradient-to-r from-primary/10 to-transparent">
               <DataTableToolbar
                 searchPlaceholder="Search UPI..."
                 searchValue={search}
@@ -534,7 +534,7 @@ export default function UpiPage() {
               <>
               <div className="overflow-x-auto">
               <Table className="min-w-[980px]">
-                <TableHeader>
+                <TableHeader className="bg-card/80 backdrop-blur-xl">
                   <TableRow>
                     {showBulkControls ? (
                       <TableHead className="w-[42px]">
@@ -556,7 +556,7 @@ export default function UpiPage() {
                 </TableHeader>
                 <TableBody>
                   {paginatedProfiles.map((p) => (
-                    <TableRow key={p.id}>
+                    <TableRow key={p.id} className="hover:bg-muted/35 transition-colors">
                       {showBulkControls ? (
                         <TableCell>
                           <Checkbox
@@ -635,7 +635,7 @@ export default function UpiPage() {
             <div className="grid md:grid-cols-2 gap-6">
               <QRCodeGenerator upiId={qrUpiId} />
               <div className="space-y-4">
-                <div className="glass-card p-6 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20">
+                <div className="glass-elevated bg-gradient-to-br from-fuchsia-50/90 to-violet-100/80 p-6 dark:from-fuchsia-950/20 dark:to-violet-950/20">
                   <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
                     <QrCode className="h-5 w-5 text-purple-600" />
                     Your UPI IDs
@@ -646,7 +646,7 @@ export default function UpiPage() {
                       .map((p) => (
                         <div
                           key={p.id}
-                          className="p-3 bg-white/50 dark:bg-gray-900/50 rounded-lg border border-border hover:border-primary transition-colors cursor-pointer"
+                          className="cursor-pointer rounded-xl border border-border/70 bg-white/55 p-3 transition-colors hover:border-primary dark:bg-gray-900/50"
                           onClick={() => setQrUpiId(p.upiId)}
                         >
                           <div className="flex items-start justify-between">

@@ -48,9 +48,9 @@ const eventLabels = {
 
 export default function AccessLogTable({ logs, className }: AccessLogTableProps) {
   return (
-    <div className={cn("overflow-x-auto", className)}>
+    <div className={cn("overflow-x-auto rounded-xl border border-border/60 bg-card/45", className)}>
       <Table>
-        <TableHeader>
+        <TableHeader className="sticky top-0 z-10 bg-card/85 backdrop-blur-xl">
           <TableRow>
             <TableHead className="w-[150px]">Timestamp</TableHead>
             <TableHead>User</TableHead>
@@ -64,7 +64,7 @@ export default function AccessLogTable({ logs, className }: AccessLogTableProps)
           {logs.map((log) => {
             const EventIcon = eventIcons[log.eventType];
             return (
-              <TableRow key={log.id}>
+              <TableRow key={log.id} className="hover:bg-muted/35 transition-colors">
                 <TableCell className="font-mono text-xs text-muted-foreground">
                   {formatDateTime(log.timestamp)}
                 </TableCell>

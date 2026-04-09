@@ -68,14 +68,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/40 p-4">
       <div className="absolute right-4 top-4">
         <ThemeToggle />
       </div>
-      <Card className="w-full max-w-md border-border/60 bg-card/95 shadow-xl">
-        <CardHeader className="space-y-2 text-center border-b border-border/60 bg-muted/30">
+      <Card className="w-full max-w-md overflow-hidden border-border/60 bg-card/85 backdrop-blur-xl shadow-2xl">
+        <CardHeader className="space-y-2 text-center border-b border-border/60 bg-gradient-to-b from-primary/10 via-primary/5 to-transparent">
           <div className="flex justify-center mb-2">
-            <div className="p-3 bg-primary/15 rounded-full">
+            <div className="rounded-2xl border border-primary/25 bg-primary/15 p-3 shadow-md">
               <Building2 className="h-10 w-10 text-primary" />
             </div>
           </div>
@@ -164,7 +164,7 @@ export default function LoginPage() {
               />
 
               {isDevMode && (
-                <div className="bg-muted/50 border border-border rounded p-3 space-y-2">
+                <div className="rounded-xl border border-border/70 bg-muted/35 p-3 space-y-2">
                   <p className="text-xs font-semibold text-foreground">Test Credentials:</p>
                   <div className="space-y-1 text-xs text-muted-foreground">
                     <p>Admin: <strong>admin</strong> / <strong>admin123</strong></p>
@@ -174,7 +174,7 @@ export default function LoginPage() {
                 </div>
               )}
             </CardContent>
-            <CardFooter className="flex flex-col space-y-4 border-t border-border/60 bg-muted/30 pt-6">
+            <CardFooter className="flex flex-col space-y-4 border-t border-border/60 bg-muted/20 pt-6">
               <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting ? "Signing in..." : "Sign In"}
               </Button>

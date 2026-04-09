@@ -242,7 +242,7 @@ export default function AccountsPage() {
               <SheetTrigger asChild>
                 <Button><Plus className="h-4 w-4 mr-2" /> Open Account</Button>
               </SheetTrigger>
-              <SheetContent className="w-[480px] sm:w-[540px] overflow-y-auto">
+              <SheetContent className="w-[480px] sm:w-[540px] overflow-y-auto border-l border-border/70 bg-card/95 backdrop-blur-xl">
                 <SheetHeader>
                   <SheetTitle>Open New Account</SheetTitle>
                 </SheetHeader>
@@ -440,8 +440,8 @@ export default function AccountsPage() {
         />
       </div>
 
-      <div className="glass-card">
-        <div className="p-4 border-b border-border">
+      <div className="glass-elevated">
+        <div className="p-4 border-b border-border/70 bg-gradient-to-r from-primary/10 to-transparent">
           <DataTableToolbar
             searchPlaceholder="Search accounts..."
             searchValue={search}
@@ -499,7 +499,7 @@ export default function AccountsPage() {
             </TableHeader>
             <TableBody>
               {filtered.map((a) => (
-                <TableRow key={a.accountNumber}>
+                <TableRow key={a.accountNumber} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-mono text-xs">{a.accountNumber}</TableCell>
                   <TableCell className="font-medium">{a.customerName}</TableCell>
                   <TableCell className="text-sm">{a.bankName}</TableCell>
@@ -522,7 +522,7 @@ export default function AccountsPage() {
       </div>
 
       <Dialog open={complianceOpen} onOpenChange={setComplianceOpen}>
-        <DialogContent>
+        <DialogContent className="border-border/70 bg-card/95 backdrop-blur-xl">
           <DialogHeader>
             <DialogTitle>Account Compliance Verification</DialogTitle>
             <DialogDescription>

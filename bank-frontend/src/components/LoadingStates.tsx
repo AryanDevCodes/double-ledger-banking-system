@@ -9,16 +9,16 @@ interface TableSkeletonProps {
 
 export function TableSkeleton({ columns = 5, rows = 5, className }: TableSkeletonProps) {
   return (
-    <div className={cn("w-full", className)}>
+    <div className={cn("w-full rounded-xl border border-border/60 bg-card/50", className)}>
       {/* Header */}
-      <div className="flex gap-4 p-4 border-b border-border">
+      <div className="flex gap-4 border-b border-border/70 p-4">
         {Array.from({ length: columns }).map((_, i) => (
           <Skeleton key={i} className="h-4 flex-1" />
         ))}
       </div>
       {/* Rows */}
       {Array.from({ length: rows }).map((_, rowIndex) => (
-        <div key={rowIndex} className="flex gap-4 p-4 border-b border-border last:border-0">
+        <div key={rowIndex} className="flex gap-4 border-b border-border/60 p-4 last:border-0">
           {Array.from({ length: columns }).map((_, colIndex) => (
             <Skeleton 
               key={colIndex} 
@@ -43,7 +43,7 @@ export function StatCardSkeleton({ className }: CardSkeletonProps) {
     <div className={cn("glass-card p-4", className)}>
       <div className="flex items-start justify-between mb-2.5">
         <Skeleton className="h-4 w-20" />
-        <Skeleton className="h-8 w-8 rounded-lg" />
+        <Skeleton className="h-8 w-8 rounded-xl" />
       </div>
       <Skeleton className="h-7 w-24 mb-2" />
       <Skeleton className="h-3 w-16" />

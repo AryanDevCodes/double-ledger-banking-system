@@ -28,7 +28,7 @@ export default function PageHeader({
       <div className="min-w-0">
         <div className="flex items-center gap-2.5">
           {icon ? (
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20 shadow-sm">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary ring-1 ring-primary/25 shadow-md">
               {icon}
             </div>
           ) : null}
@@ -40,7 +40,7 @@ export default function PageHeader({
         </div>
       </div>
 
-      {actions ? <div className="flex items-center gap-2 flex-wrap">{actions}</div> : null}
+      {actions ? <div className="flex items-center gap-2 flex-wrap sm:justify-end">{actions}</div> : null}
     </div>
   );
 }

@@ -18,12 +18,8 @@
 [![Swagger UI](https://img.shields.io/badge/Swagger%20UI-Local-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)](http://localhost:8080/swagger-ui.html)
 
 </div>
-
----<img width="1536" height="885" alt="templte (1)" src="https://github.com/user-attachments/assets/b0b6733f-1715-4d90-a58d-f571e7f2d75b" />
-
-
-
-
+<img width="1536" height="885" alt="templte (1)" src="https://github.com/user-attachments/assets/b0b6733f-1715-4d90-a58d-f571e7f2d75b" /
+---
 ## 📌 Contents
 
 - [What this project is](#-what-this-project-is)

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Building2, Users, CreditCard, ArrowLeftRight, Smartphone, TrendingUp, ShieldCheck, AlertTriangle, RefreshCw, Wallet, Activity, CheckCircle2 } from "lucide-react";
+import { Building2, Users, CreditCard, ArrowLeftRight, Smartphone, TrendingUp, ShieldCheck, AlertTriangle, RefreshCw, Wallet, Activity, CheckCircle2, Settings2, ArrowUp, ArrowDown, GripVertical, Save, Trash2 } from "lucide-react";
 import StatCard from "@/components/StatCard";
 import StatusBadge from "@/components/StatusBadge";
 import PageWrapper from "@/components/PageWrapper";
@@ -11,6 +11,9 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROLES } from "@/lib/rbac";
@@ -40,6 +43,30 @@ type DashboardTransaction = TransactionResponseDTO & {
   toAccountNumber?: string;
 };
 
+type StatWidget = {
+  id: string;
+  title: string;
+  value: string | number;
+  subtitle?: string;
+  icon: JSX.Element;
+};
+
+type WidgetPreset = {
+  id: "compact" | "executive" | "risk" | "ops";
+  label: string;
+  description: string;
+  order: string[];
+  hidden: string[];
+};
+
+type SavedWidgetLayout = {
+  id: string;
+  name: string;
+  order: string[];
+  hidden: string[];
+  updatedAt: string;
+};
+
 export default function Dashboard() {
   const { user } = useAuth();
   const [banks, setBanks] = useState<BankResponseDTO[]>([]);
@@ -48,6 +75,12 @@ export default function Dashboard() {
   const [upiProfiles, setUpiProfiles] = useState<UpiProfileResponseDTO[]>([]);
   const [transactions, setTransactions] = useState<DashboardTransaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [widgetSettingsOpen, setWidgetSettingsOpen] = useState(false);
+  const [statOrder, setStatOrder] = useState<string[]>([]);
+  const [hiddenStats, setHiddenStats] = useState<string[]>([]);
+  const [draggingWidgetId, setDraggingWidgetId] = useState<string | null>(null);
+  const [savedLayouts, setSavedLayouts] = useState<SavedWidgetLayout[]>([]);
+  const [layoutName, setLayoutName] = useState("");
 
   useEffect(() => {
     loadData();
@@ -125,6 +158,9 @@ export default function Dashboard() {
     !roles.includes(ROLES.CUSTOMER_MANAGER) &&
     !roles.includes(ROLES.AUDITOR);
   const locale = typeof navigator !== "undefined" ? navigator.language : "en-US";
+  const roleKey = roles.length ? roles.slice().sort().join("_") : "guest";
+  const statLayoutStorageKey = `sb.dashboard.stats.layout.${roleKey}.${isCustomer ? "customer" : "ops"}`;
+  const savedLayoutsStorageKey = `sb.dashboard.stats.saved.${roleKey}.${isCustomer ? "customer" : "ops"}`;
 
   const upiByAccount = new Map<string, string[]>();
   upiProfiles.forEach((profile) => {
@@ -182,6 +218,331 @@ export default function Dashboard() {
     );
   };
 
+  const allStatWidgets: StatWidget[] = isCustomer
+    ? [
+        {
+          id: "my-accounts",
+          title: "My Accounts",
+          value: accounts.length,
+          icon: <CreditCard className="h-5 w-5" />,
+          subtitle: `${activeAccounts} active`,
+        },
+        {
+          id: "my-balance",
+          title: "Total Balance",
+          value: formatCurrency(totalBalance),
+          icon: <Wallet className="h-5 w-5" />,
+        },
+        {
+          id: "my-upi",
+          title: "UPI Profiles",
+          value: upiProfiles.length,
+          icon: <Smartphone className="h-5 w-5" />,
+        },
+        {
+          id: "my-transactions",
+          title: "Transactions",
+          value: transactions.length,
+          icon: <ArrowLeftRight className="h-5 w-5" />,
+          subtitle: `${successRate}% success`,
+        },
+        {
+          id: "my-total-sent",
+          title: "Total Sent",
+          value: formatCurrency(
+            transactions
+              .filter((t) => (t.transactionType || "TRANSFER") !== "CREDIT")
+              .reduce((sum, t) => sum + t.amount, 0),
+          ),
+          icon: <TrendingUp className="h-5 w-5" />,
+        },
+        {
+          id: "my-total-received",
+          title: "Total Received",
+          value: formatCurrency(
+            transactions
+              .filter((t) => (t.transactionType || "TRANSFER") === "CREDIT")
+              .reduce((sum, t) => sum + t.amount, 0),
+          ),
+          icon: <Activity className="h-5 w-5" />,
+        },
+      ]
+    : [
+        {
+          id: "ops-banks",
+          title: "Banks",
+          value: banks.length,
+          icon: <Building2 className="h-5 w-5" />,
+          subtitle: "Registered",
+        },
+        {
+          id: "ops-customers",
+          title: "Customers",
+          value: customers.length,
+          icon: <Users className="h-5 w-5" />,
+          subtitle: "Total",
+        },
+        {
+          id: "ops-accounts",
+          title: "Accounts",
+          value: activeAccounts,
+          icon: <CreditCard className="h-5 w-5" />,
+          subtitle: "Active",
+        },
+        {
+          id: "ops-balance",
+          title: "Total Balance",
+          value: formatCurrency(totalBalance),
+          icon: <TrendingUp className="h-5 w-5" />,
+        },
+        {
+          id: "ops-transactions",
+          title: "Transactions",
+          value: transactions.length,
+          icon: <ArrowLeftRight className="h-5 w-5" />,
+          subtitle: `${successRate}% success`,
+        },
+        {
+          id: "ops-upi",
+          title: "UPI Profiles",
+          value: upiProfiles.length,
+          icon: <Smartphone className="h-5 w-5" />,
+          subtitle: "Registered",
+        },
+      ];
+
+  const defaultOrder = allStatWidgets.map((item) => item.id);
+
+  const widgetPresets: WidgetPreset[] = isCustomer
+    ? [
+        {
+          id: "compact",
+          label: "Compact",
+          description: "Minimal personal essentials",
+          order: ["my-balance", "my-accounts", "my-transactions", "my-upi", "my-total-sent", "my-total-received"],
+          hidden: ["my-upi", "my-total-received"],
+        },
+        {
+          id: "executive",
+          label: "Executive",
+          description: "Net position and cashflow first",
+          order: ["my-balance", "my-total-sent", "my-total-received", "my-transactions", "my-accounts", "my-upi"],
+          hidden: [],
+        },
+        {
+          id: "risk",
+          label: "Risk",
+          description: "Payment activity first",
+          order: ["my-transactions", "my-upi", "my-accounts", "my-balance", "my-total-sent", "my-total-received"],
+          hidden: ["my-total-received"],
+        },
+        {
+          id: "ops",
+          label: "Ops",
+          description: "Default operational layout",
+          order: defaultOrder,
+          hidden: [],
+        },
+      ]
+    : [
+        {
+          id: "compact",
+          label: "Compact",
+          description: "High-signal minimal overview",
+          order: ["ops-balance", "ops-transactions", "ops-accounts", "ops-customers", "ops-upi", "ops-banks"],
+          hidden: ["ops-upi", "ops-banks"],
+        },
+        {
+          id: "executive",
+          label: "Executive",
+          description: "Business KPIs first",
+          order: ["ops-balance", "ops-transactions", "ops-customers", "ops-accounts", "ops-upi", "ops-banks"],
+          hidden: [],
+        },
+        {
+          id: "risk",
+          label: "Risk",
+          description: "Exposure and throughput focus",
+          order: ["ops-transactions", "ops-accounts", "ops-customers", "ops-upi", "ops-balance", "ops-banks"],
+          hidden: ["ops-banks"],
+        },
+        {
+          id: "ops",
+          label: "Ops",
+          description: "Default operational layout",
+          order: defaultOrder,
+          hidden: [],
+        },
+      ];
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(statLayoutStorageKey);
+      if (!raw) {
+        setStatOrder(defaultOrder);
+        setHiddenStats([]);
+        return;
+      }
+
+      const parsed = JSON.parse(raw) as { order?: string[]; hidden?: string[] };
+      const parsedOrder = Array.isArray(parsed.order) ? parsed.order : [];
+      const parsedHidden = Array.isArray(parsed.hidden) ? parsed.hidden : [];
+
+      const validSet = new Set(defaultOrder);
+      const mergedOrder = [...parsedOrder.filter((id) => validSet.has(id)), ...defaultOrder.filter((id) => !parsedOrder.includes(id))];
+      const mergedHidden = parsedHidden.filter((id) => validSet.has(id));
+
+      setStatOrder(mergedOrder);
+      setHiddenStats(mergedHidden);
+    } catch {
+      setStatOrder(defaultOrder);
+      setHiddenStats([]);
+    }
+  }, [statLayoutStorageKey, isCustomer]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(savedLayoutsStorageKey);
+      if (!raw) {
+        setSavedLayouts([]);
+        return;
+      }
+
+      const parsed = JSON.parse(raw) as SavedWidgetLayout[];
+      if (!Array.isArray(parsed)) {
+        setSavedLayouts([]);
+        return;
+      }
+
+      setSavedLayouts(parsed);
+    } catch {
+      setSavedLayouts([]);
+    }
+  }, [savedLayoutsStorageKey]);
+
+  useEffect(() => {
+    if (!statOrder.length) {
+      return;
+    }
+
+    localStorage.setItem(
+      statLayoutStorageKey,
+      JSON.stringify({
+        order: statOrder,
+        hidden: hiddenStats,
+      }),
+    );
+  }, [statOrder, hiddenStats, statLayoutStorageKey]);
+
+  useEffect(() => {
+    localStorage.setItem(savedLayoutsStorageKey, JSON.stringify(savedLayouts));
+  }, [savedLayouts, savedLayoutsStorageKey]);
+
+  const statById = new Map(allStatWidgets.map((item) => [item.id, item]));
+  const visibleStatWidgets = statOrder
+    .map((id) => statById.get(id))
+    .filter((item): item is StatWidget => !!item)
+    .filter((item) => !hiddenStats.includes(item.id));
+
+  const orderedWidgetMeta = statOrder
+    .map((id) => statById.get(id))
+    .filter((item): item is StatWidget => !!item);
+
+  const moveStatWidget = (id: string, direction: "up" | "down") => {
+    setStatOrder((current) => {
+      const index = current.indexOf(id);
+      if (index === -1) return current;
+
+      const target = direction === "up" ? index - 1 : index + 1;
+      if (target < 0 || target >= current.length) return current;
+
+      const next = [...current];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  };
+
+  const moveStatWidgetToIndex = (id: string, targetIndex: number) => {
+    setStatOrder((current) => {
+      const sourceIndex = current.indexOf(id);
+      if (sourceIndex === -1 || sourceIndex === targetIndex) {
+        return current;
+      }
+
+      const safeTargetIndex = Math.max(0, Math.min(targetIndex, current.length - 1));
+      const next = [...current];
+      const [moved] = next.splice(sourceIndex, 1);
+      next.splice(safeTargetIndex, 0, moved);
+      return next;
+    });
+  };
+
+  const toggleWidgetVisibility = (id: string, visible: boolean) => {
+    setHiddenStats((current) => {
+      if (visible) {
+        return current.filter((item) => item !== id);
+      }
+      if (current.includes(id)) {
+        return current;
+      }
+      return [...current, id];
+    });
+  };
+
+  const applyPreset = (preset: WidgetPreset) => {
+    const validSet = new Set(defaultOrder);
+    const mergedOrder = [...preset.order.filter((id) => validSet.has(id)), ...defaultOrder.filter((id) => !preset.order.includes(id))];
+    const mergedHidden = preset.hidden.filter((id) => validSet.has(id));
+    setStatOrder(mergedOrder);
+    setHiddenStats(mergedHidden);
+    toast.success(`Applied ${preset.label} layout`);
+  };
+
+  const applySavedLayout = (layout: SavedWidgetLayout) => {
+    const validSet = new Set(defaultOrder);
+    const mergedOrder = [...layout.order.filter((id) => validSet.has(id)), ...defaultOrder.filter((id) => !layout.order.includes(id))];
+    const mergedHidden = layout.hidden.filter((id) => validSet.has(id));
+    setStatOrder(mergedOrder);
+    setHiddenStats(mergedHidden);
+    toast.success(`Applied \"${layout.name}\"`);
+  };
+
+  const saveCurrentLayout = () => {
+    const trimmedName = layoutName.trim();
+    if (!trimmedName) {
+      toast.error("Enter a layout name");
+      return;
+    }
+
+    if (savedLayouts.some((layout) => layout.name.toLowerCase() === trimmedName.toLowerCase())) {
+      toast.error("A layout with this name already exists");
+      return;
+    }
+
+    const next: SavedWidgetLayout = {
+      id: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}`,
+      name: trimmedName,
+      order: statOrder,
+      hidden: hiddenStats,
+      updatedAt: new Date().toISOString(),
+    };
+
+    setSavedLayouts((current) => [next, ...current].slice(0, 12));
+    setLayoutName("");
+    toast.success(`Saved layout \"${trimmedName}\"`);
+  };
+
+  const deleteSavedLayout = (id: string) => {
+    setSavedLayouts((current) => current.filter((layout) => layout.id !== id));
+    toast.success("Layout removed");
+  };
+
+  const resetWidgetLayout = () => {
+    setStatOrder(defaultOrder);
+    setHiddenStats([]);
+    toast.success("Widget layout reset to default");
+  };
+
   return (
     <PageWrapper>
       <PageHeader
@@ -195,10 +556,16 @@ export default function Dashboard() {
         }
         icon={<TrendingUp className="h-5 w-5" />}
         actions={
-          <Button variant="outline" size="sm" onClick={loadData} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setWidgetSettingsOpen(true)}>
+              <Settings2 className="h-4 w-4 mr-2" />
+              Customize Widgets
+            </Button>
+            <Button variant="outline" size="sm" onClick={loadData} disabled={loading}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+          </div>
         }
       />
 
@@ -211,90 +578,155 @@ export default function Dashboard() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
-          {isCustomer ? (
-            <>
-              <StatCard
-                title="My Accounts"
-                value={accounts.length}
-                icon={<CreditCard className="h-5 w-5" />}
-                subtitle={`${activeAccounts} active`}
-              />
-              <StatCard
-                title="Total Balance"
-                value={formatCurrency(totalBalance)}
-                icon={<Wallet className="h-5 w-5" />}
-              />
-              <StatCard
-                title="UPI Profiles"
-                value={upiProfiles.length}
-                icon={<Smartphone className="h-5 w-5" />}
-              />
-              <StatCard
-                title="Transactions"
-                value={transactions.length}
-                icon={<ArrowLeftRight className="h-5 w-5" />}
-                subtitle={`${successRate}% success`}
-              />
-              <StatCard
-                title="Total Sent"
-                value={formatCurrency(
-                  transactions
-                    .filter((t) => (t.transactionType || "TRANSFER") !== "CREDIT")
-                    .reduce((sum, t) => sum + t.amount, 0)
-                )}
-                icon={<TrendingUp className="h-5 w-5" />}
-              />
-              <StatCard
-                title="Total Received"
-                value={formatCurrency(
-                  transactions
-                    .filter((t) => (t.transactionType || "TRANSFER") === "CREDIT")
-                    .reduce((sum, t) => sum + t.amount, 0)
-                )}
-                icon={<Activity className="h-5 w-5" />}
-              />
-            </>
-          ) : (
-            <>
-              <StatCard 
-                title="Banks" 
-                value={banks.length} 
-                icon={<Building2 className="h-5 w-5" />} 
-                subtitle="Registered" 
-              />
-              <StatCard 
-                title="Customers" 
-                value={customers.length} 
-                icon={<Users className="h-5 w-5" />} 
-                subtitle="Total" 
-              />
-              <StatCard 
-                title="Accounts" 
-                value={activeAccounts} 
-                icon={<CreditCard className="h-5 w-5" />} 
-                subtitle="Active" 
-              />
-              <StatCard 
-                title="Total Balance" 
-                value={formatCurrency(totalBalance)} 
-                icon={<TrendingUp className="h-5 w-5" />} 
-              />
-              <StatCard 
-                title="Transactions" 
-                value={transactions.length} 
-                icon={<ArrowLeftRight className="h-5 w-5" />} 
-                subtitle={`${successRate}% success`}
-              />
-              <StatCard 
-                title="UPI Profiles" 
-                value={upiProfiles.length} 
-                icon={<Smartphone className="h-5 w-5" />} 
-                subtitle="Registered" 
-              />
-            </>
-          )}
+          {visibleStatWidgets.map((widget) => (
+            <StatCard
+              key={widget.id}
+              title={widget.title}
+              value={widget.value}
+              icon={widget.icon}
+              subtitle={widget.subtitle}
+            />
+          ))}
         </div>
       )}
+
+      <Dialog open={widgetSettingsOpen} onOpenChange={setWidgetSettingsOpen}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto border-border/70 bg-card/95 backdrop-blur-xl">
+          <DialogHeader>
+            <DialogTitle>Customize Stat Widgets</DialogTitle>
+            <DialogDescription>
+              Reorder (drag and drop) and toggle visibility. Layout is saved for your current role profile.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Quick Presets</p>
+            <div className="grid grid-cols-2 gap-2">
+              {widgetPresets.map((preset) => (
+                <Button
+                  key={preset.id}
+                  variant="outline"
+                  size="sm"
+                  className="justify-start"
+                  onClick={() => applyPreset(preset)}
+                >
+                  <span className="truncate">{preset.label}</span>
+                </Button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              {isCustomer
+                ? "Presets tune personal finance visibility for different workflows."
+                : "Presets optimize the operations cockpit for different monitoring styles."}
+            </p>
+            <div className="mt-3">
+              <Button variant="ghost" size="sm" onClick={resetWidgetLayout}>
+                Reset to default layout
+              </Button>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Saved Layouts</p>
+            <div className="flex gap-2">
+              <Input
+                value={layoutName}
+                onChange={(event) => setLayoutName(event.target.value)}
+                placeholder="Layout name"
+                className="h-9"
+              />
+              <Button size="sm" onClick={saveCurrentLayout}>
+                <Save className="h-4 w-4 mr-2" />
+                Save
+              </Button>
+            </div>
+
+            {savedLayouts.length > 0 ? (
+              <div className="mt-3 space-y-2 max-h-48 overflow-auto pr-1">
+                {savedLayouts.map((layout) => (
+                  <div key={layout.id} className="flex items-center gap-2 rounded-lg border border-border/60 bg-background/60 p-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{layout.name}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        Updated {new Date(layout.updatedAt).toLocaleString()}
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => applySavedLayout(layout)}>
+                      Apply
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => deleteSavedLayout(layout.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground mt-3">No saved layouts yet.</p>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            {orderedWidgetMeta.map((widget, index) => {
+              const isVisible = !hiddenStats.includes(widget.id);
+              const isDragging = draggingWidgetId === widget.id;
+              return (
+                <div
+                  key={widget.id}
+                  draggable
+                  onDragStart={() => setDraggingWidgetId(widget.id)}
+                  onDragEnd={() => setDraggingWidgetId(null)}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={(event) => {
+                    event.preventDefault();
+                    if (!draggingWidgetId || draggingWidgetId === widget.id) {
+                      return;
+                    }
+                    moveStatWidgetToIndex(draggingWidgetId, index);
+                    setDraggingWidgetId(null);
+                  }}
+                  className={`flex items-center gap-3 rounded-xl border border-border/70 bg-muted/20 px-3 py-2 transition ${isDragging ? "opacity-60 ring-1 ring-primary/40" : ""}`}
+                >
+                  <div className="cursor-grab text-muted-foreground">
+                    <GripVertical className="h-4 w-4" />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{widget.title}</p>
+                    <p className="text-xs text-muted-foreground">{widget.id}</p>
+                  </div>
+
+                  <Switch
+                    checked={isVisible}
+                    onCheckedChange={(checked) => toggleWidgetVisibility(widget.id, checked)}
+                    aria-label={`Toggle ${widget.title}`}
+                  />
+
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      disabled={index === 0}
+                      onClick={() => moveStatWidget(widget.id, "up")}
+                    >
+                      <ArrowUp className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      disabled={index === orderedWidgetMeta.length - 1}
+                      onClick={() => moveStatWidget(widget.id, "down")}
+                    >
+                      <ArrowDown className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Analytics */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-6">

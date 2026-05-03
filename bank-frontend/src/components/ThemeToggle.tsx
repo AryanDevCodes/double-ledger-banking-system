@@ -1,5 +1,5 @@
 import { useTheme } from "next-themes";
-import { Moon, Sun, Laptop, Palette, Sparkles, Landmark, Waves, Gem } from "lucide-react";
+import { Moon, Sun, Laptop, Palette, Sparkles, Landmark, Waves, Gem, Flame, Leaf, PanelsTopLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,8 +12,8 @@ import {
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
-type UiStyle = "modern" | "classic";
-type Accent = "emerald" | "ocean" | "royal";
+type UiStyle = "modern" | "classic" | "solid";
+type Accent = "emerald" | "ocean" | "royal" | "ember" | "jade";
 
 const UI_STYLE_KEY = "ui-style";
 const UI_ACCENT_KEY = "ui-accent";
@@ -106,6 +106,13 @@ export function ThemeToggle({ withLabel = false, className }: ThemeToggleProps) 
           <Landmark className="mr-2 h-4 w-4" />
           Classic
         </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => handleStyleChange("solid")}
+          className={uiStyle === "solid" ? "font-semibold" : undefined}
+        >
+          <PanelsTopLeft className="mr-2 h-4 w-4" />
+          Solid
+        </DropdownMenuItem>
 
         <DropdownMenuSeparator />
         <DropdownMenuLabel>Accent</DropdownMenuLabel>
@@ -129,6 +136,20 @@ export function ThemeToggle({ withLabel = false, className }: ThemeToggleProps) 
         >
           <Gem className="mr-2 h-4 w-4" />
           Royal
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => handleAccentChange("ember")}
+          className={accent === "ember" ? "font-semibold" : undefined}
+        >
+          <Flame className="mr-2 h-4 w-4" />
+          Ember
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => handleAccentChange("jade")}
+          className={accent === "jade" ? "font-semibold" : undefined}
+        >
+          <Leaf className="mr-2 h-4 w-4" />
+          Jade
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

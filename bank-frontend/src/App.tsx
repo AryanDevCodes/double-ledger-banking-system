@@ -10,8 +10,10 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { getDashboardRoute } from "@/lib/rbac";
 import { useAuth } from "@/contexts/AuthContext";
+import { FEATURES } from "@/lib/features";
 
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
+const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage"));
 const DashboardLayout = lazy(() => import("@/components/DashboardLayout"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const SetPasswordPage = lazy(() => import("@/pages/SetPasswordPage"));
@@ -26,6 +28,7 @@ const CustomerManagerDashboard = lazy(() => import("@/pages/CustomerManagerDashb
 const PaymentsPage = lazy(() => import("@/pages/PaymentsPage"));
 const AuditLogsPage = lazy(() => import("@/pages/AuditLogsPage"));
 const SecurityPage = lazy(() => import("@/pages/SecurityPage"));
+const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -63,6 +66,7 @@ const App = () => (
                 <Routes>
                 {/* Public Routes */}
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                 <Route path="/set-password" element={
                   <ProtectedRoute>
                     <SetPasswordPage />
@@ -82,16 +86,21 @@ const App = () => (
                   <Route path="/accounts" element={<AccountsPage />} />
                   <Route path="/transactions" element={<TransactionsPage />} />
                   <Route path="/upi" element={<UpiPage />} />
-                  <Route path="/audit" element={
-                    <ProtectedRoute requiredRoles={['ROLE_ADMIN', 'ROLE_AUDITOR']}>
-                      <AuditLogsPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/security" element={
-                    <ProtectedRoute requiredRoles={['ROLE_ADMIN']}>
-                      <SecurityPage />
-                    </ProtectedRoute>
-                  } />
+                  <Route path="/profile" element={<ProfilePage />} />
+                  {FEATURES.enableAuditModule && (
+                    <Route path="/audit" element={
+                      <ProtectedRoute requiredRoles={['ROLE_ADMIN', 'ROLE_AUDITOR']}>
+                        <AuditLogsPage />
+                      </ProtectedRoute>
+                    } />
+                  )}
+                  {FEATURES.enableSecurityModule && (
+                    <Route path="/security" element={
+                      <ProtectedRoute requiredRoles={['ROLE_ADMIN']}>
+                        <SecurityPage />
+                      </ProtectedRoute>
+                    } />
+                  )}
                   <Route path="/admin" element={
                     <ProtectedRoute requiredRoles={['ROLE_ADMIN']}>
                       <AdminDashboard />

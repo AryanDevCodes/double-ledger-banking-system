@@ -376,8 +376,18 @@ export default function PaymentsPage() {
         }
       />
 
+      <div className="module-hero module-hero--payments mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Payment Console</p>
+            <p className="text-sm text-foreground/90 mt-1">Unified rails for UPI and bank transfers with transparent outcomes and instant controls.</p>
+          </div>
+          <Badge variant="secondary" className="rounded-full">Instant + Account Transfer</Badge>
+        </div>
+      </div>
+
       <Tabs defaultValue="pay" className="space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-3 rounded-xl border border-border/70 bg-card/70 p-1 backdrop-blur-xl">
+        <TabsList className="tabs-luxe grid w-full max-w-md grid-cols-3">
           <TabsTrigger value="pay">
             <Send className="h-4 w-4 mr-2" />
             Send Money
@@ -395,7 +405,7 @@ export default function PaymentsPage() {
         {/* Send Money Tab */}
         <TabsContent value="pay" className="space-y-6">
           {!canInitiatePayments && (
-            <Card className="border-border/70 bg-card/80 backdrop-blur-xl">
+            <Card className="panel-luxe">
               <CardHeader>
                 <CardTitle>Payment initiation restricted</CardTitle>
                 <CardDescription>
@@ -434,7 +444,7 @@ export default function PaymentsPage() {
           {canInitiatePayments && (
           <div className="grid md:grid-cols-2 gap-6">
             {/* UPI Payment */}
-            <Card className="border-border/70 bg-card/80 backdrop-blur-xl shadow-md">
+            <Card className="panel-luxe shadow-md">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Smartphone className="h-5 w-5 text-teal-500" />
@@ -514,7 +524,7 @@ export default function PaymentsPage() {
             </Card>
 
             {/* Bank Transfer */}
-            <Card className="border-border/70 bg-card/80 backdrop-blur-xl shadow-md">
+            <Card className="panel-luxe shadow-md">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CreditCard className="h-5 w-5 text-blue-500" />
@@ -590,7 +600,7 @@ export default function PaymentsPage() {
           )}
 
           {/* Quick Balance Overview */}
-          <Card className="border-border/70 bg-card/80 backdrop-blur-xl">
+          <Card className="panel-luxe">
             <CardHeader>
               <CardTitle>Your Accounts</CardTitle>
               <CardDescription>Quick balance overview</CardDescription>
@@ -611,7 +621,7 @@ export default function PaymentsPage() {
           </Card>
 
           {/* Transaction History */}
-          <Card className="border-border/70 bg-card/80 backdrop-blur-xl">
+          <Card className="panel-luxe">
             <CardHeader className="flex flex-row items-start justify-between space-y-0">
               <div>
                 <CardTitle className="flex items-center gap-2">
@@ -716,7 +726,7 @@ export default function PaymentsPage() {
         {/* UPI Management Tab */}
         <TabsContent value="upi" className="space-y-6">
           <div className="grid lg:grid-cols-2 gap-6">
-            <Card className="border-border/70 bg-card/80 backdrop-blur-xl shadow-md">
+            <Card className="panel-luxe shadow-md">
               <CardHeader>
                 <CardTitle>Register UPI ID</CardTitle>
                 <CardDescription>Create a new UPI ID linked to your account</CardDescription>
@@ -776,7 +786,7 @@ export default function PaymentsPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-border/70 bg-card/80 backdrop-blur-xl shadow-md">
+            <Card className="panel-luxe shadow-md">
               <CardHeader>
                 <CardTitle>Your UPI IDs</CardTitle>
                 <CardDescription>Activate, deactivate, or remove UPI profiles</CardDescription>

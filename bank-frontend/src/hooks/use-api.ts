@@ -100,17 +100,14 @@ export const useCustomers = (options?: Omit<UseQueryOptions<CustomerResponseDTO[
 export const useCustomer = (id: string) =>
   useQuery({
     queryKey: ["customers", id],
-    queryFn: () => customerApi.getById(id),
+    queryFn: () => customerApi.getByEmail(id),
     enabled: !!id,
   });
 
 export const useCreateCustomer = () => {
-  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: customerApi.create,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["customers"] });
-      toast.success("Customer created successfully");
+    mutationFn: async (_data: CustomerRequestDTO) => {
+      throw new Error("Customer creation API is unavailable. Create customers via account onboarding.");
     },
     onError: handleApiError,
   });
@@ -119,8 +116,17 @@ export const useCreateCustomer = () => {
 export const useUpdateCustomer = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<CustomerRequestDTO> }) =>
-      customerApi.update(id, data),
+    mutationFn: ({
+      name,
+      email,
+      phoneNumber,
+      data,
+    }: {
+      name: string;
+      email: string;
+      phoneNumber: string;
+      data: CustomerRequestDTO;
+    }) => customerApi.update(name, email, phoneNumber, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["customers"] });
       toast.success("Customer updated successfully");
@@ -152,7 +158,7 @@ export const useAccounts = (options?: Omit<UseQueryOptions<AccountResponseDTO[]>
 export const useAccount = (accountNumber: string) =>
   useQuery({
     queryKey: ["accounts", accountNumber],
-    queryFn: () => accountApi.getByAccountNumber(accountNumber),
+    queryFn: () => accountApi.getById(accountNumber),
     enabled: !!accountNumber,
   });
 
@@ -172,7 +178,7 @@ export const useCreateAccount = () => {
 export const useCloseAccount = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: accountApi.close,
+    mutationFn: accountApi.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["accounts"] });
       toast.success("Account closed successfully");
@@ -192,15 +198,18 @@ export const useTransactions = (options?: Omit<UseQueryOptions<TransactionRespon
 export const useTransaction = (id: number) =>
   useQuery({
     queryKey: ["transactions", id],
-    queryFn: () => transactionApi.getById(id),
+    queryFn: async () => {
+      const items = await transactionApi.getAll();
+      return items.find((item) => item.transactionId === id) ?? null;
+    },
     enabled: !!id,
   });
 
-export const useAccountTransactions = (accountNumber: string) =>
+export const useAccountTransactions = (accountNumber: string, email: string) =>
   useQuery({
-    queryKey: ["transactions", "account", accountNumber],
-    queryFn: () => transactionApi.getByAccountNumber(accountNumber),
-    enabled: !!accountNumber,
+    queryKey: ["transactions", "account", accountNumber, email],
+    queryFn: () => transactionApi.getByAccount(accountNumber, email),
+    enabled: !!accountNumber && !!email,
   });
 
 export const useCreateTransaction = () => {
@@ -220,7 +229,7 @@ export const useCreateTransaction = () => {
 export const useUpiProfiles = (options?: Omit<UseQueryOptions<UpiProfileResponseDTO[]>, "queryKey" | "queryFn">) =>
   useQuery({
     queryKey: ["upi-profiles"],
-    queryFn: upiApi.getAllProfiles,
+    queryFn: upiApi.getAll,
     ...options,
   });
 
@@ -259,7 +268,7 @@ export const useUpiPayment = () => {
 export const useDeactivateUpi = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: upiApi.deactivate,
+    mutationFn: upiApi.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["upi-profiles"] });
       toast.success("UPI ID deactivated");

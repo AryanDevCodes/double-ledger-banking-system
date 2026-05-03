@@ -398,48 +398,85 @@ export default function UpiPage() {
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <StatCard
-          title="Total UPI"
-          value={profiles.length}
-          subtitle={`${activeCount} active`}
-          icon={<Smartphone className="h-5 w-5" />}
-        />
-        <StatCard title="Active" value={activeCount} subtitle="Ready to use" icon={<CheckCircle2 className="h-5 w-5" />} />
-        <StatCard title="Inactive" value={inactiveCount} subtitle="Needs attention" icon={<Ban className="h-5 w-5" />} />
-        <StatCard title="Linked Accounts" value={accounts.length} subtitle="Available" icon={<QrCode className="h-5 w-5" />} />
+      <div className="module-hero module-hero--upi mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">UPI Workspace</p>
+            <p className="text-sm text-foreground/90 mt-1">Control identity rails, status governance, and QR-ready payment surfaces.</p>
+          </div>
+          <div className="inline-flex items-center rounded-full border border-border/70 bg-background/70 px-3 py-1.5 text-xs text-muted-foreground">
+            Profile + Status + QR Operations
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-3 mb-6">
+        <div className="lg:col-span-2 grid gap-4 sm:grid-cols-2">
+          <StatCard
+            title="Total UPI"
+            value={profiles.length}
+            subtitle={`${activeCount} active`}
+            icon={<Smartphone className="h-5 w-5" />}
+            compact={false}
+          />
+          <StatCard
+            title="Linked Accounts"
+            value={accounts.length}
+            subtitle="Available"
+            icon={<QrCode className="h-5 w-5" />}
+            compact={false}
+          />
+          <StatCard
+            title="Active"
+            value={activeCount}
+            subtitle="Ready to use"
+            icon={<CheckCircle2 className="h-5 w-5" />}
+            compact={false}
+          />
+          <StatCard
+            title="Inactive"
+            value={inactiveCount}
+            subtitle="Needs attention"
+            icon={<Ban className="h-5 w-5" />}
+            compact={false}
+          />
+        </div>
+
+        <div className="panel-luxe p-5 space-y-4">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Capacity Control</p>
+            <p className="text-xl font-semibold mt-1">UPI utilization</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {profiles.length} of {accounts.length * 4 || 0} slots used
+            </p>
+          </div>
+          <Progress value={accounts.length ? Math.min(100, (profiles.length / (accounts.length * 4)) * 100) : 0} />
+
+          <div className="grid grid-cols-2 gap-3 pt-1">
+            <div className="rounded-xl border border-border/60 bg-background/55 p-3">
+              <p className="text-[11px] uppercase tracking-[0.11em] text-muted-foreground">Avg / Account</p>
+              <p className="text-2xl font-semibold mt-1">{avgUpiPerAccount}</p>
+            </div>
+            <div className="rounded-xl border border-border/60 bg-background/55 p-3">
+              <p className="text-[11px] uppercase tracking-[0.11em] text-muted-foreground">Near Limit</p>
+              <p className="text-2xl font-semibold mt-1">{nearLimitAccounts}</p>
+              <p className="text-[11px] text-muted-foreground mt-1">3+ UPI IDs</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {!canCustomerOperateUpi ? (
-        <div className="glass-elevated border-l-4 border-l-amber-500 p-4">
-          <p className="text-sm font-medium">Read-only UPI mode</p>
-          <p className="text-xs text-muted-foreground mt-1">
+        <div className="panel-luxe border-l-4 border-l-amber-500 p-5 mb-6">
+          <p className="text-sm font-semibold">Read-only UPI mode</p>
+          <p className="text-sm text-muted-foreground mt-2 max-w-3xl">
             Staff roles can audit UPI profiles and exports, but cannot register UPI IDs, change status, or generate QR codes.
           </p>
         </div>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="glass-elevated p-4">
-          <p className="text-xs text-muted-foreground">Average UPI per account</p>
-          <p className="text-2xl font-semibold mt-1">{avgUpiPerAccount}</p>
-        </div>
-        <div className="glass-elevated p-4">
-          <p className="text-xs text-muted-foreground">Accounts near UPI limit</p>
-          <p className="text-2xl font-semibold mt-1">{nearLimitAccounts}</p>
-          <p className="text-xs text-muted-foreground mt-1">3 or more UPI IDs</p>
-        </div>
-        <div className="glass-elevated p-4">
-          <p className="text-xs text-muted-foreground mb-2">UPI capacity utilization</p>
-          <Progress value={accounts.length ? Math.min(100, (profiles.length / (accounts.length * 4)) * 100) : 0} />
-          <p className="text-xs text-muted-foreground mt-2">
-            {profiles.length} of {accounts.length * 4 || 0} slots used
-          </p>
-        </div>
-      </div>
-
       <Tabs defaultValue="profiles" className="space-y-6">
-        <TabsList className={`grid w-full max-w-md rounded-xl border border-border/70 bg-card/70 p-1 backdrop-blur-xl ${canGenerateQr ? "grid-cols-2" : "grid-cols-1"}`}>
+        <TabsList className={`tabs-luxe grid w-full max-w-md ${canGenerateQr ? "grid-cols-2" : "grid-cols-1"}`}>
           <TabsTrigger value="profiles">UPI Profiles</TabsTrigger>
           {canGenerateQr ? (
             <TabsTrigger value="qr">
@@ -449,7 +486,7 @@ export default function UpiPage() {
         </TabsList>
 
         <TabsContent value="profiles" className="space-y-4">
-          <div className="glass-elevated">
+          <div className="data-table-shell">
             <div className="p-4 border-b border-border/70 bg-gradient-to-r from-primary/10 to-transparent">
               <DataTableToolbar
                 searchPlaceholder="Search UPI..."

@@ -21,13 +21,16 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { StatCardSkeleton, TableSkeleton } from "@/components/LoadingStates";
 import {
   ArrowRight,
+  Bookmark,
   ChevronLeft,
   ChevronRight,
   CheckCircle2,
   Plus,
   Receipt,
   RefreshCw,
+  Save,
   TrendingUp,
+  Trash2,
 } from "lucide-react";
 import type { AccountResponseDTO, TransactionResponseDTO } from "@/types/api";
 import { toast } from "sonner";
@@ -51,6 +54,14 @@ const transferSchema = z
 
 type TransferValues = z.infer<typeof transferSchema>;
 
+type SavedTransactionView = {
+  id: string;
+  name: string;
+  search: string;
+  status?: string;
+  dateIso?: string;
+};
+
 export default function TransactionsPage() {
   const { user } = useAuth();
   const canCreateTransfer = (user?.roles || []).includes(ROLES.USER);
@@ -63,6 +74,8 @@ export default function TransactionsPage() {
     date: undefined,
   });
   const [open, setOpen] = useState(false);
+  const [savedViews, setSavedViews] = useState<SavedTransactionView[]>([]);
+  const [viewName, setViewName] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState<number>(() => {
     if (typeof window === "undefined") return 10;
@@ -74,6 +87,8 @@ export default function TransactionsPage() {
     resolver: zodResolver(transferSchema),
     defaultValues: { senderAccount: "", receiverAccount: "", amount: "" },
   });
+
+  const savedViewsStorageKey = `sb.transactions.savedViews.${user?.userId ?? "anon"}`;
 
   const loadData = async () => {
     try {
@@ -91,8 +106,31 @@ export default function TransactionsPage() {
 
   useEffect(() => {
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(savedViewsStorageKey);
+      if (!raw) {
+        setSavedViews([]);
+        return;
+      }
+
+      const parsed = JSON.parse(raw) as SavedTransactionView[];
+      if (!Array.isArray(parsed)) {
+        setSavedViews([]);
+        return;
+      }
+      setSavedViews(parsed);
+    } catch {
+      setSavedViews([]);
+    }
+  }, [savedViewsStorageKey]);
+
+  useEffect(() => {
+    localStorage.setItem(savedViewsStorageKey, JSON.stringify(savedViews));
+  }, [savedViews, savedViewsStorageKey]);
 
   const senderAccountNumber = form.watch("senderAccount");
   const receiverAccountNumber = form.watch("receiverAccount");
@@ -231,6 +269,45 @@ export default function TransactionsPage() {
       toast.error("Failed to export transactions");
       console.error(error);
     }
+  };
+
+  const saveCurrentView = () => {
+    const trimmedName = viewName.trim();
+    if (!trimmedName) {
+      toast.error("Enter a view name");
+      return;
+    }
+
+    if (savedViews.some((view) => view.name.toLowerCase() === trimmedName.toLowerCase())) {
+      toast.error("A view with this name already exists");
+      return;
+    }
+
+    const next: SavedTransactionView = {
+      id: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}`,
+      name: trimmedName,
+      search,
+      status: activeFilters.status as string | undefined,
+      dateIso: activeFilters.date instanceof Date ? activeFilters.date.toISOString() : undefined,
+    };
+
+    setSavedViews((current) => [next, ...current].slice(0, 10));
+    setViewName("");
+    toast.success(`Saved view \"${trimmedName}\"`);
+  };
+
+  const applySavedView = (view: SavedTransactionView) => {
+    setSearch(view.search ?? "");
+    setActiveFilters({
+      status: view.status,
+      date: view.dateIso ? new Date(view.dateIso) : undefined,
+    });
+    toast.success(`Applied \"${view.name}\"`);
+  };
+
+  const deleteSavedView = (id: string) => {
+    setSavedViews((current) => current.filter((view) => view.id !== id));
+    toast.success("Saved view removed");
   };
 
   return (
@@ -391,6 +468,18 @@ export default function TransactionsPage() {
         }
       />
 
+      <div className="module-hero module-hero--transactions mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Operations View</p>
+            <p className="text-sm text-foreground/90 mt-1">Track money movement with saved views, precision filters, and fast transfer controls.</p>
+          </div>
+          <div className="inline-flex items-center rounded-full border border-border/70 bg-background/70 px-3 py-1 text-xs text-muted-foreground">
+            Live ledger-backed transaction stream
+          </div>
+        </div>
+      </div>
+
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -426,7 +515,7 @@ export default function TransactionsPage() {
         </div>
       )}
 
-      <div className="glass-elevated transition-shadow">
+      <div className="data-table-shell transition-shadow">
         <div className="p-4 border-b border-border/70 bg-gradient-to-r from-primary/10 to-transparent">
           <DataTableToolbar
             searchPlaceholder="Search transactions..."
@@ -440,6 +529,44 @@ export default function TransactionsPage() {
             onFilterChange={(key, value) => setActiveFilters((prev) => ({ ...prev, [key]: value }))}
             onClearFilters={() => setActiveFilters({ status: undefined, date: undefined })}
           />
+
+          <div className="mt-3 rounded-xl border border-border/70 bg-card/85 p-3 backdrop-blur-xl">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <Bookmark className="h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Save current filter view"
+                  value={viewName}
+                  onChange={(event) => setViewName(event.target.value)}
+                  className="h-8"
+                />
+              </div>
+              <Button variant="outline" size="sm" onClick={saveCurrentView}>
+                <Save className="h-4 w-4 mr-2" />
+                Save View
+              </Button>
+            </div>
+
+            {savedViews.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {savedViews.map((view) => (
+                  <div key={view.id} className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-muted/35 px-2 py-1">
+                    <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => applySavedView(view)}>
+                      {view.name}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5 text-muted-foreground hover:text-destructive"
+                      onClick={() => deleteSavedView(view.id)}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {loading ? (
@@ -470,7 +597,7 @@ export default function TransactionsPage() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-xl border border-border/60 bg-card/45">
           <Table className="min-w-[900px]">
             <TableHeader className="sticky top-0 z-10 bg-card/90 backdrop-blur-xl supports-[backdrop-filter]:bg-card/75">
               <TableRow>

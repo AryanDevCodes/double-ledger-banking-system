@@ -6,8 +6,8 @@ interface ThemeProviderProps {
   children: ReactNode;
 }
 
-type UiStyle = "modern" | "classic";
-type Accent = "emerald" | "ocean" | "royal";
+type UiStyle = "modern" | "classic" | "solid";
+type Accent = "emerald" | "ocean" | "royal" | "ember" | "jade";
 
 const UI_STYLE_KEY = "ui-style";
 const UI_ACCENT_KEY = "ui-accent";

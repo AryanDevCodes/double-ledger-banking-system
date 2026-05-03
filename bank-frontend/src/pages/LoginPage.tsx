@@ -163,6 +163,17 @@ export default function LoginPage() {
                 )}
               />
 
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  variant="link"
+                  className="h-auto p-0 text-xs"
+                  onClick={() => navigate('/forgot-password')}
+                >
+                  Forgot password?
+                </Button>
+              </div>
+
               {isDevMode && (
                 <div className="rounded-xl border border-border/70 bg-muted/35 p-3 space-y-2">
                   <p className="text-xs font-semibold text-foreground">Test Credentials:</p>

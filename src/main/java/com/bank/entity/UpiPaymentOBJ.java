@@ -1,40 +1,35 @@
 package com.bank.entity;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CurrentTimestamp;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-
 @Entity
 @Table(
-        name = "upi_payment_obj",
-        uniqueConstraints = @UniqueConstraint(columnNames = "idempotency_key")
-)
-@Getter @Setter
+    name = "upi_payment_obj",
+    uniqueConstraints = @UniqueConstraint(columnNames = "idempotency_key"))
+@Getter
+@Setter
 public class UpiPaymentOBJ {
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  private String idempotencyKey;
+  private String fromUpi;
+  private String toUpi;
+  private BigDecimal amount;
 
-    private String idempotencyKey;
+  @Enumerated(EnumType.STRING)
+  private Status status;
 
-    private String fromUpi;
-    private String toUpi;
+  private Long transactionId;
 
-    private BigDecimal amount;
+  @Column(length = 500)
+  private String failureReason;
 
-    @Enumerated(EnumType.STRING)
-    private Status status;
-
-    private Long transactionId;
-
-    @Column(length = 500)
-    private String failureReason;
-
-    @CurrentTimestamp
-    private LocalDateTime createdAt;
+  @CurrentTimestamp private LocalDateTime createdAt;
 }

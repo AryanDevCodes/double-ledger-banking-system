@@ -2,16 +2,16 @@ package com.bank.service.transaction;
 
 import com.bank.dto.transaction.TransactionRequestDTO;
 import com.bank.dto.transaction.TransactionResponseDTO;
-
 import java.util.List;
 
 public interface TransactionService {
+  TransactionResponseDTO makeTransaction(TransactionRequestDTO transactionRequestDTO);
 
-    TransactionResponseDTO makeTransaction(TransactionRequestDTO transactionRequestDTO);
+  List<TransactionResponseDTO> getAllTransactions(String accountNumber, String email);
 
-    List<TransactionResponseDTO> getAllTransactions(String accountNumber, String email);
+  List<TransactionResponseDTO> getAllTransactionsWithoutFilter();
 
-    List<TransactionResponseDTO> getAllTransactionsWithoutFilter();
+  List<TransactionResponseDTO> getTransactionsForUser(Long userId);
 
-    List<TransactionResponseDTO> getTransactionsForUser(Long userId);
+  List<TransactionResponseDTO> getTransactionsForCustomer(String customerId);
 }

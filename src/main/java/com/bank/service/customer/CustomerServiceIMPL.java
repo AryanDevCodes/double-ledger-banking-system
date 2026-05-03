@@ -9,95 +9,95 @@ import com.bank.repository.CustomerRepository;
 import com.bank.service.customer.mapper.CustomerMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class CustomerServiceIMPL implements CustomerService {
-    private final CustomerRepository customerRepository;
-    private final CustomerMapper customerMapper;
+public
+class CustomerServiceIMPL implements CustomerService {
+  private final CustomerRepository customerRepository;
+  private final CustomerMapper customerMapper;
 
-    @Override
-    public List<CustomerResponseDTO> findAll() {
-        List<Customer> customers = customerRepository.findAll();
-        return customers.stream().map(customerMapper::toResponseDTO).collect(Collectors.toList());
+  @Override
+  public List<CustomerResponseDTO> findAll() {
+    List<Customer> customers = customerRepository.findAll();
+    return customers.stream().map(customerMapper::toResponseDTO).collect(Collectors.toList());
+  }
+
+  @Override
+  public List<CustomerResponseDTO> findCustomerByNameAndBank(String name, String bank) {
+    if (name == null || name.trim().isEmpty() || bank == null || bank.trim().isEmpty()) {
+      throw new InvalidDataException(
+          "name and bank should not be null or empty", "name/bank", name + "/" + bank);
     }
+    List<Customer> customers =
+        customerRepository.findCustomerByFullNameAndAccount_Bank_BankName(name, bank);
+    return customers.stream().map(customerMapper::toResponseDTO).collect(Collectors.toList());
+  }
 
-    @Override
-    public List<CustomerResponseDTO> findCustomerByNameAndBank(String name, String bank) {
-        if (name == null || name.trim().isEmpty() || bank == null || bank.trim().isEmpty()) {
-            throw new InvalidDataException("name and bank should not be null or empty", "name/bank", name + "/" + bank);
-        }
-
-        List<Customer> customers = customerRepository.findCustomerByFullNameAndAccount_Bank_BankName(name, bank);
-        return customers.stream().map(customerMapper::toResponseDTO)
-                .collect(Collectors.toList());
+  @Override
+  public List<CustomerResponseDTO> findCustomerByBank(String bankName) {
+    if (bankName == null || bankName.trim().isEmpty()) {
+      throw new InvalidDataException("bank should not be null or empty");
     }
+    List<Customer> customers = customerRepository.findCustomerByAccount_Bank_BankName(bankName);
+    return customers.stream().map(customerMapper::toResponseDTO).collect(Collectors.toList());
+  }
 
-    @Override
-    public List<CustomerResponseDTO> findCustomerByBank(String bankName) {
-        if (bankName == null || bankName.trim().isEmpty()) {
-            throw new InvalidDataException("bank should not be null or empty");
-        }
-        List<Customer> customers = customerRepository.findCustomerByAccount_Bank_BankName(bankName);
-        return customers.stream().map(customerMapper::toResponseDTO)
-                .collect(Collectors.toList());
+  @Override
+  public CustomerResponseDTO findCustomerByEmail(String email) {
+    if (email == null || email.trim().isEmpty()) {
+      throw new InvalidDataException("email should not be null or empty");
     }
-
-    @Override
-    public CustomerResponseDTO findCustomerByEmail(String email) {
-        if (email == null || email.trim().isEmpty()) {
-            throw new InvalidDataException("email should not be null or empty");
-        }
-        Customer customer = customerRepository.findByEmail(email);
-        if (customer == null) {
-            throw new ResourceNotFoundException("Customer not found with email: " + email);
-        }
-        return customerMapper.toResponseDTO(customer);
+    Customer customer = customerRepository.findByEmail(email);
+    if (customer == null) {
+      throw new ResourceNotFoundException("Customer not found with email: " + email);
     }
+    return customerMapper.toResponseDTO(customer);
+  }
 
-    @Override
-    public CustomerResponseDTO findCustomerByUserId(Long userId) {
-        if (userId == null) {
-            throw new InvalidDataException("userId should not be null");
-        }
-        Customer customer = customerRepository.findByUserId(userId);
-        if (customer == null) {
-            throw new ResourceNotFoundException("Customer not found for user ID: " + userId);
-        }
-        return customerMapper.toResponseDTO(customer);
+  @Override
+  public CustomerResponseDTO findCustomerByUserId(Long userId) {
+    if (userId == null) {
+      throw new InvalidDataException("userId should not be null");
     }
-
-    @Override
-    @Transactional
-    public CustomerResponseDTO updateCustomer(String name, String email, String phoneNumber, CustomerRequestDTO dto) {
-        if (dto == null) {
-            throw new InvalidDataException("Please enter some data to update");
-        }
-
-        Customer customer = customerRepository.findCustomerByFullNameAndEmailAndPhoneNumber(name, email, phoneNumber);
-        if (customer == null) {
-            throw new InvalidDataException("Customer not found");
-        }
-        customer.setFullName(dto.getFullName());
-        customer.setEmail(dto.getEmail());
-        customer.setPhoneNumber(dto.getPhoneNumber());
-        customer.setKycStatus(dto.getKycStatus());
-        customer.setAge(dto.getAge());
-        customer.setAddress(dto.getAddress());
-        customer.setCustomerStatus(dto.getCustomerStatus());
-
-        return customerMapper.toResponseDTO(customerRepository.save(customer));
+    Customer customer = customerRepository.findByUserId(userId);
+    if (customer == null) {
+      throw new ResourceNotFoundException("Customer not found for user ID: " + userId);
     }
+    return customerMapper.toResponseDTO(customer);
+  }
 
-    @Override
-    public void deleteCustomer(String id) {
-        if (id == null) {
-            throw new InvalidDataException("id should not be null");
-        }
-        customerRepository.deleteById(id);
+  @Override
+  @Transactional
+  public CustomerResponseDTO updateCustomer(
+      String name, String email, String phoneNumber, CustomerRequestDTO dto) {
+    if (dto == null) {
+      throw new InvalidDataException("Please enter some data to update");
     }
+    Customer customer =
+        customerRepository.findCustomerByFullNameAndEmailAndPhoneNumber(name, email, phoneNumber);
+    if (customer == null) {
+      throw new InvalidDataException("Customer not found");
+    }
+    customer.setFullName(dto.getFullName());
+    customer.setEmail(dto.getEmail());
+    customer.setPhoneNumber(dto.getPhoneNumber());
+    customer.setKycStatus(dto.getKycStatus());
+    customer.setAge(dto.getAge());
+    customer.setAddress(dto.getAddress());
+    customer.setCustomerStatus(dto.getCustomerStatus());
+    return customerMapper.toResponseDTO(customerRepository.save(customer));
+  }
+
+  @Override
+  public void deleteCustomer(String id) {
+    if (id == null) {
+      throw new InvalidDataException("id should not be null");
+    }
+    customerRepository.deleteById(id);
+  }
 }

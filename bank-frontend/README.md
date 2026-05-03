@@ -18,9 +18,13 @@ Create `.env.local` in `bank-frontend/`:
 ```sh
 VITE_API_BASE_URL=http://localhost:8080
 VITE_ENABLE_MOCKS=false
+VITE_ENABLE_AUDIT=false
+VITE_ENABLE_SECURITY=false
 ```
 
 `VITE_API_BASE_URL` points to the backend REST API. `VITE_ENABLE_MOCKS` should stay false (mock data has been removed).
+
+`VITE_ENABLE_AUDIT` and `VITE_ENABLE_SECURITY` gate frontend routes that require backend modules not present in all environments. Keep both `false` unless those APIs are available.
 
 ## Features
 
@@ -30,6 +34,22 @@ VITE_ENABLE_MOCKS=false
 - Audit and security views: audit logs, access logs, sessions, activity feed.
 - Banking flows: banks, customers, accounts, transactions, UPI profiles/payments.
 - Reusable UI built on shadcn-ui/Radix + Tailwind; global toasts (shadcn + sonner) and tooltips.
+- Global command palette (`Ctrl+K`) for fast module navigation and quick actions.
+- Module readiness indicator in the top bar showing backend-dependent modules currently disabled by feature flags.
+- Advanced theme controls now include UI styles (`Modern`, `Classic`, `Solid`) and accent palettes (`Emerald`, `Ocean`, `Royal`, `Ember`, `Jade`).
+- Dashboard stat widgets are now customizable per role profile (show/hide + reorder) and saved in localStorage.
+- One-click stat layout presets are available in Dashboard (Compact, Executive, Risk, Ops) for faster context switching.
+- Widget composer supports drag-and-drop ordering plus reset-to-default for quick iteration.
+- Named dashboard layouts can be saved, reapplied, and deleted from the widget composer.
+- Transactions module now supports saved filter views (save/apply/delete) for fast investigation workflows.
+
+## Local Changes (May 2026, Unpublished)
+
+- New profile and forgot-password screens wired to auth flows.
+- Added global command palette for fast navigation (`Ctrl+K`).
+- Dashboard layout upgrades: role-based widget customization, presets, and saved layouts.
+- Transactions workflow enhancements: saved filters and faster investigation flows.
+- UI consistency, accessibility, and theme refinements across modules.
 
 ## Scripts
 

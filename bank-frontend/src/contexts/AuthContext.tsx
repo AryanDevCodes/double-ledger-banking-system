@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from 'sonner';
+import { loadProfilePhotoUrl, persistProfilePhotoUrl } from '@/lib/profile-photo';
 
 interface User {
   userId: number;
@@ -7,6 +8,7 @@ interface User {
   email: string;
   fullName: string;
   roles: string[];
+  avatarUrl?: string;
 }
 
 interface AuthContextType {
@@ -15,6 +17,7 @@ interface AuthContextType {
   loading: boolean;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
+  setAvatarUrl: (url: string | null) => void;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   isAuthenticated: boolean;
   hasRole: (role: string) => boolean;
@@ -39,8 +42,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const storedPcr = localStorage.getItem('passwordChangeRequired');
 
     if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+      try {
+        const parsedUser = JSON.parse(storedUser) as User;
+        const avatarUrl = loadProfilePhotoUrl(parsedUser.userId) ?? parsedUser.avatarUrl;
+        setToken(storedToken);
+        setUser({ ...parsedUser, avatarUrl: avatarUrl ?? undefined });
+      } catch {
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+      }
     }
     if (storedPcr === 'true') {
       setPasswordChangeRequired(true);
@@ -64,6 +75,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       const data = await response.json();
       const needsPasswordChange = !!data.passwordChangeRequired;
+      const existingAvatar = loadProfilePhotoUrl(data.userId);
+      const backendAvatar = typeof data.avatarUrl === 'string' && data.avatarUrl.trim() ? data.avatarUrl : null;
       
       const userData: User = {
         userId: data.userId,
@@ -71,6 +84,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         email: data.email,
         fullName: data.fullName,
         roles: data.roles,
+        avatarUrl: existingAvatar ?? backendAvatar ?? undefined,
       };
 
       setToken(data.accessToken);
@@ -123,6 +137,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     toast.success('Password updated successfully');
   };
 
+  const setAvatarUrl = (url: string | null) => {
+    setUser((currentUser) => {
+      if (!currentUser) {
+        return currentUser;
+      }
+
+      persistProfilePhotoUrl(currentUser.userId, url);
+      const nextUser: User = {
+        ...currentUser,
+        avatarUrl: url ?? undefined,
+      };
+      localStorage.setItem('user', JSON.stringify(nextUser));
+      return nextUser;
+    });
+  };
+
   const hasRole = (role: string): boolean => {
     if (!user) return false;
     return user.roles.includes(role);
@@ -139,6 +169,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     loading,
     login,
     logout,
+    setAvatarUrl,
     changePassword,
     isAuthenticated: !!user && !!token,
     hasRole,

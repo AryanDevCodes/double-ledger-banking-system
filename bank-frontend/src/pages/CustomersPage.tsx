@@ -9,7 +9,7 @@ import StatusBadge from "@/components/StatusBadge";
 import StatCard from "@/components/StatCard";
 import DataTableToolbar from "@/components/DataTableToolbar";
 import EmptyState from "@/components/EmptyState";
-import { customerApi } from "@/lib/api-client";
+import { customerApi, transactionApi } from "@/lib/api-client";
 import { exportToCSV, exportToExcel, exportToPDF } from "@/lib/export";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,7 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { TableSkeleton } from "@/components/LoadingStates";
 import { Plus, Users, MoreHorizontal, Eye, Pencil, RefreshCw, ShieldCheck, UserCheck } from "lucide-react";
-import type { CustomerResponseDTO } from "@/types/api";
+import type { CustomerResponseDTO, TransactionResponseDTO } from "@/types/api";
 import { toast } from "sonner";
 
 const customerSchema = z.object({
@@ -51,7 +51,12 @@ export default function CustomersPage() {
     customerStatus: undefined,
   });
   const [open, setOpen] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<CustomerResponseDTO | null>(null);
+  const [viewCustomer, setViewCustomer] = useState<CustomerResponseDTO | null>(null);
+  const [viewTransactions, setViewTransactions] = useState<TransactionResponseDTO[]>([]);
+  const [viewTransactionsLoading, setViewTransactionsLoading] = useState(false);
+  const [viewTransactionsError, setViewTransactionsError] = useState<string | null>(null);
   const form = useForm<CustomerValues>({
     resolver: zodResolver(customerSchema),
     defaultValues: {
@@ -136,6 +141,41 @@ export default function CustomersPage() {
       age: customer.age?.toString() || "",
     });
     setOpen(true);
+  };
+
+  const handleView = (customer: CustomerResponseDTO) => {
+    setViewCustomer(customer);
+    setViewTransactions([]);
+    setViewTransactionsError(null);
+    setViewOpen(true);
+  };
+
+  const loadCustomerTransactions = async (customerId: string) => {
+    try {
+      setViewTransactionsLoading(true);
+      setViewTransactionsError(null);
+      const data = await transactionApi.getByCustomer(customerId);
+      setViewTransactions(data);
+    } catch (error) {
+      setViewTransactionsError("Unable to load customer transactions");
+      console.error(error);
+    } finally {
+      setViewTransactionsLoading(false);
+    }
+  };
+
+  const handleCopyAccounts = async (customer: CustomerResponseDTO) => {
+    if (!customer.accountNumbers || customer.accountNumbers.length === 0) {
+      toast.info("No account numbers available");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(customer.accountNumbers.join(", "));
+      toast.success("Account numbers copied");
+    } catch (error) {
+      toast.error("Unable to copy account numbers");
+      console.error(error);
+    }
   };
 
   const kycVerified = customers.filter(
@@ -355,7 +395,7 @@ export default function CustomersPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="rounded-xl border-border/70 bg-popover/95 backdrop-blur-xl">
-                        <DropdownMenuItem onClick={() => toast.info(`Viewing ${c.fullName}`)}>
+                        <DropdownMenuItem onClick={() => handleView(c)}>
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
@@ -376,6 +416,106 @@ export default function CustomersPage() {
       <div className="text-xs text-muted-foreground text-center mt-4">
         Showing {filtered.length} of {customers.length} customers
       </div>
+
+      <Dialog open={viewOpen} onOpenChange={(nextOpen) => { setViewOpen(nextOpen); if (!nextOpen) { setViewCustomer(null); setViewTransactions([]); setViewTransactionsError(null); } }}>
+        <DialogContent className="border-border/70 bg-card/95 backdrop-blur-xl">
+          <DialogHeader>
+            <DialogTitle>Customer Details</DialogTitle>
+          </DialogHeader>
+          {viewCustomer ? (
+            <div className="grid gap-3 text-sm">
+              <div className="grid gap-2 sm:grid-cols-2">
+                <p><span className="text-muted-foreground">Name:</span> {viewCustomer.fullName}</p>
+                <p><span className="text-muted-foreground">Customer ID:</span> {viewCustomer.id}</p>
+                <p><span className="text-muted-foreground">Email:</span> {viewCustomer.email}</p>
+                <p><span className="text-muted-foreground">Phone:</span> {viewCustomer.phoneNumber}</p>
+                <p><span className="text-muted-foreground">KYC:</span> <StatusBadge status={viewCustomer.kycStatus} /></p>
+                <p><span className="text-muted-foreground">Status:</span> <StatusBadge status={viewCustomer.customerStatus} /></p>
+                <p><span className="text-muted-foreground">Age:</span> {viewCustomer.age ?? "-"}</p>
+                <p><span className="text-muted-foreground">Accounts:</span> {viewCustomer.accountNumbers?.length ?? 0}</p>
+                <p><span className="text-muted-foreground">Transactions:</span> {viewTransactions.length}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Address</p>
+                <p>{viewCustomer.address || "-"}</p>
+              </div>
+              {viewCustomer.accountNumbers && viewCustomer.accountNumbers.length > 0 ? (
+                <div>
+                  <p className="text-muted-foreground">Account Numbers</p>
+                  <p className="font-mono text-xs break-all">{viewCustomer.accountNumbers.join(", ")}</p>
+                </div>
+              ) : null}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-muted-foreground">Recent Transactions</p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="rounded-xl"
+                    onClick={() => loadCustomerTransactions(viewCustomer.id)}
+                    disabled={viewTransactionsLoading}
+                  >
+                    {viewTransactionsLoading ? "Loading..." : "Load"}
+                  </Button>
+                </div>
+                {viewTransactionsError ? (
+                  <p className="text-xs text-destructive">{viewTransactionsError}</p>
+                ) : null}
+                {viewTransactions.length > 0 ? (
+                  <div className="space-y-2">
+                    {viewTransactions.slice(0, 5).map((item) => (
+                      <div key={item.transactionId} className="rounded-lg border border-border/70 bg-muted/15 p-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-semibold">Txn #{item.transactionId}</span>
+                          <StatusBadge status={item.status} />
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {item.senderAccountNumber} → {item.receiverAccountNumber}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">No transactions loaded yet.</p>
+                )}
+              </div>
+            </div>
+          ) : null}
+          <DialogFooter>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-xl"
+                onClick={() => {
+                  if (viewCustomer) {
+                    handleCopyAccounts(viewCustomer);
+                  }
+                }}
+              >
+                Copy Accounts
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-xl"
+                onClick={() => {
+                  if (viewCustomer) {
+                    setViewOpen(false);
+                    handleEdit(viewCustomer);
+                  }
+                }}
+              >
+                Edit Customer
+              </Button>
+              <Button type="button" variant="outline" className="rounded-xl" onClick={() => setViewOpen(false)}>
+                Close
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageWrapper>
   );
 }

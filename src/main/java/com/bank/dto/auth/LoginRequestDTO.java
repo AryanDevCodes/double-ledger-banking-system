@@ -1,4 +1,4 @@
-package com.bank.service.dto.auth;
+package com.bank.dto.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,7 +7,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginRequestDTO {
-    private String username;
-    private String password;
+public
+class LoginRequestDTO {
+  private String username;
+  private String password;
 }

@@ -2,40 +2,43 @@ package com.bank.repository;
 
 import com.bank.entity.Account;
 import jakarta.persistence.LockModeType;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
-
 @Repository
 public interface AccountRepository extends JpaRepository<Account, Long> {
 
-    @Query("select a from Account a where a.bank.bankName = :bankName")
-    List<Account> findByBankBankName(@Param("bankName") String bankName);
+  @Query("select a from Account a where a.bank.bankName = :bankName")
+  List<Account> findByBankBankName(@Param("bankName") String bankName);
 
-    Account findByAccountNumber(String accountNumber);
+  Account findByAccountNumber(String accountNumber);
 
-    @Query("select a from Account a where a.customer.email = :email")
-    List<Account> findByCustomerEmail(@Param("email") String email);
+  @Query("select a from Account a where a.customer.email = :email")
+  List<Account> findByCustomerEmail(@Param("email") String email);
 
-    @Query("select a from Account a where a.customer.user.id = :userId")
-    List<Account> findByCustomerUserId(@Param("userId") Long userId);
+  @Query("select a from Account a where a.customer.user.id = :userId")
+  List<Account> findByCustomerUserId(@Param("userId") Long userId);
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select a from Account a where a.id = :id")
-    Optional<Account> lockById(@Param("id") Long id);
+  @Query("select a from Account a where a.customer.id = :customerId")
+  List<Account> findByCustomerId(@Param("customerId") String customerId);
 
-    // @Query("""
-    // select a,c from Account a
-    // join a.customer c
-    // where a.accountNumber = :accountNumber
-    // and c.email = :email
-    // """)
-    // Optional<Account> findAccountByAccountNumberAndEmail(@Param("accountNumber")
-    // String accountNumber, @Param("email") String email);
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @Query("select a from Account a where a.id = :id")
+  Optional<Account> lockById(@Param("id") Long id);
 
+  // @Query(
+  //     """
+  //     select a, c
+  //     from Account a
+  //     join a.customer c
+  //     where a.accountNumber = :accountNumber
+  //     and c.email = :email
+  //     """)
+  // Optional<Account> findAccountByAccountNumberAndEmail(
+  //     @Param("accountNumber") String accountNumber, @Param("email") String email);
 }

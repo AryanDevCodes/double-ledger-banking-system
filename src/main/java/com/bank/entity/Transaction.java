@@ -1,77 +1,72 @@
 package com.bank.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.Entity;
-
 import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-
 @Entity
 @Table(
-        name = "transactions",
-        uniqueConstraints = {
-                @UniqueConstraint(columnNames = "transaction_id")
-        }
-)
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+    name = "transactions",
+    uniqueConstraints = {@UniqueConstraint(columnNames = "transaction_id")})
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "senderAccount", "receiverAccount"})
 public class Transaction {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long transactionId;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long transactionId;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "from_account_id",nullable = false)
-    private Account senderAccount;
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "from_account_id", nullable = false)
+  private Account senderAccount;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "to_account_id",nullable = false)
-    private Account receiverAccount;
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "to_account_id", nullable = false)
+  private Account receiverAccount;
 
-    @ManyToOne
-    @JoinColumn(name = "sender_bank_id", columnDefinition = "VARCHAR(255)")
-    private Bank senderBank;
+  @ManyToOne
+  @JoinColumn(name = "sender_bank_id", columnDefinition = "VARCHAR(255)")
+  private Bank senderBank;
 
-    @ManyToOne
-    @JoinColumn(name = "receiver_bank_id", columnDefinition = "VARCHAR(255)")
-    private Bank receiverBank;
+  @ManyToOne
+  @JoinColumn(name = "receiver_bank_id", columnDefinition = "VARCHAR(255)")
+  private Bank receiverBank;
 
-    // Denormalized fields for faster queries and historical accuracy
-    @Column(name = "sender_account_number")
-    private String senderAccountNumber;
+  // Denormalized fields for faster queries and historical accuracy
+  @Column(name = "sender_account_number")
+  private String senderAccountNumber;
 
-    @Column(name = "sender_email")
-    private String senderEmail;
+  @Column(name = "sender_email")
+  private String senderEmail;
 
-    @Column(name = "sender_bank_name")
-    private String senderBankName;
+  @Column(name = "sender_bank_name")
+  private String senderBankName;
 
-    @Column(name = "receiver_account_number")
-    private String receiverAccountNumber;
+  @Column(name = "receiver_account_number")
+  private String receiverAccountNumber;
 
-    @Column(name = "receiver_email")
-    private String receiverEmail;
+  @Column(name = "receiver_email")
+  private String receiverEmail;
 
-    @Column(name = "receiver_bank_name")
-    private String receiverBankName;
+  @Column(name = "receiver_bank_name")
+  private String receiverBankName;
 
-    @Column(name = "amount", nullable = false)
-    private BigDecimal amount;
+  @Column(name = "amount", nullable = false)
+  private BigDecimal amount;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    @Builder.Default
-    private Status status = Status.INITIATED;
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  @Builder.Default
+  private Status status = Status.INITIATED;
 
-    @CreationTimestamp
-    @Column(name = "transaction_date", nullable = false, updatable = false)
-    private LocalDateTime transactionDate;
-
-
+  @CreationTimestamp
+  @Column(name = "transaction_date", nullable = false, updatable = false)
+  private LocalDateTime transactionDate;
 }

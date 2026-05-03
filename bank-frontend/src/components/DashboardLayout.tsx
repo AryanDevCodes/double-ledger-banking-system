@@ -5,6 +5,7 @@ import { getDashboardRoute, getVisibleNavItems } from "@/lib/rbac";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import AppSidebar from "@/components/AppSidebar";
+import GlobalCommandPalette from "@/components/GlobalCommandPalette";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   DropdownMenu,
@@ -22,13 +23,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Building2, User, LogOut, Menu, ChevronDown, Bell, Search, X, CircleCheck, AlertTriangle, Info } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Building2, User, LogOut, Menu, ChevronDown, Bell, Search, X, CircleCheck, AlertTriangle, Info, Command } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { getDisabledFeatureModules } from "@/lib/features";
 
 export default function DashboardLayout() {
   const { user, logout } = useAuth();
@@ -41,12 +43,14 @@ export default function DashboardLayout() {
     return localStorage.getItem("sb.sidebar.collapsed") === "true";
   });
   const [moduleSearch, setModuleSearch] = useState("");
+  const [commandOpen, setCommandOpen] = useState(false);
   const [brandingOpen, setBrandingOpen] = useState(false);
   const [draftBrandName, setDraftBrandName] = useState(brandName);
   const [draftConsoleTagline, setDraftConsoleTagline] = useState(consoleTagline);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   
   const visibleNavItems = user ? getVisibleNavItems(user.roles) : [];
+  const disabledModules = getDisabledFeatureModules();
   const dashboardPath = user ? getDashboardRoute(user.roles) : "/dashboard";
   const userInitials = user?.fullName
     ?.split(" ")
@@ -77,6 +81,15 @@ export default function DashboardLayout() {
       .filter((item) => item.label.toLowerCase().includes(q) || item.to.toLowerCase().includes(q))
       .slice(0, 5);
   }, [moduleSearch, visibleNavItems, dashboardPath]);
+
+  const commandNavItems = useMemo(
+    () =>
+      visibleNavItems.map((item) => ({
+        ...item,
+        to: item.path === "/dashboard" ? dashboardPath : item.path,
+      })),
+    [visibleNavItems, dashboardPath],
+  );
 
   const notifications = useMemo(
     () => [
@@ -117,8 +130,7 @@ export default function DashboardLayout() {
 
       if (!isTypingTarget && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
-        searchInputRef.current?.focus();
-        searchInputRef.current?.select();
+        setCommandOpen(true);
       }
     };
 
@@ -247,6 +259,18 @@ export default function DashboardLayout() {
                 <Search className="h-3.5 w-3.5" />
               </Button>
 
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="ml-3 h-9 rounded-xl"
+                onClick={() => setCommandOpen(true)}
+              >
+                <Command className="mr-2 h-4 w-4" />
+                Palette
+                <span className="ml-2 text-[10px] text-muted-foreground">Ctrl+K</span>
+              </Button>
+
               {!!moduleSearch && (
                 <div className="absolute top-11 left-0 right-0 z-50 rounded-xl border border-border/70 bg-popover/95 backdrop-blur-xl shadow-xl">
                   {searchMatches.length > 0 ? (
@@ -272,6 +296,11 @@ export default function DashboardLayout() {
             </div>
 
             <div className="flex items-center gap-1.5">
+              {disabledModules.length > 0 && (
+                <Badge variant="secondary" className="hidden md:inline-flex rounded-full">
+                  {disabledModules.length} module{disabledModules.length > 1 ? "s" : ""} offline
+                </Badge>
+              )}
               <ThemeToggle withLabel className="hidden sm:inline-flex" />
               <ThemeToggle className="sm:hidden" />
               <DropdownMenu>
@@ -318,6 +347,7 @@ export default function DashboardLayout() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="h-9 rounded-full px-1.5 hover:bg-muted/70">
                     <Avatar className="h-7 w-7 border border-primary/30">
+                      {user?.avatarUrl ? <AvatarImage src={user.avatarUrl} alt={user?.fullName || user?.username || "User"} /> : null}
                       <AvatarFallback className="bg-primary/15 text-primary text-xs font-semibold">
                         {userInitials}
                       </AvatarFallback>
@@ -333,9 +363,9 @@ export default function DashboardLayout() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem disabled>
+                  <DropdownMenuItem onClick={() => navigate("/profile")}>
                     <User className="mr-2 h-4 w-4" />
-                    <span>Profile (Coming soon)</span>
+                    <span>Profile</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => setBrandingOpen(true)}
@@ -415,6 +445,16 @@ export default function DashboardLayout() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <GlobalCommandPalette
+        open={commandOpen}
+        onOpenChange={setCommandOpen}
+        navItems={commandNavItems}
+        onNavigate={(to) => navigate(to)}
+        onOpenBranding={() => setBrandingOpen(true)}
+        onLogout={handleLogout}
+        disabledModules={disabledModules}
+      />
     </div>
   );
 }

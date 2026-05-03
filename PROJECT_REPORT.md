@@ -1,5 +1,6 @@
 # 📊 BANK MANAGEMENT SYSTEM - PROJECT REPORT 2026
 **Date:** February 9, 2026  
+**Report Update:** May 3, 2026  
 **Project Type:** Spring Boot REST API - Banking System with Ledger Architecture  
 **Status:** ✅ Production Ready with Advanced Features
 
@@ -17,6 +18,18 @@ This is a **production-grade Banking Management System** built with Spring Boot 
 - ✅ **Iron-Clad Idempotency** - PROCESSING state persisted before execution
 - ✅ **Failure Tracking** - Complete error context for debugging
 - ✅ **40% Reduced Complexity** - Refactored with helper methods
+
+---
+
+## Recent Updates (May 2026, Unpublished)
+
+- Added audit logging pipeline (interceptor + `/audit/logs`) with queryable audit trails and detail metadata.
+- Added audit endpoints: `GET /audit/logs` with filters and `GET /audit/logs/{id}` for drill-down.
+- Added security operations endpoints for session management and access log review (`/security/sessions`, `/security/sessions/{id}`, `/security/sessions/terminate-all`, `/security/access-logs`).
+- Introduced access log + user session persistence entities for security monitoring and admin review.
+- Expanded auth surface: forgot-password + reset flows, profile payload enrichment, and profile UI.
+- Frontend UI consistency/accessibility improvements plus dashboard layout upgrades and saved views.
+- Documentation refreshed to reflect the latest local module coverage and routes.
 
 ---
 
@@ -158,7 +171,7 @@ This prevents duplicate payments caused by timeouts, retries, or network failure
 5. **Exception Handler Pattern** - Centralized error handling
 6. **Ledger Pattern** - ⭐ **NEW** Double-entry bookkeeping
 7. **Value Object Pattern** - ⭐ **NEW** `LockedAccounts` record
-8. **Strategy Pattern** - ⭐ **NEW** UPI resolver with ownership validation stub
+8. **Strategy Pattern** - ⭐ **NEW** UPI resolver with ownership validation
 
 ---
 
@@ -454,9 +467,8 @@ public TransactionResponseDTO executeUpiPayment(UpiPayRequestDTO dto) {
         obj = upiPaymentObjRepository.save(obj);  // Iron-clad idempotency
     }
 
-    // 5. 🔴 SECURITY TODO: Replace with ownership validation
-    //    upiResolver.resolveAndVerifyOwnership(obj.getFromUpi(), currentUser);
-    Account sender = upiResolver.resolveActiveAccount(obj.getFromUpi());
+    // 5. Ownership validation (enforced before debit path)
+    Account sender = upiResolver.resolveAndVerifyOwnership(obj.getFromUpi(), currentUser);
     Account receiver = upiResolver.resolveActiveAccount(obj.getToUpi());
 
     TransactionResponseDTO response;
@@ -622,6 +634,9 @@ private String failureReason;
 5. **ledger** - ⭐ Financial ledger entries (double-entry)
 6. **upi_profiles** - ⭐ UPI ID registrations
 7. **upi_payment_obj** - ⭐ UPI payment intents with idempotency
+8. **audit_logs** - Audit trail entries for API activity
+9. **access_logs** - Access events for security monitoring
+10. **user_sessions** - Session tracking for admin operations
 
 ### Key Schema Changes 2026
 
@@ -956,9 +971,14 @@ Account Balance = SUM(CREDIT) - SUM(DEBIT)
 ### Tables Created
 1. **banks** - Bank information
 2. **customers** - Customer details
-3. **account** - Customer accounts
+3. **accounts** - Customer accounts
 4. **transactions** - Transaction records
 5. **ledger** - Financial ledger entries
+6. **upi_profiles** - UPI ID registrations
+7. **upi_payment_obj** - UPI payment intents
+8. **audit_logs** - Audit trail entries
+9. **access_logs** - Access events
+10. **user_sessions** - Session tracking
 
 ### Key Relationships
 ```
@@ -973,6 +993,9 @@ Bank ──1:N──> Account ──M:1──> Customer
 - `idx_transactions_sender` on (sender_account_number, sender_email)
 - `idx_transactions_receiver` on (receiver_account_number, receiver_email)
 - `idx_transactions_date` on (transaction_date DESC)
+- `idx_audit_logs_timestamp` and `idx_audit_logs_user_id`
+- `idx_access_logs_timestamp` and `idx_access_logs_user_id`
+- `idx_user_sessions_token_id`
 
 ---
 
@@ -1077,8 +1100,8 @@ CREATE INDEX idx_transactions_date ON transactions(transaction_date DESC);
 - ✅ Created `UpiResolver` for UPI ID resolution
 
 #### 5. Security Enhancements
-- ✅ Documented ownership validation requirement (🔴 TODO)
-- ✅ Added security stub methods with implementation guide
+- ✅ Implemented ownership validation for UPI and transfer debit paths
+- ✅ Added security enforcement utilities in `UpiResolver` and transaction service
 - ✅ Comprehensive security documentation in README
 - ✅ Input validation for UPI requests
 - ✅ Idempotency key validation
@@ -1172,10 +1195,10 @@ CREATE INDEX idx_transactions_date ON transactions(transaction_date DESC);
 ## 📊 PROJECT METRICS (2026 Edition)
 
 ### Code Statistics
-- **Total Entities:** 8 (Bank, Customer, Account, Transaction, Ledger, UpiProfile, UpiPaymentOBJ, User)
-- **Controllers:** 5 (Bank, Customer, Account, Transaction, **UPI** ⭐)
-- **Services:** 6 with implementations
-- **Repositories:** 7 (JPA interfaces)
+- **Total Entities:** 11+ (includes AccessLog, AuditLog, UserSession)
+- **Controllers:** 8+ (Auth, Bank, Customer, Account, Transaction, UPI, Audit, Security, QR)
+- **Services:** 9+ with implementations
+- **Repositories:** 10+ (JPA interfaces)
 - **DTOs:** 20+ (Request and Response)
 - **Mappers:** 4 (MapStruct interfaces)
 - **Exception Classes:** 5 custom exceptions
@@ -1183,7 +1206,7 @@ CREATE INDEX idx_transactions_date ON transactions(transaction_date DESC);
 - **Lines of Code:** ~3500+ (excluding generated)
 
 ### API Endpoints
-- **Total Endpoints:** 27+ ⭐ (increased from 20)
+- **Total Endpoints:** 35+ ⭐ (including audit/security endpoints)
 - **Bank APIs:** 5
 - **Customer APIs:** 5
 - **Account APIs:** 6
@@ -1192,7 +1215,7 @@ CREATE INDEX idx_transactions_date ON transactions(transaction_date DESC);
 - **Health/Actuator:** 2+
 
 ### Database
-- **Tables:** 7 ⭐ (added 2 for UPI)
+- **Tables:** 10+ ⭐ (includes audit_logs, access_logs, user_sessions)
 - **Indexes:** 8+ (optimized)
 - **Constraints:** 15+ (unique/foreign key)
 - **Triggers:** 0 (application-level logic preferred)
@@ -1231,7 +1254,7 @@ CREATE INDEX idx_transactions_date ON transactions(transaction_date DESC);
 - **Value Objects** (`LockedAccounts` record)
 - **Helper Methods** for semantic compression
 - **Idempotency** for safe retries
-- **Security TODO** markers for production readiness
+- **Ownership validation** enforced for debit paths
 - **Failure Tracking** for debugging
 - **Comprehensive Documentation** with examples
 
@@ -1246,11 +1269,11 @@ CREATE INDEX idx_transactions_date ON transactions(transaction_date DESC);
 ## 🔮 FUTURE ENHANCEMENTS
 
 ### Immediate Priority (Pre-Production)
-1. 🔴 **CRITICAL:** Implement ownership validation for UPI payments
-2. 🔴 **CRITICAL:** Add JWT/OAuth2 authentication
-3. 🟡 Add rate limiting for payment APIs
-4. 🟡 Implement audit logging
-5. 🟡 Add monitoring and alerting
+1. 🔴 **CRITICAL:** Add refresh-token rotation + revocation tracking
+2. 🔴 **CRITICAL:** Add MFA/OTP support for high-risk actions
+3. 🟡 Add rate limiting for auth and payment APIs
+4. 🟡 Add monitoring and alerting
+5. 🟡 Add audit log analytics dashboards
 
 ### Short-Term (Post-Launch)
 1. Email/SMS notifications
@@ -1290,6 +1313,8 @@ CREATE INDEX idx_transactions_date ON transactions(transaction_date DESC);
 - Transaction audit: Ledger table
 - Payment tracking: UPI payment object table
 - Failure tracking: `failureReason` field
+- Audit trail: `audit_logs` table (API activity)
+- Security telemetry: `access_logs` and `user_sessions` tables
 
 ### Troubleshooting (2026)
 - **Empty URLs in Postman:** Re-import updated collection
@@ -1305,7 +1330,7 @@ CREATE INDEX idx_transactions_date ON transactions(transaction_date DESC);
 This Bank Management System represents a **production-grade financial application** with:
 
 ### Core Achievements
-- ✅ **Complete Banking Operations:** 27+ REST endpoints across 5 modules
+- ✅ **Complete Banking Operations:** 35+ REST endpoints across 7+ modules
 - ✅ **Financial Accuracy:** Double-entry ledger ensures 100% balance integrity
 - ✅ **Modern Payments:** UPI system with complete CRUD and idempotency
 - ✅ **Concurrent Safety:** Deterministic locking prevents all deadlocks
@@ -1317,7 +1342,7 @@ This Bank Management System represents a **production-grade financial applicatio
 ### Technical Excellence
 - **Architecture:** Clean layered architecture with clear separation
 - **Performance:** Optimized queries with strategic indexing
-- **Security:** Comprehensive documentation with TODOs for production
+- **Security:** Ownership validation enforced plus audit/security visibility
 - **Maintainability:** Well-documented code with clear naming
 - **Testability:** 25+ test scenarios documented and validated
 - **Scalability:** Designed for horizontal scaling
@@ -1331,7 +1356,7 @@ This Bank Management System represents a **production-grade financial applicatio
 
 ### Production Readiness
 - **Status:** 95% Production Ready
-- **Remaining:** Ownership validation + Authentication (5%)
+- **Remaining:** token revocation, MFA, and operational monitoring (5%)
 - **Documentation:** Comprehensive with examples
 - **Testing:** Extensive manual and integration testing completed
 - **Deployment:** Clear instructions with migration scripts
@@ -1339,7 +1364,7 @@ This Bank Management System represents a **production-grade financial applicatio
 ---
 
 **Total Development Time:** 80+ hours (Feb 2-9, 2026)  
-**Final Status:** ✅ PRODUCTION READY (pending security implementation)  
+**Final Status:** ✅ PRODUCTION READY (pending operational hardening)  
 **Performance:** Optimized for high-throughput concurrent transactions  
 **Code Quality:** Professional-grade with industry best practices  
 **Documentation:** 2000+ lines across multiple files  

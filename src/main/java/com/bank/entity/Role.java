@@ -1,14 +1,21 @@
 package com.bank.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Table;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-
-import java.util.Set;
 
 @Entity
 @Table(name = "roles")
@@ -20,22 +27,22 @@ import java.util.Set;
 @ToString(exclude = "users")
 public class Role {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @Column(unique = true, nullable = false)
-    @Enumerated(EnumType.STRING)
-    private RoleName name;
+  @Column(unique = true, nullable = false)
+  @Enumerated(EnumType.STRING)
+  private RoleName name;
 
-    @ManyToMany(mappedBy = "roles")
-    private Set<User> users;
+  @ManyToMany(mappedBy = "roles")
+  private Set<User> users;
 
-    public enum RoleName {
-        ROLE_ADMIN, // Full system access
-        ROLE_MANAGER, // Manage customers, accounts, approve transactions
-        ROLE_CUSTOMER_MANAGER, // Manage customers only
-        ROLE_AUDITOR, // View-only access to all data
-        ROLE_USER // Basic user access
-    }
+  public enum RoleName {
+    ROLE_ADMIN,
+    ROLE_MANAGER,
+    ROLE_CUSTOMER_MANAGER,
+    ROLE_AUDITOR,
+    ROLE_USER
+  }
 }

@@ -8,8 +8,10 @@ import {
   Smartphone,
   FileText,
   Lock,
+  UserCircle2,
   type LucideIcon,
 } from "lucide-react";
+import { isFeatureRouteEnabled } from "@/lib/features";
 
 export const ROLES = {
   ADMIN: 'ROLE_ADMIN',
@@ -208,6 +210,12 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     roles: 'all',
   },
   {
+    path: '/profile',
+    label: 'Profile',
+    icon: UserCircle2,
+    roles: 'all',
+  },
+  {
     path: '/banks',
     label: 'Banks',
     icon: Building2,
@@ -256,6 +264,10 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
  */
 export function getVisibleNavItems(userRoles: string[]): NavigationItem[] {
   return NAVIGATION_ITEMS.filter(item => {
+    if (!isFeatureRouteEnabled(item.path)) {
+      return false;
+    }
+
     if (item.roles === 'all') return true;
     return hasAnyRole(userRoles, ...item.roles);
   });

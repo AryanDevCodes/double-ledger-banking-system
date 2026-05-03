@@ -19,7 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface AppSidebarProps {
   collapsed?: boolean;
@@ -60,7 +60,7 @@ export default function AppSidebar({ collapsed: controlledCollapsed, onCollapsed
 
   // Group nav items by category
   const mainItems = visibleNavItems.filter(item => 
-    ['/dashboard', '/banks', '/customers', '/accounts', '/transactions', '/upi', '/payments'].includes(item.path)
+    ['/dashboard', '/profile', '/banks', '/customers', '/accounts', '/transactions', '/upi', '/payments'].includes(item.path)
   );
   const complianceItems = visibleNavItems.filter(item => 
     ['/audit', '/security'].includes(item.path)
@@ -208,6 +208,7 @@ export default function AppSidebar({ collapsed: controlledCollapsed, onCollapsed
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-3 w-full rounded-xl px-2.5 py-2 hover:bg-sidebar-accent transition-colors">
                 <Avatar className="h-8 w-8">
+                  {user?.avatarUrl ? <AvatarImage src={user.avatarUrl} alt={user?.fullName || user?.username || 'User'} /> : null}
                   <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
                     {user?.fullName ? getInitials(user.fullName) : 'U'}
                   </AvatarFallback>
@@ -225,7 +226,7 @@ export default function AppSidebar({ collapsed: controlledCollapsed, onCollapsed
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem disabled>
+              <DropdownMenuItem onClick={() => navigate('/profile')}>
                 <UserIcon className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </DropdownMenuItem>

@@ -33,6 +33,7 @@
 - [Quick Start (4–5 steps)](#-quick-start-45-steps)
 - [Security Highlights](#-security-highlights-must-read)
 - [Backend Updates (This Session)](#-backend-updates-this-session-april-2026)
+- [Local Changes (May 2026, Unpublished)](#-local-changes-may-2026-unpublished)
 - [API Documentation](#-api-documentation)
 - [Ledger Architecture](#-ledger-architecture-double-entry)
 - [Frontend](#-frontend-react-dashboard)
@@ -262,8 +263,11 @@ Create `bank-frontend/.env.local`:
 
 ```bash
 VITE_API_BASE_URL=http://localhost:8080
-VITE_ENABLE_MOCKS=false
+VITE_ENABLE_AUDIT=true
+VITE_ENABLE_SECURITY=true
 ```
+
+Set `VITE_ENABLE_AUDIT` and `VITE_ENABLE_SECURITY` to `false` if those backend modules are not available in your environment.
 
 Run:
 
@@ -319,6 +323,32 @@ The following backend hardening updates were implemented in this session:
 - **Compliance fields exposed in account responses**
     - `AccountResponseDTO` now includes customer compliance fields (`kycStatus`, `customerStatus`) for admin/compliance UIs.
 
+- **Password recovery flow added**
+    - New public endpoints: `POST /api/auth/forgot-password` and `POST /api/auth/reset-password`.
+    - Reset tokens are time-bound and validated server-side before password updates.
+    - Current implementation returns reset token in response for local/dev workflows.
+
+- **Profile payload enrichment**
+    - `GET /api/auth/me` now returns richer role-aware profile fields (personal banking, managed scope, and compliance counters).
+    - Frontend profile view now primarily hydrates from this enriched auth payload.
+
+- **Frontend auth routes enhanced**
+    - New public route: `/forgot-password`.
+    - Login includes direct Forgot Password entry point.
+    - Protected profile route `/profile` is available from dashboard navigation.
+
+## Local Changes (May 2026, Unpublished)
+
+- Added audit logging pipeline (interceptor + `/audit/logs`) with queryable audit trails and detail metadata.
+- Added audit endpoints: `GET /audit/logs` with filters (date/action/user/resource) and `GET /audit/logs/{id}`.
+- Added security operations endpoints for session management and access log review (`/security/sessions`, `/security/sessions/{id}`, `/security/sessions/terminate-all`, `/security/access-logs`).
+- Introduced access log + user session persistence entities to support security monitoring and admin review.
+- Added audit/access/session tables for backend security telemetry.
+- Expanded auth surface: forgot-password + reset flows, profile payload enrichment, and profile UI.
+- Frontend: global command palette (`Ctrl+K`), dashboard layout upgrades, and accessibility/consistency refinements.
+- Transactions UX: saved filter views and improved investigation workflows.
+- Documentation refreshed to reflect the latest local modules, routes, and feature flags.
+
 ---
 
 ## 📚 API Documentation
@@ -363,7 +393,9 @@ Frontend lives in `bank-frontend/`.
 Includes:
 
 - Auth (token storage + protected routing)
+- Password recovery flow (request token + reset password)
 - Role-based dashboards
+- Profile workspace with role-aware identity, banking, and compliance tabs
 - Banking flows (banks/customers/accounts/transactions)
 - UPI flows (profiles + payments)
 - Security/audit screens (audit logs, access logs, sessions)

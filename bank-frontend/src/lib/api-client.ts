@@ -32,6 +32,51 @@ export class ApiError extends Error {
   }
 }
 
+export interface AuthUserProfileResponse {
+  id: number;
+  username: string;
+  email: string;
+  fullName: string;
+  phoneNumber?: string;
+  avatarUrl?: string;
+  primaryRole?: string;
+  isActive?: boolean | null;
+  isLocked?: boolean | null;
+  roles: string[];
+  createdAt?: string;
+  updatedAt?: string;
+  lastLogin?: string;
+
+  customerId?: string;
+  customerStatus?: string;
+  kycStatus?: string;
+  age?: number;
+  address?: string;
+
+  accountCount?: number;
+  totalBalance?: number;
+  transactionCount?: number;
+  upiProfileCount?: number;
+
+  managedBankCount?: number;
+  managedCustomerCount?: number;
+  managedAccountCount?: number;
+  managedTransactionCount?: number;
+  managedUpiProfileCount?: number;
+  pendingKycCount?: number;
+
+  activeSessionCount?: number;
+  failedLoginCount?: number;
+  auditSuccessCount?: number;
+  auditFailureCount?: number;
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
+  resetToken?: string;
+  expiresAt?: string;
+}
+
 // Generic fetch wrapper with timeout and error handling
 async function fetchWithTimeout(
   url: string,
@@ -111,6 +156,21 @@ async function apiRequestBlob(
 
   return response.blob();
 }
+
+// ============= Auth API =============
+export const authApi = {
+  getCurrentUser: () => apiRequest<AuthUserProfileResponse>("/api/auth/me"),
+  requestPasswordReset: (identifier: string) =>
+    apiRequest<ForgotPasswordResponse>("/api/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ identifier }),
+    }),
+  resetPassword: (token: string, newPassword: string) =>
+    apiRequest<void>("/api/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ token, newPassword }),
+    }),
+};
 
 // ============= Bank API =============
 export const bankApi = {
@@ -210,6 +270,9 @@ export const transactionApi = {
   
   getByAccount: (accountNumber: string, email: string) =>
     apiRequest<TransactionResponseDTO[]>(`/transaction?accountNumber=${encodeURIComponent(accountNumber)}&email=${encodeURIComponent(email)}`),
+
+  getByCustomer: (customerId: string) =>
+    apiRequest<TransactionResponseDTO[]>(`/transaction/customer/${encodeURIComponent(customerId)}`),
   
   getBalance: (id: number) =>
     apiRequest<number>(`/transaction/accounts/${id}/balance`),
@@ -285,6 +348,16 @@ export interface AuditLogEntry {
   status: "SUCCESS" | "FAILED";
 }
 
+export interface AuditLogsPageResponse {
+  items: AuditLogEntry[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
 export const auditApi = {
   getLogs: (params?: { 
     startDate?: string; 
@@ -292,6 +365,8 @@ export const auditApi = {
     action?: string;
     userId?: string;
     resource?: string;
+    page?: number;
+    size?: number;
   }) => {
     const searchParams = new URLSearchParams();
     if (params?.startDate) searchParams.set("startDate", params.startDate);
@@ -299,9 +374,11 @@ export const auditApi = {
     if (params?.action) searchParams.set("action", params.action);
     if (params?.userId) searchParams.set("userId", params.userId);
     if (params?.resource) searchParams.set("resource", params.resource);
+    if (params?.page) searchParams.set("page", String(params.page));
+    if (params?.size) searchParams.set("size", String(params.size));
     
     const query = searchParams.toString();
-    return apiRequest<AuditLogEntry[]>(`/audit/logs${query ? `?${query}` : ""}`);
+    return apiRequest<AuditLogsPageResponse>(`/audit/logs${query ? `?${query}` : ""}`);
   },
   
   getLogById: (id: string) => apiRequest<AuditLogEntry>(`/audit/logs/${id}`),

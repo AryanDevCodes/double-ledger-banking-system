@@ -1,0 +1,29 @@
+package com.bank.dto.auth;
+
+import java.time.LocalDateTime;
+import java.util.Set;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class AuthResponseDTO {
+  private String accessToken;
+  private String refreshToken;
+  @Builder.Default
+  private String tokenType = "Bearer";
+  private Long userId;
+  private String username;
+  private String email;
+  private String fullName;
+  private String phoneNumber;
+  private String avatarUrl;
+  private Set<String> roles;
+  private String role;
+  private LocalDateTime expiresAt;
+  private boolean passwordChangeRequired;
+}

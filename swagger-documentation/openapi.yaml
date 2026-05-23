@@ -1,0 +1,789 @@
+openapi: 3.0.1
+info:
+  title: OpenAPI definition
+  version: v0
+servers:
+- url: http://localhost:8080
+  description: Generated server url
+paths:
+  /upi/register:
+    post:
+      tags:
+      - upi-controller
+      operationId: registerUpiProfile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpiRegisterRequestDTO"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UpiProfileResponseDTO"
+  /upi/pay:
+    post:
+      tags:
+      - upi-controller
+      operationId: executeUpiPayment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpiPayRequestDTO"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TransactionResponseDTO"
+  /transaction:
+    get:
+      tags:
+      - transaction-controller
+      operationId: getTransactions
+      parameters:
+      - name: accountNumber
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: email
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TransactionResponseDTO"
+    post:
+      tags:
+      - transaction-controller
+      operationId: createTransaction
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransactionRequestDTO"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TransactionResponseDTO"
+  /bank/create:
+    post:
+      tags:
+      - bank-controller
+      operationId: createBank
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BankRequestDTO"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/BankResponseDTO"
+  /account/{bankName}:
+    post:
+      tags:
+      - account-controller
+      operationId: createAccount
+      parameters:
+      - name: bankName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountRequestDTO"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AccountResponseDTO"
+  /upi/{upiId}/status:
+    patch:
+      tags:
+      - upi-controller
+      operationId: updateUpiStatus
+      parameters:
+      - name: upiId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: status
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UpiProfileResponseDTO"
+  /customer/update:
+    patch:
+      tags:
+      - customer-controller
+      operationId: updateCustomer
+      parameters:
+      - name: name
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: email
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: phoneNumber
+        in: query
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerRequestDTO"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CustomerResponseDTO"
+  /bank/{id}:
+    get:
+      tags:
+      - bank-controller
+      operationId: findBankById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/BankResponseDTO"
+    delete:
+      tags:
+      - bank-controller
+      operationId: deleteBank
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+    patch:
+      tags:
+      - bank-controller
+      operationId: updateBank
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BankRequestDTO"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/BankResponseDTO"
+  /account/{accNumber}:
+    delete:
+      tags:
+      - account-controller
+      operationId: deleteAccount
+      parameters:
+      - name: accNumber
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AccountResponseDTO"
+    patch:
+      tags:
+      - account-controller
+      operationId: updateAccount
+      parameters:
+      - name: accNumber
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountRequestDTO"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AccountResponseDTO"
+  /upi:
+    get:
+      tags:
+      - upi-controller
+      operationId: getAllUpiProfiles
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UpiProfileResponseDTO"
+  /upi/{upiId}:
+    get:
+      tags:
+      - upi-controller
+      operationId: getUpiProfile
+      parameters:
+      - name: upiId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UpiProfileResponseDTO"
+    delete:
+      tags:
+      - upi-controller
+      operationId: deleteUpiProfile
+      parameters:
+      - name: upiId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+  /upi/account/{accountNumber}:
+    get:
+      tags:
+      - upi-controller
+      operationId: getUpiProfilesByAccountNumber
+      parameters:
+      - name: accountNumber
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UpiProfileResponseDTO"
+  /transaction/accounts/{id}/balance:
+    get:
+      tags:
+      - transaction-controller
+      operationId: getBalance
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: number
+  /customer:
+    get:
+      tags:
+      - customer-controller
+      operationId: getAllCustomer
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CustomerResponseDTO"
+  /customer/search:
+    get:
+      tags:
+      - customer-controller
+      operationId: searchCustomer
+      parameters:
+      - name: name
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: bankName
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CustomerResponseDTO"
+  /customer/bank:
+    get:
+      tags:
+      - customer-controller
+      operationId: getCustomersByBank
+      parameters:
+      - name: bankName
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CustomerResponseDTO"
+  /bank:
+    get:
+      tags:
+      - bank-controller
+      operationId: findAllBanks
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BankResponseDTO"
+  /account:
+    get:
+      tags:
+      - account-controller
+      operationId: getAllAccounts
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AccountResponseDTO"
+  /account/{id}:
+    get:
+      tags:
+      - account-controller
+      operationId: getAccount
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AccountResponseDTO"
+  /account/name/{bankName}:
+    get:
+      tags:
+      - account-controller
+      operationId: getAccountsByBankName
+      parameters:
+      - name: bankName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AccountResponseDTO"
+  /customer/delete:
+    delete:
+      tags:
+      - customer-controller
+      operationId: deleteCustomer
+      parameters:
+      - name: id
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CustomerResponseDTO"
+components:
+  schemas:
+    UpiRegisterRequestDTO:
+      required:
+      - accountNumber
+      - upiId
+      type: object
+      properties:
+        upiId:
+          type: string
+        accountNumber:
+          type: string
+    UpiProfileResponseDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        upiId:
+          type: string
+        accountNumber:
+          type: string
+        accountHolderName:
+          type: string
+        bankName:
+          type: string
+        status:
+          type: string
+          enum:
+          - PENDING
+          - COMPLETED
+          - FAILED
+          - ACTIVE
+          - INACTIVE
+          - CLOSED
+          - INITIATED
+          - PROCESSING
+          - SUCCESS
+        createdAt:
+          type: string
+          format: date-time
+    UpiPayRequestDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        idempotencyKey:
+          type: string
+        fromUpi:
+          type: string
+        toUpi:
+          type: string
+        amount:
+          type: number
+        status:
+          type: string
+          enum:
+          - PENDING
+          - COMPLETED
+          - FAILED
+          - ACTIVE
+          - INACTIVE
+          - CLOSED
+          - INITIATED
+          - PROCESSING
+          - SUCCESS
+    TransactionResponseDTO:
+      type: object
+      properties:
+        transactionId:
+          type: integer
+          format: int64
+        senderName:
+          type: string
+        senderAccountNumber:
+          type: string
+        senderBankName:
+          type: string
+        receiverName:
+          type: string
+        receiverAccountNumber:
+          type: string
+        receiverBankName:
+          type: string
+        amount:
+          type: number
+        status:
+          type: string
+          enum:
+          - PENDING
+          - COMPLETED
+          - FAILED
+          - ACTIVE
+          - INACTIVE
+          - CLOSED
+          - INITIATED
+          - PROCESSING
+          - SUCCESS
+        transactionDate:
+          type: string
+          format: date-time
+    TransactionRequestDTO:
+      required:
+      - receiverAccount
+      - senderAccount
+      type: object
+      properties:
+        senderAccount:
+          type: string
+        receiverAccount:
+          type: string
+        amount:
+          type: number
+        senderBankName:
+          type: string
+        receiverBankName:
+          type: string
+    BankRequestDTO:
+      required:
+      - bankName
+      - branch
+      - branchAddress
+      - ifscCode
+      type: object
+      properties:
+        bankName:
+          type: string
+        branchAddress:
+          type: string
+        ifscCode:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        branch:
+          type: string
+    BankResponseDTO:
+      type: object
+      properties:
+        id:
+          type: string
+        bankName:
+          type: string
+        branch:
+          type: string
+        ifscCode:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        branchAddress:
+          type: string
+        accountNumbers:
+          type: array
+          items:
+            type: string
+    AccountRequestDTO:
+      type: object
+      properties:
+        initialDeposit:
+          type: number
+        customer:
+          $ref: "#/components/schemas/CustomerRequestDTO"
+    CustomerRequestDTO:
+      type: object
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+        phoneNumber:
+          type: string
+        kycStatus:
+          type: string
+          enum:
+          - PENDING
+          - COMPLETED
+          - FAILED
+          - ACTIVE
+          - INACTIVE
+          - CLOSED
+          - INITIATED
+          - PROCESSING
+          - SUCCESS
+        age:
+          type: integer
+          format: int32
+        address:
+          type: string
+        customerStatus:
+          type: string
+          enum:
+          - PENDING
+          - COMPLETED
+          - FAILED
+          - ACTIVE
+          - INACTIVE
+          - CLOSED
+          - INITIATED
+          - PROCESSING
+          - SUCCESS
+    AccountResponseDTO:
+      type: object
+      properties:
+        accountNumber:
+          type: string
+        currencyCode:
+          type: string
+        balance:
+          type: number
+        status:
+          type: string
+          enum:
+          - PENDING
+          - COMPLETED
+          - FAILED
+          - ACTIVE
+          - INACTIVE
+          - CLOSED
+          - INITIATED
+          - PROCESSING
+          - SUCCESS
+        bankId:
+          type: string
+        bankName:
+          type: string
+        customerId:
+          type: string
+        customerName:
+          type: string
+        age:
+          type: integer
+          format: int32
+        address:
+          type: string
+    CustomerResponseDTO:
+      type: object
+      properties:
+        id:
+          type: string
+        fullName:
+          type: string
+        email:
+          type: string
+        phoneNumber:
+          type: string
+        kycStatus:
+          type: string
+          enum:
+          - PENDING
+          - COMPLETED
+          - FAILED
+          - ACTIVE
+          - INACTIVE
+          - CLOSED
+          - INITIATED
+          - PROCESSING
+          - SUCCESS
+        age:
+          type: integer
+          format: int32
+        address:
+          type: string
+        customerStatus:
+          type: string
+          enum:
+          - PENDING
+          - COMPLETED
+          - FAILED
+          - ACTIVE
+          - INACTIVE
+          - CLOSED
+          - INITIATED
+          - PROCESSING
+          - SUCCESS
+        accountNumbers:
+          type: array
+          items:
+            type: string

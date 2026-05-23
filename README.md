@@ -2,7 +2,7 @@
 
 # 🏦 Bank Ledger & Payment Engine
 
-**Full-stack banking system — double-entry ledger · UPI payments · JWT auth · audit logging · session management · React dashboard**
+**Full-stack banking system — double-entry ledger · UPI payments · refresh token rotation · audit logging · notifications · cards · loans · React dashboard**
 
 ![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.10-6DB33F?logo=springboot&logoColor=white)
@@ -41,6 +41,14 @@
 - [QR Code Generation](#7-qr-code-generation--qr)
 - [Audit Logging](#8-audit-logging--audit)
 - [Security & Session Management](#9-security--session-management--security)
+- [Notifications](#10-notifications--apinotifications)
+- [Debit Cards](#11-debit-cards--apidebit-cards)
+- [Debit Card Requests](#12-debit-card-requests--apidebit-card-requests)
+- [Credit Cards & Plans](#13-credit-cards--plans--apicredit-cards--apicredit-plans)
+- [Loans & EMI](#14-loans--emi--apiloans--apiemis)
+- [Account Statements](#15-account-statements--apiaccountsaccountnumberstatement)
+- [Webhooks](#16-webhooks--apiwebhooks)
+- [Composite & Card Events](#17-composite--card-events--apicomposite--streamevents)
 - [Ledger Architecture](#-ledger-architecture-double-entry)
 - [Security Design](#-security-design)
 - [Database Schema](#-database-schema)
@@ -94,7 +102,7 @@ Client (Browser / Postman)
   JWT Auth Filter  ←──  Spring Security (stateless)
         │
         ▼
-  REST Controllers  (9 controllers, 50+ endpoints)
+  REST Controllers  (20 controllers, 125+ endpoints)
         │
         ▼
   Service Layer  (business logic, ownership checks)
@@ -112,7 +120,8 @@ Ledger Writer           UPI Resolver
   │ ledger (append-only)        │
   │ upi_profiles · upi_payment  │
   │ audit_logs · access_logs    │
-  │ user_sessions · users       │
+  │ user_sessions · refresh_tokens │
+  │ notifications · cards · loans  │
   └─────────────────────────────┘
 ```
 
@@ -188,6 +197,10 @@ Idempotency check (upi_payment_obj)
 | JJWT | 0.12.6 | JWT generation & validation |
 | MapStruct | 1.6.3 | Type-safe DTO mapping |
 | SpringDoc OpenAPI | 2.7.0 | Swagger UI |
+| Spring Actuator | bundled | Health and metrics endpoints |
+| Spring Mail | bundled | Password reset email delivery |
+| Spring Cache + Redis | bundled | Optional caching layer |
+| OpenPDF | 1.3.30 | PDF statement export |
 | ZXing | 3.5.3 | QR code generation |
 | Lombok | bundled | Boilerplate reduction |
 | Jakarta Validation | bundled | Request validation |
@@ -275,6 +288,7 @@ The system implements five roles enforced via `@PreAuthorize` on every endpoint:
 - `POST /api/auth/login`
 - `POST /api/auth/forgot-password`
 - `POST /api/auth/reset-password`
+- `POST /api/auth/refresh`
 - `GET /swagger-ui/**`
 - `GET /v3/api-docs/**`
 
@@ -287,10 +301,11 @@ The system implements five roles enforced via `@PreAuthorize` on every endpoint:
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
 | `POST` | `/api/auth/login` | Public | Authenticate and receive JWT access + refresh tokens. Sets `passwordChangeRequired` flag on first login. |
-| `POST` | `/api/auth/forgot-password` | Public | Request a password reset token (15-minute TTL). Token returned in response body for dev workflows. |
+| `POST` | `/api/auth/forgot-password` | Public | Request a password reset token (15-minute TTL). Response is generic; token delivered via email. |
 | `POST` | `/api/auth/reset-password` | Public | Consume reset token and set a new password (min 8 chars). Clears token on success. |
 | `GET` | `/api/auth/me` | Any authenticated | Returns enriched user profile: roles, KYC status, account count, total balance, UPI count, transaction count, and compliance counters (role-aware). |
 | `POST` | `/api/auth/change-password` | Any authenticated | Change password with current password verification. Bypassed on first login. |
+| `POST` | `/api/auth/refresh` | Public | Rotate refresh token and return new access + refresh tokens. |
 | `POST` | `/api/auth/logout` | Any authenticated | Records logout event in `access_logs` and terminates the active session record. |
 
 **`POST /api/auth/login` response fields:**
@@ -346,6 +361,7 @@ The system implements five roles enforced via `@PreAuthorize` on every endpoint:
 | Method | Endpoint | Roles | Description |
 |--------|----------|-------|-------------|
 | `GET` | `/customer` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | List all customers |
+| `GET` | `/customer/paginated` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | Paginated customer list |
 | `GET` | `/customer/me` | All authenticated | Get own customer profile (by JWT user ID) |
 | `GET` | `/customer/email/{email}` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | Get customer by email |
 | `GET` | `/customer/search?name=&bankName=` | ADMIN, MANAGER, CUSTOMER_MANAGER | Search by name and bank |
@@ -362,10 +378,14 @@ The system implements five roles enforced via `@PreAuthorize` on every endpoint:
 | Method | Endpoint | Roles | Description |
 |--------|----------|-------|-------------|
 | `GET` | `/account` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | List all accounts |
+| `GET` | `/account/paginated` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | Paginated account list |
 | `GET` | `/account/my` | All authenticated | Get own accounts (by JWT user ID) |
-| `GET` | `/account/{accountNumber}` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | Get account by number |
+| `GET` | `/account/{id}` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | Get account by ID |
 | `GET` | `/account/name/{bankName}` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | List accounts by bank |
 | `GET` | `/account/email/{email}` | ADMIN, MANAGER, CUSTOMER_MANAGER | List accounts by customer email |
+| `GET` | `/account/validate-receiver?accountNumber=&bankName=` | ADMIN, MANAGER, USER | Validate receiver account |
+| `GET` | `/account/lookup-by-number?accountNumber=` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | Lookup account by number |
+| `GET` | `/account/{accountNumber}/balance` | ADMIN, MANAGER, AUDITOR, USER | Ledger-derived balance |
 | `POST` | `/account/{bankName}` | ADMIN, MANAGER | Create account (auto-generates number: `ACC_BANKNAME_xxxxx`) |
 | `PATCH` | `/account/{accNumber}` | ADMIN, MANAGER | Update account details |
 | `PATCH` | `/account/{accNumber}/compliance` | ADMIN, MANAGER, CUSTOMER_MANAGER | Update `accountStatus`, `kycStatus`, `customerStatus` |
@@ -378,11 +398,14 @@ The system implements five roles enforced via `@PreAuthorize` on every endpoint:
 | Method | Endpoint | Roles | Description |
 |--------|----------|-------|-------------|
 | `GET` | `/transaction/all` | ADMIN, MANAGER, AUDITOR | Get all transactions (no filter) |
+| `GET` | `/transaction/all/paginated` | ADMIN, MANAGER, AUDITOR | Paginated transaction list |
 | `GET` | `/transaction?accountNumber=&email=` | ADMIN, MANAGER, AUDITOR, USER | Get transactions by account + email |
 | `GET` | `/transaction/my` | All authenticated | Get own transactions (by JWT user ID) |
 | `GET` | `/transaction/customer/{customerId}` | ADMIN, MANAGER, AUDITOR, CUSTOMER_MANAGER | Get all transactions for a customer |
 | `GET` | `/transaction/accounts/{id}/balance` | ADMIN, MANAGER, AUDITOR, USER | Get ledger-derived balance for an account |
 | `POST` | `/transaction` | **ROLE_USER only** | Initiate a money transfer (sender ownership enforced) |
+| `POST` | `/transaction/{transactionId}/reverse` | ADMIN, MANAGER | Reverse a completed transaction |
+| `GET` | `/transaction/{transactionId}/receipt` | ADMIN, MANAGER, AUDITOR, USER | Get transaction receipt details |
 
 **Transaction states:** `INITIATED → PROCESSING → COMPLETED / FAILED`
 
@@ -403,10 +426,12 @@ The system implements five roles enforced via `@PreAuthorize` on every endpoint:
 |--------|----------|-------|-------------|
 | `POST` | `/upi/register` | ADMIN, MANAGER, USER | Register a UPI profile linked to an account |
 | `GET` | `/upi` | ADMIN, MANAGER, AUDITOR, USER | List all UPI profiles |
+| `GET` | `/upi/paginated` | ADMIN, MANAGER, AUDITOR, USER | Paginated UPI profiles |
 | `GET` | `/upi/my` | All authenticated | Get own UPI profiles (by JWT user ID) |
 | `GET` | `/upi/{upiId}` | ADMIN, MANAGER, AUDITOR, USER | Get UPI profile by UPI ID |
 | `GET` | `/upi/account/{accountNumber}` | ADMIN, MANAGER, USER | List UPI profiles for an account |
 | `PATCH` | `/upi/{upiId}/status?status=` | ADMIN, MANAGER, USER | Update UPI profile status (ACTIVE/INACTIVE) |
+| `PUT` | `/upi/{upiId}/toggle?enabled=` | ADMIN, MANAGER, USER | Toggle UPI profile enablement |
 | `DELETE` | `/upi/{upiId}` | **ADMIN only** | Soft-delete UPI profile |
 | `POST` | `/upi/pay` | **ROLE_USER only** | Execute idempotent UPI payment |
 
@@ -429,8 +454,8 @@ Failure reason stored in `upi_payment_obj.failure_reason` for debugging and audi
 
 | Method | Endpoint | Roles | Description |
 |--------|----------|-------|-------------|
-| `GET` | `/qr/generate?upiId=&name=&amount=&width=&height=` | USER | Generate UPI payment QR code (PNG). Format: `upi://pay?pa=...&pn=...&am=...&cu=INR` |
-| `GET` | `/qr/account?accountNumber=&bankName=&ifscCode=&width=&height=` | USER | Generate account details QR code (PNG) |
+| `GET` | `/qr/generate?upiId=&name=&amount=&width=&height=` | ADMIN, MANAGER, USER | Generate UPI payment QR code (PNG). Format: `upi://pay?pa=...&pn=...&am=...&cu=INR` |
+| `GET` | `/qr/account?accountNumber=&bankName=&ifscCode=&width=&height=` | ADMIN, MANAGER, USER | Generate account details QR code (PNG) |
 
 Returns `image/png` bytes. Width/height default to 300×300.
 
@@ -484,6 +509,148 @@ Returns `image/png` bytes. Width/height default to 300×300.
 
 ---
 
+### 10. Notifications — `/api/notifications`
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/notifications?page=&size=` | Paginated notifications for current user |
+| `GET` | `/api/notifications/unread` | List unread notifications |
+| `GET` | `/api/notifications/unread/count` | Count unread notifications |
+| `PUT` | `/api/notifications/{notificationId}/read` | Mark a notification as read |
+| `PUT` | `/api/notifications/read-all` | Mark all notifications as read |
+
+User ID is derived from the bearer token; users can only access their own notifications.
+
+---
+
+### 11. Debit Cards — `/api/debit-cards`
+
+| Method | Endpoint | Roles | Description |
+|--------|----------|-------|-------------|
+| `GET` | `/api/debit-cards/account/{accountId}` | ADMIN, MANAGER, USER | Get cards by account ID |
+| `GET` | `/api/debit-cards/account-number/{accountNumber}` | ADMIN, MANAGER, USER | Get cards by account number |
+| `GET` | `/api/debit-cards/{cardId}` | ADMIN, MANAGER, USER | Get card by ID |
+| `PUT` | `/api/debit-cards/{cardId}/toggle-contactless?enabled=` | ADMIN, USER | Toggle contactless |
+| `PUT` | `/api/debit-cards/{cardId}/toggle-international?enabled=` | ADMIN, USER | Toggle international |
+| `PUT` | `/api/debit-cards/{cardId}/toggle-otp?enabled=` | ADMIN, USER | Toggle OTP verification |
+| `PUT` | `/api/debit-cards/{cardId}/limits` | ADMIN, USER | Update daily/monthly limits |
+| `PUT` | `/api/debit-cards/{cardId}/merchant-blocks` | ADMIN, USER | Update blocked merchant categories |
+| `POST` | `/api/debit-cards/{cardId}/freeze?reason=` | ADMIN, USER | Freeze card |
+| `POST` | `/api/debit-cards/{cardId}/unfreeze` | ADMIN, USER | Unfreeze card |
+| `POST` | `/api/debit-cards/{cardId}/replace` | ADMIN, USER | Request replacement |
+| `PUT` | `/api/debit-cards/{cardId}/block?reason=` | ADMIN, USER | Permanently block card |
+
+---
+
+### 12. Debit Card Requests — `/api/debit-card-requests`
+
+| Method | Endpoint | Roles | Description |
+|--------|----------|-------|-------------|
+| `POST` | `/api/debit-card-requests` | USER | Create a debit card request |
+| `GET` | `/api/debit-card-requests/my` | USER | Current user's requests |
+| `GET` | `/api/debit-card-requests/pending` | ADMIN, MANAGER | Pending requests |
+| `GET` | `/api/debit-card-requests/approved` | ADMIN, MANAGER | Approved requests |
+| `GET` | `/api/debit-card-requests/issued` | ADMIN, MANAGER | Issued requests |
+| `POST` | `/api/debit-card-requests/{requestId}/approve` | ADMIN, MANAGER | Approve request |
+| `POST` | `/api/debit-card-requests/{requestId}/reject` | ADMIN, MANAGER | Reject request |
+| `POST` | `/api/debit-card-requests/{requestId}/issue` | ADMIN, MANAGER | Mark as issued |
+| `POST` | `/api/debit-card-requests/{requestId}/dispatch` | ADMIN, MANAGER | Mark as dispatched |
+| `POST` | `/api/debit-card-requests/{requestId}/deliver` | ADMIN, MANAGER | Mark as delivered |
+
+---
+
+### 13. Credit Cards & Plans — `/api/credit-cards`, `/api/credit-plans`
+
+**Credit Cards**
+
+| Method | Endpoint | Roles | Description |
+|--------|----------|-------|-------------|
+| `GET` | `/api/credit-cards/account/{accountId}` | ADMIN, MANAGER, USER | Cards for account |
+| `GET` | `/api/credit-cards/account-number/{accountNumber}` | ADMIN, MANAGER, USER | Cards for account number |
+| `GET` | `/api/credit-cards/{cardId}` | ADMIN, MANAGER, USER | Get card by ID |
+| `PUT` | `/api/credit-cards/{cardId}/toggle-contactless?enabled=` | ADMIN, USER | Toggle contactless |
+| `PUT` | `/api/credit-cards/{cardId}/toggle-international?enabled=` | ADMIN, USER | Toggle international |
+| `PUT` | `/api/credit-cards/{cardId}/toggle-otp?enabled=` | ADMIN, USER | Toggle OTP verification |
+| `PUT` | `/api/credit-cards/{cardId}/limits` | ADMIN, USER | Update limits |
+| `PUT` | `/api/credit-cards/{cardId}/merchant-blocks` | ADMIN, USER | Update blocked merchant categories |
+| `POST` | `/api/credit-cards/{cardId}/freeze` | ADMIN, USER | Freeze card |
+| `POST` | `/api/credit-cards/{cardId}/unfreeze` | ADMIN, USER | Unfreeze card |
+| `POST` | `/api/credit-cards/{cardId}/replace` | ADMIN, USER | Request replacement |
+| `PUT` | `/api/credit-cards/{cardId}/block?reason=` | ADMIN, USER | Permanently block card |
+
+**Credit Plans**
+
+| Method | Endpoint | Roles | Description |
+|--------|----------|-------|-------------|
+| `GET` | `/api/credit-plans` | ADMIN, MANAGER, USER | List plans |
+| `GET` | `/api/credit-plans/all` | ADMIN, MANAGER | List all plans (admin/manager view) |
+| `POST` | `/api/credit-plans` | ADMIN, MANAGER | Create plan |
+| `PATCH` | `/api/credit-plans/{planId}` | ADMIN, MANAGER | Update plan |
+| `POST` | `/api/credit-plans/{planId}/assign/{cardId}` | ADMIN, MANAGER | Assign plan to card |
+
+---
+
+### 14. Loans & EMI — `/api/loans`, `/api/emis`
+
+**Loans**
+
+| Method | Endpoint | Roles | Description |
+|--------|----------|-------|-------------|
+| `GET` | `/api/loans/customer/{customerId}` | ADMIN, MANAGER, USER | Loans for customer |
+| `GET` | `/api/loans/account/{accountId}` | ADMIN, MANAGER, USER | Loans for account |
+| `GET` | `/api/loans/{loanId}` | ADMIN, MANAGER, USER | Loan by ID |
+| `POST` | `/api/loans` | ADMIN, MANAGER | Create loan |
+
+**EMI**
+
+| Method | Endpoint | Roles | Description |
+|--------|----------|-------|-------------|
+| `GET` | `/api/emis/loan/{loanId}` | ADMIN, MANAGER, USER | EMI schedule for loan |
+| `GET` | `/api/emis/{emiId}` | ADMIN, MANAGER, USER | EMI details by ID |
+
+---
+
+### 15. Account Statements — `/api/accounts/{accountNumber}/statement`
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/api/accounts/{accountNumber}/statement?format=csv&from=&to=` | Any authenticated | Export statement as CSV or PDF |
+
+---
+
+### 16. Webhooks — `/api/webhooks`
+
+| Method | Endpoint | Roles | Description |
+|--------|----------|-------|-------------|
+| `POST` | `/api/webhooks` | ADMIN, MANAGER | Register new webhook subscription |
+| `GET` | `/api/webhooks` | ADMIN, MANAGER, AUDITOR | List all subscriptions |
+| `DELETE` | `/api/webhooks/{id}` | ADMIN, MANAGER | Delete subscription |
+| `PATCH` | `/api/webhooks/{id}/active?active=` | ADMIN, MANAGER | Enable or disable subscription |
+
+---
+
+### 17. Composite & Card Events — `/api/composite`, `/stream/events`
+
+**Composite**
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/composite/my/overview` | Aggregated dashboard overview |
+| `POST` | `/api/composite/transfer` | Composite transfer workflow |
+| `GET` | `/api/composite/customers/{customerId}/banking-profile` | Customer banking profile |
+| `GET` | `/api/composite/banks/{bankId}/operations-summary` | Bank operations summary |
+| `POST` | `/api/composite/accounts/balance-check` | Multi-account balance check |
+| `GET` | `/api/composite/transactions/advanced` | Advanced transaction search |
+| `GET` | `/api/composite/search/global` | Global search across entities |
+| `POST` | `/api/composite/accounts/{accountNumber}/freeze` | Freeze account |
+| `POST` | `/api/composite/customers/{customerId}/kyc-verify` | KYC verification action |
+
+**Card Events (SSE)**
+
+- `GET /stream/events` — Server-sent events stream; access token provided via query param `token`.
+
+---
+
 ## 🧾 Ledger Architecture (double-entry)
 
 Every transaction creates **exactly two** immutable ledger entries:
@@ -516,6 +683,7 @@ SELECT COALESCE(SUM(
 - Stateless JWT (Spring Security 6 + JJWT 0.12.6)
 - Every protected request must include `Authorization: Bearer <token>`
 - Token TTL: 24 hours; refresh token also issued at login
+- Refresh tokens are hashed in `refresh_tokens`; rotation revokes reuse and the token family
 - `@EnableMethodSecurity(prePostEnabled = true)` — fine-grained `@PreAuthorize` on every endpoint
 
 ### Sender Ownership Enforcement (IDOR prevention)
@@ -541,7 +709,7 @@ Allowed origins (configurable): `http://localhost:8081`, `http://localhost:5173`
 
 ## 🗄️ Database Schema
 
-### Tables (13 entities)
+### Tables (22+)
 
 | Table | Description |
 |-------|-------------|
@@ -558,6 +726,15 @@ Allowed origins (configurable): `http://localhost:8081`, `http://localhost:5173`
 | `audit_logs` | Auto-captured API activity log |
 | `access_logs` | Security access events (login, logout, password change) |
 | `user_sessions` | Active JWT session tracking |
+| `refresh_tokens` | Hashed refresh token records with rotation metadata |
+| `notifications` | Per-user notification records |
+| `debit_cards` | Debit cards with limits and controls |
+| `debit_card_requests` | Physical debit card requests |
+| `credit_cards` | Credit cards linked to accounts and plans |
+| `credit_plans` | Credit plan definitions |
+| `loans` | Loan records |
+| `emis` | EMI schedule rows |
+| `webhook_subscriptions` | Outbound webhook registrations |
 
 ### Key Indexes
 

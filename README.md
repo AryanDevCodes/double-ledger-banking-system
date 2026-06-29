@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🏦 Bank Ledger & Payment Engine
+# 🏦 Double Ledger & Banking System
 
 **Full-stack banking system — double-entry ledger · UPI payments · refresh token rotation · audit logging · notifications · cards · loans · React dashboard**
 

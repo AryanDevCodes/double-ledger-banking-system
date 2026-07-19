@@ -1,0 +1,28 @@
+server:
+  servlet:
+    context-path: /api
+
+spring:
+  sql:
+    init:
+      # Don't run schema.sql against a real database during tests.
+      mode: never
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:bank_db;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+  mail:
+    host: localhost
+    port: 25
+
+jwt:
+  # JwtUtil expects BASE64-encoded bytes.
+  secret: YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=
+  expiration: 86400000
+  refresh:
+    expiration: 604800000

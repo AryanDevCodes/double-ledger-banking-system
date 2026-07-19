@@ -2,6 +2,7 @@ package com.bank.security;
 
 import java.util.Arrays;
 import java.util.List;
+import com.bank.config.CorsProperties;
 import com.bank.security.ratelimit.RateLimitFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -32,6 +33,7 @@ public class SecurityConfig {
   private final RateLimitFilter rateLimitFilter;
   private final UserDetailsService userDetailsService;
   private final PasswordEncoder passwordEncoder;
+  private final CorsProperties corsProperties;
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -74,8 +76,11 @@ public class SecurityConfig {
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOrigins(
-        List.of("http://localhost:8081", "http://localhost:5173", "http://localhost:3000"));
+    List<String> allowedOrigins = corsProperties.getAllowedOrigins();
+    if (allowedOrigins == null || allowedOrigins.isEmpty()) {
+      allowedOrigins = List.of("http://localhost:8081", "http://localhost:5173", "http://localhost:3000");
+    }
+    configuration.setAllowedOrigins(allowedOrigins);
     configuration.setAllowedMethods(
         Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
     configuration.setAllowedHeaders(Arrays.asList("*"));

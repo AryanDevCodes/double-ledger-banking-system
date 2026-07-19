@@ -6,6 +6,11 @@ on:
       - backend-alignment-upgrade
     paths:
       - "bank-backend/**"
+  workflow_dispatch: {}
+
+concurrency:
+  group: sync-backend-only
+  cancel-in-progress: false
 
 jobs:
   sync:
@@ -16,7 +21,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Push bank-backend subtree to backend-only/main
+      - name: Push bank-backend to backend-only/main
         env:
           BACKEND_ONLY_PUSH_TOKEN: ${{ secrets.BACKEND_ONLY_PUSH_TOKEN }}
         run: |
@@ -24,4 +29,14 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
           git remote add backend-only "https://x-access-token:${BACKEND_ONLY_PUSH_TOKEN}@github.com/AryanDevCodes/double-ledger-banking-system-BACKEND.git"
-          git subtree push --prefix bank-backend backend-onl
+
+          # Mirror strategy: split subtree and force-push to backend-only/main.
+          # This avoids non-fast-forward failures when backend-only history differs.
+          remote_sha="$(git ls-remote backend-only refs/heads/main | awk '{print $1}')"
+          split_sha="$(git subtree split --prefix bank-backend)"
+
+          if [ -n "${remote_sha}" ]; then
+            git push backend-only "${split_sha}:refs/heads/main" --force-with-lease=refs/heads/main:"${remote_sha}"
+          else
+            git push backend-only "${split_sha}:refs/heads/main" --force
+          fi

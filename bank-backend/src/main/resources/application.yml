@@ -47,6 +47,12 @@ jwt:
 
 # Application-level toggles
 app:
+  cors:
+    # Comma-separated or YAML list are both fine. This list is used by Spring Security CORS.
+    allowed-origins:
+      - http://localhost:5173
+      - http://localhost:3000
+      - http://localhost:8081
   mail:
     enabled: false               # set true once SMTP is configured
     from: no-reply@bank.local

@@ -15,34 +15,60 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      metadata: read
+      packages: read
+
     steps:
-      - name: Checkout
+      - name: Checkout source repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
-      - name: Push bank-backend to backend-only/main
+      - name: Push bank-backend subtree to backend-only/main
         env:
           BACKEND_ONLY_PUSH_TOKEN: ${{ secrets.BACKEND_ONLY_PUSH_TOKEN }}
+        shell: bash
         run: |
           set -euo pipefail
+
           if [ -z "${BACKEND_ONLY_PUSH_TOKEN:-}" ]; then
-            echo "BACKEND_ONLY_PUSH_TOKEN is not set. Add it in repo Settings -> Secrets and variables -> Actions."
+            echo "BACKEND_ONLY_PUSH_TOKEN is not set."
+            echo "Add it in: Settings -> Secrets and variables -> Actions"
             exit 1
           fi
 
-          git config user.name "github-actions"
-          git config user.email "github-actions@users.noreply.github.com"
-          # Use an explicit username so GitHub authenticates as the PAT owner.
-          git remote add backend-only "https://AryanDevCodes:${BACKEND_ONLY_PUSH_TOKEN}@github.com/AryanDevCodes/double-ledger-banking-system-BACKEND.git"
+          git config user.name "sync-bot"
+          git config user.email "sync-bot@users.noreply.github.com"
 
-          # Mirror strategy: split subtree and force-push to backend-only/main.
-          # This avoids non-fast-forward failures when backend-only history differs.
-          remote_sha="$(git ls-remote backend-only refs/heads/main | awk '{print $1}')"
+          # Remove any auth header that checkout or runner might have set
+          git config --local --unset-all http.https://github.com/.extraheader || true
+
+          # Define backend remote without embedding token in URL
+          git remote remove backend-only 2>/dev/null || true
+          git remote add backend-only https://github.com/AryanDevCodes/double-ledger-banking-system-BACKEND.git
+
+          # Build Basic auth header for PAT (username must be x-access-token)
+          AUTH="$(printf 'x-access-token:%s' "$BACKEND_ONLY_PUSH_TOKEN" | base64 -w0)"
+
+          # Split subtree commit
           split_sha="$(git subtree split --prefix bank-backend)"
 
+          # Check if target branch exists on remote (authenticated)
+          remote_sha="$(
+            git -c http.https://github.com/.extraheader="AUTHORIZATION: basic $AUTH" \
+              ls-remote backend-only refs/heads/main | awk '{print $1}'
+          )"
+
           if [ -n "${remote_sha}" ]; then
-            git push backend-only "${split_sha}:refs/heads/main" --force-with-lease=refs/heads/main:"${remote_sha}"
+            # Safe force update only if remote main is still at remote_sha
+            git -c http.https://github.com/.extraheader="AUTHORIZATION: basic $AUTH" \
+              push backend-only "${split_sha}:refs/heads/main" \
+              --force-with-lease=refs/heads/main:"${remote_sha}"
           else
-            git push backend-only "${split_sha}:refs/heads/main" --force
+            # First push when main doesn't exist yet
+            git -c http.https://github.com/.extraheader="AUTHORIZATION: basic $AUTH" \
+              push backend-only "${split_sha}:refs/heads/main" --force
           fi

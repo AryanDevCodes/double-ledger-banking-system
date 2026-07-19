@@ -26,9 +26,15 @@ jobs:
           BACKEND_ONLY_PUSH_TOKEN: ${{ secrets.BACKEND_ONLY_PUSH_TOKEN }}
         run: |
           set -euo pipefail
+          if [ -z "${BACKEND_ONLY_PUSH_TOKEN:-}" ]; then
+            echo "BACKEND_ONLY_PUSH_TOKEN is not set. Add it in repo Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
-          git remote add backend-only "https://x-access-token:${BACKEND_ONLY_PUSH_TOKEN}@github.com/AryanDevCodes/double-ledger-banking-system-BACKEND.git"
+          # Use an explicit username so GitHub authenticates as the PAT owner.
+          git remote add backend-only "https://AryanDevCodes:${BACKEND_ONLY_PUSH_TOKEN}@github.com/AryanDevCodes/double-ledger-banking-system-BACKEND.git"
 
           # Mirror strategy: split subtree and force-push to backend-only/main.
           # This avoids non-fast-forward failures when backend-only history differs.

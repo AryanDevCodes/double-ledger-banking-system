@@ -4,6 +4,8 @@ server:
     context-path: /api
 
 spring:
+  main:
+    lazy-initialization: true
   sql:
     init:
       mode: never
@@ -17,7 +19,7 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
@@ -26,10 +28,10 @@ spring:
   cache:
     type: simple
 
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+  # data:
+  #   redis:
+  #     host: ${REDIS_HOST:localhost}
+  #     port: ${REDIS_PORT:6379}
 
   mail:
     host: ${MAIL_HOST:}
@@ -95,3 +97,9 @@ management:
       enabled: false
     redis:
       enabled: false
+      
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

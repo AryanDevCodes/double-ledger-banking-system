@@ -8,9 +8,9 @@ spring:
       mode: always
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/bank_db
-    username: postgres
-    password: ${DB_PASSWORD:8252}
+    url: jdbc:postgresql://ep-long-truth-az0zfw4b-pooler.c-3.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channelBinding=require
+    username: neondb_owner
+    password: ${DB_PASSWORD:npg_P1i6urfXIKOA}
   jpa:
     open-in-view: true
     hibernate:

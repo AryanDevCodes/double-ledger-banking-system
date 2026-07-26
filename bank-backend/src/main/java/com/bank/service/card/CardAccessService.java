@@ -5,7 +5,6 @@ import com.bank.entity.Role;
 import com.bank.entity.User;
 import com.bank.exception.ResourceNotFoundException;
 import com.bank.repository.UserRepository;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;

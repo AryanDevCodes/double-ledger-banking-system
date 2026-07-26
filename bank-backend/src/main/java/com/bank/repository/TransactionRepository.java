@@ -14,10 +14,14 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
-        @Query("select t from Transaction t where "
-                        + "t.senderAccountNumber = :accountNumber "
-                        + "or t.receiverAccountNumber = :accountNumber "
-                        + "order by t.transactionDate desc")
+        @Query("SELECT t FROM Transaction t "
+                        + "LEFT JOIN FETCH t.senderAccount sa "
+                        + "LEFT JOIN FETCH sa.customer sc "
+                        + "LEFT JOIN FETCH t.receiverAccount ra "
+                        + "LEFT JOIN FETCH ra.customer rc "
+                        + "WHERE (t.senderAccountNumber = :accountNumber OR t.receiverAccountNumber = :accountNumber) "
+                        + "AND (sc.email = :email OR rc.email = :email) "
+                        + "ORDER BY t.transactionDate DESC")
         List<Transaction> findTransactionByAccountNumberAndEmail(
                         @Param("accountNumber") String accountNumber, @Param("email") String email);
 
@@ -26,8 +30,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
                         + "LEFT JOIN FETCH sa.customer sc "
                         + "LEFT JOIN FETCH t.receiverAccount ra "
                         + "LEFT JOIN FETCH ra.customer rc "
-                        + "WHERE t.senderAccountNumber = :accountNumber "
-                        + "OR t.receiverAccountNumber = :accountNumber "
+                        + "WHERE (t.senderAccountNumber = :accountNumber OR t.receiverAccountNumber = :accountNumber) "
+                        + "AND (sc.email = :email OR rc.email = :email) "
                         + "ORDER BY t.transactionDate DESC")
         List<Transaction> findTransactionByAccountNumberAndEmailWithDetails(
                         @Param("accountNumber") String accountNumber, @Param("email") String email);
@@ -39,8 +43,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
                         + "LEFT JOIN FETCH t.receiverAccount ra "
                         + "LEFT JOIN FETCH ra.customer rc "
                         + "LEFT JOIN FETCH ra.bank rb "
-                        + "WHERE t.senderAccountNumber = :accountNumber "
-                        + "OR t.receiverAccountNumber = :accountNumber "
+                        + "WHERE (t.senderAccountNumber = :accountNumber OR t.receiverAccountNumber = :accountNumber) "
+                        + "AND (sc.email = :email OR rc.email = :email) "
+                        + "AND (:bankName IS NULL OR sb.bankName = :bankName OR rb.bankName = :bankName) "
                         + "ORDER BY t.transactionDate DESC")
         List<Transaction> findTransactionByAccountNumberAndEmailAndBankNameWithDetails(
                         @Param("accountNumber") String accountNumber,

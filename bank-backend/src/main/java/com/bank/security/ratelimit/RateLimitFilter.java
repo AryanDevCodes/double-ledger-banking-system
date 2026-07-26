@@ -47,7 +47,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     return List.of(
         new Endpoint("POST", "/api/auth/login", "login"),
         new Endpoint("POST", "/api/auth/forgot-password", "forgot"),
-        new Endpoint("POST", "/upi/pay", "upi-pay"));
+        new Endpoint("POST", "/api/upi/pay", "upi-pay"));
   }
 
   @Override
@@ -130,10 +130,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
   private static final class Bucket {
     private final AtomicLong tokensTimes1000;
     private final AtomicLong lastRefillMs;
-    private final int initialCapacity;
 
     Bucket(int initialCapacity) {
-      this.initialCapacity = initialCapacity;
       this.tokensTimes1000 = new AtomicLong((long) initialCapacity * 1000L);
       this.lastRefillMs = new AtomicLong(System.currentTimeMillis());
     }

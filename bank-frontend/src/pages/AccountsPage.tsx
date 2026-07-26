@@ -10,45 +10,35 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { 
-  Wallet, 
-  RefreshCw, 
-  Users, 
-  Landmark, 
-  ShieldCheck, 
-  Copy, 
-  Calendar,
+import {
+  Wallet,
+  RefreshCw,
+  Users,
+  Landmark,
+  ShieldCheck,
+  Copy,
+  Clock,
   FileText,
   Download,
   Eye,
   EyeOff,
   Plus,
   Search,
-  Filter,
   X,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  AlertTriangle,
   TrendingUp,
   CreditCard,
   Building2,
   Info,
-  FilterX
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { PasswordStrength } from "@/components/PasswordStrength";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { AccountResponseDTO, BankResponseDTO } from "@/types/api";
 import { toast } from "sonner";
@@ -94,6 +84,16 @@ const complianceSchema = z.object({
 
 type ComplianceValues = z.infer<typeof complianceSchema>;
 
+const STEPS = ["bank", "setup", "extra"] as const;
+type Step = (typeof STEPS)[number];
+
+// Fields that must be valid before the user can move off a given step.
+const STEP_FIELDS: Record<Step, (keyof AccountValues)[]> = {
+  bank: ["bankName", "fullName", "email", "phoneNumber", "username"],
+  setup: ["password", "initialDeposit"],
+  extra: ["age", "address", "termsAccepted"],
+};
+
 const generateActivityEvents = (accounts: AccountResponseDTO[]): ActivityEvent[] => {
   return accounts.slice(0, 8).map((a, i) => ({
     id: String(i + 1),
@@ -135,14 +135,11 @@ export default function AccountsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [bankFilter, setBankFilter] = useState<string>("all");
-  const [openAccountSheet, setOpenAccountSheet] = useState(false);
+  const [openAccountDialog, setOpenAccountDialog] = useState(false);
+  const [step, setStep] = useState<Step>("bank");
   const [complianceDialogOpen, setComplianceDialogOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<AccountResponseDTO | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [statementDialogOpen, setStatementDialogOpen] = useState(false);
-  const [statementAccount, setStatementAccount] = useState<AccountResponseDTO | null>(null);
-  const [statementFrom, setStatementFrom] = useState("");
-  const [statementTo, setStatementTo] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const form = useForm<AccountValues>({
@@ -198,7 +195,7 @@ export default function AccountsPage() {
   const filtered = useMemo(() => {
     const searchLower = search.toLowerCase();
     return accounts.filter(a => {
-      const matchesSearch = !search || 
+      const matchesSearch = !search ||
         a.accountNumber.toLowerCase().includes(searchLower) ||
         a.customerName.toLowerCase().includes(searchLower) ||
         a.bankName.toLowerCase().includes(searchLower);
@@ -210,7 +207,6 @@ export default function AccountsPage() {
 
   const totalBalance = accounts.reduce((s, a) => s + (a.balance || 0), 0);
   const activeAccounts = accounts.filter((a) => a.status === "ACTIVE").length;
-  const inactiveAccounts = accounts.filter((a) => a.status === "INACTIVE").length;
   const pendingKYC = accounts.filter((a) => a.kycStatus === "PENDING").length;
   const avgBalance = accounts.length ? totalBalance / accounts.length : 0;
   const uniqueBanks = Array.from(new Set(accounts.map((a) => a.bankName).filter(Boolean))).sort();
@@ -226,6 +222,23 @@ export default function AccountsPage() {
     { id: "pending", title: "Pending KYC", value: pendingKYC, icon: <ShieldCheck className="h-5 w-5" />, tint: "amber" },
   ];
 
+  const resetAccountDialog = () => {
+    form.reset();
+    setStep("bank");
+    setShowPassword(false);
+  };
+
+  const goToStep = async (target: Step) => {
+    const targetIndex = STEPS.indexOf(target);
+    const currentIndex = STEPS.indexOf(step);
+    // Only validate when moving forward — always allow going back.
+    if (targetIndex > currentIndex) {
+      const valid = await form.trigger(STEP_FIELDS[step]);
+      if (!valid) return;
+    }
+    setStep(target);
+  };
+
   const handleAdd = async (values: AccountValues) => {
     try {
       const response = await accountApi.create(values.bankName, {
@@ -240,9 +253,9 @@ export default function AccountsPage() {
           address: values.address || undefined,
         }
       });
-      form.reset();
-      setOpenAccountSheet(false);
-      
+      resetAccountDialog();
+      setOpenAccountDialog(false);
+
       if (response?.temporaryPassword) {
         toast.success("Account created successfully!", {
           description: `Temporary password: ${response.temporaryPassword}`,
@@ -291,10 +304,10 @@ export default function AccountsPage() {
     }
   };
 
-  const downloadStatement = async (accountNumber: string, format: "csv" | "pdf", from?: string, to?: string) => {
+  const downloadStatement = async (accountNumber: string, format: "csv" | "pdf") => {
     try {
       const loadingToast = toast.loading("Downloading statement...");
-      const blob = await accountApi.exportStatement(accountNumber, format, from, to);
+      const blob = await accountApi.exportStatement(accountNumber, format);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -324,6 +337,8 @@ export default function AccountsPage() {
 
   const hasFilters = search || statusFilter !== "all" || bankFilter !== "all";
 
+  const stepIndex = STEPS.indexOf(step);
+
   return (
     <PageWrapper>
       <PageHeader
@@ -346,47 +361,217 @@ export default function AccountsPage() {
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
               Sync
             </Button>
-            <Sheet open={openAccountSheet} onOpenChange={setOpenAccountSheet}>
-              <SheetTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Open Account
+            <Button
+              onClick={() => {
+                resetAccountDialog();
+                setOpenAccountDialog(true);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Open Account
+            </Button>
+          </div>
+        }
+      />
+
+      <FuturisticStatsGrid widgets={widgets} loading={loading} columnsClassName="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" />
+
+      {/* Different layout: charts + activity feed side by side instead of
+          charts spanning the full width with the feed computed but unused. */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+        <div className="xl:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <FuturisticChart data={statusData} title="Account Status" type="pie" height={240} colors={["#10b981", "#f59e0b", "#f43f5e"]} />
+          <FuturisticChart data={bankData} title="Accounts by Bank" type="bar" height={240} colors={["#22d3ee", "#a78bfa", "#10b981", "#f59e0b", "#f43f5e"]} />
+        </div>
+        <FuturisticActivityFeed events={activityEvents} title="Recent Activity" />
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative flex-1 sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search accounts..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 bg-white/5 border-white/10"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[140px] bg-white/5 border-white/10"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="ACTIVE">Active</SelectItem>
+              <SelectItem value="INACTIVE">Inactive</SelectItem>
+              <SelectItem value="PENDING">Pending</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={bankFilter} onValueChange={setBankFilter}>
+            <SelectTrigger className="w-[160px] bg-white/5 border-white/10"><SelectValue placeholder="Bank" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Banks</SelectItem>
+              {uniqueBanks.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          {hasFilters && (
+            <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
+              <X className="w-4 h-4 mr-1" /> Clear
+            </Button>
+          )}
+        </div>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span>{filtered.length} accounts</span>
+          {hasFilters && <span className="text-amber-400">(filtered)</span>}
+        </div>
+      </div>
+
+      {/* Card grid instead of a wide table — no horizontal scroll needed,
+          reads better on narrow screens. */}
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="glass-card-futuristic p-4 space-y-3">
+              <div className="h-4 w-32 bg-white/10 rounded animate-pulse" />
+              <div className="h-4 w-40 bg-white/10 rounded animate-pulse" />
+              <div className="h-8 w-full bg-white/10 rounded animate-pulse" />
+            </div>
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="glass-card-futuristic p-10 text-center text-muted-foreground">
+          {hasFilters ? "No accounts match your filters" : "No accounts yet"}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map((account) => (
+            <div key={account.accountNumber} className="glass-card-futuristic p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono text-sm text-cyan-400 truncate">{account.accountNumber}</span>
+                    <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0" onClick={() => copyToClipboard(account.accountNumber)}>
+                      <Copy className="w-3 h-3" />
+                    </Button>
+                  </div>
+                  <p className="font-medium truncate mt-0.5">{account.customerName}</p>
+                </div>
+                <Badge variant="outline" className="bg-white/5 shrink-0">{account.bankName}</Badge>
+              </div>
+
+              <div className="mt-3 flex items-center justify-between">
+                <span className="font-mono font-semibold text-emerald-400 text-lg">
+                  {formatCurrency(account.balance)}
+                </span>
+                <span className="text-xs text-muted-foreground">{account.currencyCode}</span>
+              </div>
+
+              <div className="mt-3 flex items-center gap-2">
+                <span className={`badge-futuristic ${account.status === "ACTIVE" ? "badge-futuristic--success" : account.status === "PENDING" ? "badge-futuristic--warning" : "badge-futuristic--default"}`}>
+                  {account.status}
+                </span>
+                <span className={`badge-futuristic ${account.kycStatus === "COMPLETED" ? "badge-futuristic--success" : account.kycStatus === "PENDING" ? "badge-futuristic--warning" : "badge-futuristic--danger"}`}>
+                  {account.kycStatus || "PENDING"}
+                </span>
+              </div>
+
+              <div className="mt-4 pt-3 border-t border-white/10 flex items-center gap-2">
+                <Button variant="outline" size="sm" className="h-8 flex-1 border-violet-500/30 text-violet-400 hover:bg-violet-500/20" onClick={() => openComplianceEditor(account)}>
+                  <ShieldCheck className="w-3 h-3 mr-1" /> Verify
                 </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-full sm:w-[600px] lg:w-[700px] overflow-y-auto">
-                <SheetHeader className="mb-6">
-                  <SheetTitle className="text-2xl">Open New Account</SheetTitle>
-                  <SheetDescription>Fill in the details below to create a new bank account.</SheetDescription>
-                </SheetHeader>
-                <Alert className="mb-4">
-                  <Info className="h-4 w-4" />
-                  <AlertDescription>Each customer is allowed <strong>one bank account only</strong>. The selected bank is permanent.</AlertDescription>
-                </Alert>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(handleAdd)} className="space-y-6">
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg flex items-center gap-2"><Landmark className="h-5 w-5" /> Bank Information</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <FormField control={form.control} name="bankName" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Bank *</FormLabel>
-                            <Select value={field.value} onValueChange={field.onChange}>
-                              <FormControl><SelectTrigger><SelectValue placeholder="Select a bank..." /></SelectTrigger></FormControl>
-                              <SelectContent>
-                                {banks.map((b) => (<SelectItem key={b.id} value={b.bankName}><div className="flex items-center gap-2"><span>{b.bankName}</span><Badge variant="outline" className="text-xs">{b.branch}</Badge></div></SelectItem>))}
-                              </SelectContent>
-                            </Select>
-                            <FormDescription className="text-xs">Permanent — cannot change later.</FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardHeader className="pb-3"><CardTitle className="text-lg flex items-center gap-2"><Users className="h-5 w-5" /> Customer Information</CardTitle></CardHeader>
-                      <CardContent className="space-y-4">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8">
+                      <Download className="w-3 h-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-[180px]">
+                    <DropdownMenuItem onClick={() => downloadStatement(account.accountNumber, "csv")}>
+                      <FileText className="w-4 h-4 mr-2" /> CSV
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => downloadStatement(account.accountNumber, "pdf")}>
+                      <FileText className="w-4 h-4 mr-2" /> PDF
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------------
+          OPEN ACCOUNT DIALOG
+          ------------------------------------------------------------------
+          Height and scroll are set explicitly on this element instead of
+          relying on the base Sheet/Dialog component's own CSS. Structure:
+            - outer: fixed height (h-[85vh]), flex-col, nothing scrolls here
+            - header: shrink-0 (never scrolls, never shrinks)
+            - middle: flex-1 + overflow-y-auto  <-- the ONLY scroll region
+            - footer: shrink-0 (always visible, no "sticky" hacks needed)
+          This guarantees a scrollbar appears whenever content overflows,
+          regardless of what ui/dialog.tsx or ui/sheet.tsx do internally. */}
+      <Dialog
+        open={openAccountDialog}
+        onOpenChange={(o) => {
+          setOpenAccountDialog(o);
+          if (!o) resetAccountDialog();
+        }}
+      >
+        <DialogContent className="max-w-2xl h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
+          <DialogHeader className="shrink-0 px-6 py-4 border-b border-white/10">
+            <DialogTitle className="text-xl">Open New Account</DialogTitle>
+            <DialogDescription>Step {stepIndex + 1} of {STEPS.length}</DialogDescription>
+          </DialogHeader>
+
+          {/* Step indicator */}
+          <div className="shrink-0 px-6 pt-4">
+            <Tabs value={step} onValueChange={(v) => goToStep(v as Step)}>
+              <TabsList className="grid grid-cols-3 w-full">
+                <TabsTrigger value="bank">Bank & Customer</TabsTrigger>
+                <TabsTrigger value="setup">Account Setup</TabsTrigger>
+                <TabsTrigger value="extra">Additional</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleAdd)} className="flex flex-col flex-1 min-h-0">
+              {/* THE scroll region — everything else in this dialog is fixed */}
+              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+                {step === "bank" && (
+                  <>
+                    <Alert>
+                      <Info className="h-4 w-4" />
+                      <AlertDescription>Each customer is allowed <strong>one bank account only</strong>. The selected bank is permanent.</AlertDescription>
+                    </Alert>
+
+                    <div>
+                      <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                        <Landmark className="h-4 w-4" /> Bank Information
+                      </h3>
+                      <FormField control={form.control} name="bankName" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Bank *</FormLabel>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <FormControl><SelectTrigger><SelectValue placeholder="Select a bank..." /></SelectTrigger></FormControl>
+                            <SelectContent>
+                              {banks.map((b) => (<SelectItem key={b.id} value={b.bankName}><div className="flex items-center gap-2"><span>{b.bankName}</span><Badge variant="outline" className="text-xs">{b.branch}</Badge></div></SelectItem>))}
+                            </SelectContent>
+                          </Select>
+                          <FormDescription className="text-xs">Permanent — cannot change later.</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </div>
+
+                    <Separator />
+
+                    <div>
+                      <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                        <Users className="h-4 w-4" /> Customer Information
+                      </h3>
+                      <div className="space-y-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <FormField control={form.control} name="fullName" render={({ field }) => (<FormItem><FormLabel>Full Name *</FormLabel><FormControl><Input placeholder="John Doe" {...field} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField control={form.control} name="phoneNumber" render={({ field }) => (<FormItem><FormLabel>Phone Number *</FormLabel><FormControl><Input placeholder="+1 (555) 000-0000" type="tel" {...field} /></FormControl><FormMessage /></FormItem>)} />
@@ -395,231 +580,102 @@ export default function AccountsPage() {
                           <FormField control={form.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email Address *</FormLabel><FormControl><Input placeholder="john@example.com" type="email" {...field} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField control={form.control} name="username" render={({ field }) => (<FormItem><FormLabel>Username</FormLabel><FormControl><Input placeholder="Leave empty to use email" {...field} /></FormControl><FormMessage /></FormItem>)} />
                         </div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardHeader className="pb-3"><CardTitle className="text-lg flex items-center gap-2"><ShieldCheck className="h-5 w-5" /> Account Setup</CardTitle></CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <FormField control={form.control} name="password" render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Password</FormLabel>
-                              <FormControl>
-                                <div className="relative">
-                                  <Input type={showPassword ? "text" : "password"} placeholder="Min. 8 characters" {...field} />
-                                  <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2" onClick={() => setShowPassword(!showPassword)}>
-                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                  </Button>
-                                </div>
-                              </FormControl>
-                              <PasswordStrength password={passwordValue} />
-                              <FormMessage />
-                            </FormItem>
-                          )} />
-                          <FormField control={form.control} name="initialDeposit" render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Initial Deposit</FormLabel>
-                              <FormControl>
-                                <div className="relative">
-                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
-                                  <Input type="number" className="pl-7" placeholder="0.00" {...field} />
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )} />
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardHeader className="pb-3"><CardTitle className="text-lg flex items-center gap-2"><Info className="h-5 w-5" /> Additional Information</CardTitle></CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <FormField control={form.control} name="age" render={({ field }) => (<FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" min="18" max="120" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                          <FormField control={form.control} name="address" render={({ field }) => (<FormItem><FormLabel>Address</FormLabel><FormControl><Input placeholder="123 Main St, City" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="pt-6">
-                        <FormField control={form.control} name="termsAccepted" render={({ field }) => (
-                          <FormItem>
-                            <div className="flex items-center gap-2">
-                              <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                              <FormLabel className="!mt-0">I accept the terms and conditions</FormLabel>
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
-                      </CardContent>
-                    </Card>
-                    <Separator />
-                    <div className="flex gap-3 justify-end sticky bottom-0 bg-background pt-4 pb-2">
-                      <Button type="button" variant="outline" onClick={() => setOpenAccountSheet(false)}>Cancel</Button>
-                      <Button type="submit" disabled={form.formState.isSubmitting || !form.formState.isValid}>
-                        {form.formState.isSubmitting ? <><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Creating...</> : <><Plus className="h-4 w-4 mr-2" />Create Account</>}
-                      </Button>
+                      </div>
                     </div>
-                  </form>
-                </Form>
-              </SheetContent>
-            </Sheet>
-          </div>
-        }
-      />
+                  </>
+                )}
 
-      <FuturisticStatsGrid widgets={widgets} loading={loading} columnsClassName="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" />
+                {step === "setup" && (
+                  <div>
+                    <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                      <ShieldCheck className="h-4 w-4" /> Account Setup
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <FormField control={form.control} name="password" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input type={showPassword ? "text" : "password"} placeholder="Min. 8 characters" {...field} />
+                              <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2" onClick={() => setShowPassword(!showPassword)}>
+                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                              </Button>
+                            </div>
+                          </FormControl>
+                          <PasswordStrength password={passwordValue} />
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="initialDeposit" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Initial Deposit</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
+                              <Input type="number" className="pl-7" placeholder="0.00" {...field} />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </div>
+                  </div>
+                )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
-        <div className="xl:col-span-2">
-          <FuturisticChart data={statusData} title="Account Status Distribution" type="pie" height={280} colors={["#10b981", "#f59e0b", "#f43f5e"]} />
-        </div>
-        <FuturisticChart data={bankData} title="Accounts by Bank" type="bar" height={280} colors={["#22d3ee", "#a78bfa", "#10b981", "#f59e0b", "#f43f5e"]} />
-      </div>
+                {step === "extra" && (
+                  <>
+                    <div>
+                      <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                        <Info className="h-4 w-4" /> Additional Information
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <FormField control={form.control} name="age" render={({ field }) => (<FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" min="18" max="120" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                        <FormField control={form.control} name="address" render={({ field }) => (<FormItem><FormLabel>Address</FormLabel><FormControl><Input placeholder="123 Main St, City" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                      </div>
+                    </div>
 
-      <div className="glass-card-futuristic">
-        <div className="p-4 border-b border-white/10">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1 sm:w-80">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search accounts..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9 bg-white/5 border-white/10"
-                />
+                    <Separator />
+
+                    <FormField control={form.control} name="termsAccepted" render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-center gap-2">
+                          <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                          <FormLabel className="!mt-0">I accept the terms and conditions</FormLabel>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </>
+                )}
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[140px] bg-white/5 border-white/10"><SelectValue placeholder="Status" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="ACTIVE">Active</SelectItem>
-                  <SelectItem value="INACTIVE">Inactive</SelectItem>
-                  <SelectItem value="PENDING">Pending</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={bankFilter} onValueChange={setBankFilter}>
-                <SelectTrigger className="w-[160px] bg-white/5 border-white/10"><SelectValue placeholder="Bank" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Banks</SelectItem>
-                  {uniqueBanks.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              {hasFilters && (
-                <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
-                  <X className="w-4 h-4 mr-1" /> Clear
-                </Button>
-              )}
-            </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>{filtered.length} accounts</span>
-              {hasFilters && <span className="text-amber-400">(filtered)</span>}
-            </div>
-          </div>
-        </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-white/10 text-left text-sm text-muted-foreground">
-                <th className="p-4 font-medium">Account No.</th>
-                <th className="p-4 font-medium">Customer</th>
-                <th className="p-4 font-medium">Bank</th>
-                <th className="p-4 font-medium text-right">Balance</th>
-                <th className="p-4 font-medium">Status</th>
-                <th className="p-4 font-medium">KYC</th>
-                <th className="p-4 font-medium text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i} className="border-b border-white/5">
-                    <td className="p-4"><div className="h-4 w-32 bg-white/10 rounded animate-pulse" /></td>
-                    <td className="p-4"><div className="h-4 w-40 bg-white/10 rounded animate-pulse" /></td>
-                    <td className="p-4"><div className="h-4 w-24 bg-white/10 rounded animate-pulse" /></td>
-                    <td className="p-4"><div className="h-4 w-20 bg-white/10 rounded animate-pulse ml-auto" /></td>
-                    <td className="p-4"><div className="h-4 w-16 bg-white/10 rounded animate-pulse" /></td>
-                    <td className="p-4"><div className="h-4 w-16 bg-white/10 rounded animate-pulse" /></td>
-                    <td className="p-4"><div className="h-8 w-32 bg-white/10 rounded animate-pulse ml-auto" /></td>
-                  </tr>
-                ))
-              ) : filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="p-8 text-center text-muted-foreground">
-                    {hasFilters ? "No accounts match your filters" : "No accounts yet"}
-                  </td>
-                </tr>
-              ) : (
-                filtered.slice(0, 20).map((account) => (
-                  <tr key={account.accountNumber} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-sm text-cyan-400">{account.accountNumber}</span>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => copyToClipboard(account.accountNumber)}>
-                          <Copy className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <div>
-                        <div className="font-medium">{account.customerName}</div>
-                        <div className="text-xs text-muted-foreground">{account.currencyCode}</div>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <Badge variant="outline" className="bg-white/5">{account.bankName}</Badge>
-                    </td>
-                    <td className="p-4 text-right font-mono font-semibold text-emerald-400">
-                      {formatCurrency(account.balance)}
-                    </td>
-                    <td className="p-4">
-                      <span className={`badge-futuristic ${account.status === "ACTIVE" ? "badge-futuristic--success" : account.status === "PENDING" ? "badge-futuristic--warning" : "badge-futuristic--default"}`}>
-                        {account.status}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <span className={`badge-futuristic ${account.kycStatus === "COMPLETED" ? "badge-futuristic--success" : account.kycStatus === "PENDING" ? "badge-futuristic--warning" : "badge-futuristic--danger"}`}>
-                        {account.kycStatus || "PENDING"}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-2 justify-end">
-                        <Button variant="outline" size="sm" className="h-8 border-violet-500/30 text-violet-400 hover:bg-violet-500/20" onClick={() => openComplianceEditor(account)}>
-                          <ShieldCheck className="w-3 h-3 mr-1" /> Verify
-                        </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="h-8">
-                              <Download className="w-3 h-3 mr-1" /> Statement
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-[200px]">
-                            <DropdownMenuItem onClick={() => downloadStatement(account.accountNumber, "csv")}>
-                              <FileText className="w-4 h-4 mr-2" /> CSV
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => downloadStatement(account.accountNumber, "pdf")}>
-                              <FileText className="w-4 h-4 mr-2" /> PDF
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {filtered.length > 20 && (
-          <div className="p-4 border-t border-white/10 flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Showing 20 of {filtered.length} accounts</span>
-            <Button variant="outline" size="sm">View All ({filtered.length})</Button>
-          </div>
-        )}
-      </div>
+              {/* Footer is a normal shrink-0 flex item now — no `sticky`
+                  needed, and it can never be scrolled out of view. */}
+              <DialogFooter className="shrink-0 px-6 py-4 border-t border-white/10 flex-row items-center justify-between sm:justify-between">
+                <div>
+                  {stepIndex > 0 && (
+                    <Button type="button" variant="ghost" onClick={() => goToStep(STEPS[stepIndex - 1])}>
+                      <ChevronLeft className="h-4 w-4 mr-1" /> Back
+                    </Button>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" onClick={() => setOpenAccountDialog(false)}>Cancel</Button>
+                  {stepIndex < STEPS.length - 1 ? (
+                    <Button type="button" onClick={() => goToStep(STEPS[stepIndex + 1])}>
+                      Next <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  ) : (
+                    <Button type="submit" disabled={form.formState.isSubmitting || !form.formState.isValid}>
+                      {form.formState.isSubmitting ? <><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Creating...</> : <><Plus className="h-4 w-4 mr-2" />Create Account</>}
+                    </Button>
+                  )}
+                </div>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={complianceDialogOpen} onOpenChange={setComplianceDialogOpen}>
         <DialogContent>

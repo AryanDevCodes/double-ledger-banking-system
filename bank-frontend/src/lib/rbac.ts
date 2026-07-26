@@ -26,83 +26,127 @@ export const ROLES = {
 
 export type Role = typeof ROLES[keyof typeof ROLES];
 
-// Fine-tuned permissions for banking operations
-export const PERMISSIONS = {
+/* -------------------------------------------------------------------------
+ * PERMISSION MATRIX
+ * -------------------------------------------------------------------------
+ * This is the thing that broke last time: BANKS_CREATE listed [MANAGER]
+ * while BANKS_EDIT listed [ADMIN, MANAGER] — so an Admin could edit a bank
+ * but couldn't see the button to create one. That kind of inconsistency is
+ * easy to introduce by hand and easy to miss in review, because it doesn't
+ * throw an error, it just quietly hides a button.
+ *
+ * To stop this class of bug from recurring, permissions are defined in two
+ * layers:
+ *
+ *   1. PERMISSION_BASE — who has this permission, NOT counting Admin.
+ *      This is the only thing you edit when adding/changing a permission.
+ *
+ *   2. PERMISSIONS (derived below) — PERMISSION_BASE with ROLES.ADMIN
+ *      merged into every entry automatically, because in this app Admin is
+ *      defined as a strict superset of every other role. You never have to
+ *      remember to add ROLES.ADMIN anywhere.
+ *
+ * If a permission should ever NOT be available to Admins (rare — e.g. a
+ * "maker-checker" action that must be done by a specific operational role,
+ * even by an admin acting as that role), add its key to ADMIN_EXCLUDED
+ * instead of adding ROLES.ADMIN by hand. That keeps the exception visible
+ * and intentional in one place instead of buried in a long array.
+ * ---------------------------------------------------------------------- */
+
+const PERMISSION_BASE = {
   // Bank Management (Infrastructure)
-  BANKS_VIEW: [ROLES.ADMIN, ROLES.MANAGER, ROLES.AUDITOR],
-  BANKS_VIEW_BY_UPI: [ROLES.ADMIN, ROLES.MANAGER, ROLES.AUDITOR, ROLES.USER],
-  BANKS_CREATE: [ROLES.MANAGER],
-  BANKS_EDIT: [ROLES.ADMIN, ROLES.MANAGER],
+  BANKS_VIEW: [ROLES.MANAGER, ROLES.AUDITOR],
+  BANKS_VIEW_BY_UPI: [ROLES.MANAGER, ROLES.AUDITOR, ROLES.USER],
+  BANKS_CREATE: [ROLES.MANAGER, ROLES.ADMIN],
+  BANKS_EDIT: [ROLES.MANAGER, ROLES.ADMIN],
 
   // Customer Management (Customer Service Focus)
-  CUSTOMERS_VIEW: [ROLES.ADMIN, ROLES.MANAGER, ROLES.CUSTOMER_MANAGER, ROLES.AUDITOR],
+  CUSTOMERS_VIEW: [ROLES.MANAGER, ROLES.CUSTOMER_MANAGER, ROLES.AUDITOR],
   CUSTOMERS_VIEW_OWN: [ROLES.USER],
-  CUSTOMERS_VIEW_BY_EMAIL: [ROLES.ADMIN, ROLES.MANAGER, ROLES.CUSTOMER_MANAGER, ROLES.AUDITOR],
-  CUSTOMERS_CREATE: [ROLES.CUSTOMER_MANAGER],
-  CUSTOMERS_EDIT: [ROLES.ADMIN, ROLES.CUSTOMER_MANAGER],
-  CUSTOMERS_APPROVE_KYC: [ROLES.ADMIN, ROLES.MANAGER],
+  CUSTOMERS_VIEW_BY_EMAIL: [ROLES.MANAGER, ROLES.CUSTOMER_MANAGER, ROLES.AUDITOR],
+  CUSTOMERS_CREATE: [ROLES.CUSTOMER_MANAGER, ROLES.ADMIN],
+  CUSTOMERS_EDIT: [ROLES.CUSTOMER_MANAGER, ROLES.ADMIN],
+  CUSTOMERS_APPROVE_KYC: [ROLES.MANAGER, ROLES.ADMIN],
 
   // Account Management (Banking Operations)
-  ACCOUNTS_VIEW: [ROLES.ADMIN, ROLES.MANAGER, ROLES.CUSTOMER_MANAGER, ROLES.AUDITOR],
+  ACCOUNTS_VIEW: [ROLES.MANAGER, ROLES.CUSTOMER_MANAGER, ROLES.AUDITOR],
   ACCOUNTS_VIEW_OWN: [ROLES.USER],
-  ACCOUNTS_VIEW_BY_EMAIL: [ROLES.ADMIN, ROLES.MANAGER, ROLES.CUSTOMER_MANAGER],
-  ACCOUNTS_CREATE: [ROLES.MANAGER],
-  ACCOUNTS_EDIT: [ROLES.ADMIN, ROLES.MANAGER],
-  ACCOUNTS_APPROVE: [ROLES.ADMIN, ROLES.MANAGER],
+  ACCOUNTS_VIEW_BY_EMAIL: [ROLES.MANAGER, ROLES.CUSTOMER_MANAGER],
+  ACCOUNTS_CREATE: [ROLES.MANAGER, ROLES.ADMIN],
+  ACCOUNTS_EDIT: [ROLES.MANAGER, ROLES.ADMIN],
+  ACCOUNTS_APPROVE: [ROLES.MANAGER, ROLES.ADMIN],
 
   // Transaction Management (Financial Operations - Immutable)
-  TRANSACTIONS_VIEW_ALL: [ROLES.ADMIN, ROLES.MANAGER, ROLES.AUDITOR],
+  TRANSACTIONS_VIEW_ALL: [ROLES.MANAGER, ROLES.AUDITOR],
   TRANSACTIONS_VIEW_OWN: [ROLES.USER],
   TRANSACTIONS_CREATE: [ROLES.USER],
-  TRANSACTIONS_APPROVE: [ROLES.ADMIN, ROLES.MANAGER],
-  TRANSACTIONS_EXPORT: [ROLES.ADMIN, ROLES.AUDITOR],
+  TRANSACTIONS_APPROVE: [ROLES.MANAGER, ROLES.ADMIN],
+  TRANSACTIONS_EXPORT: [ROLES.AUDITOR],
 
   // UPI Management (Payment System)
-  UPI_VIEW_ALL: [ROLES.ADMIN, ROLES.MANAGER, ROLES.AUDITOR],
+  UPI_VIEW_ALL: [ROLES.MANAGER, ROLES.AUDITOR],
   UPI_VIEW_OWN: [ROLES.USER],
   UPI_CREATE: [ROLES.MANAGER, ROLES.USER],
   UPI_EDIT_OWN: [ROLES.USER],
-  UPI_EDIT_ALL: [ROLES.ADMIN, ROLES.MANAGER],
-  UPI_GENERATE_QR: [ROLES.ADMIN, ROLES.MANAGER, ROLES.USER],
+  UPI_EDIT_ALL: [ROLES.MANAGER, ROLES.ADMIN],
+  UPI_GENERATE_QR: [ROLES.MANAGER, ROLES.USER],
   UPI_PAY: [ROLES.USER],
 
   // Payment Operations (Customer Features)
   PAYMENTS_SEND: [ROLES.USER],
-  PAYMENTS_VIEW_HISTORY: [ROLES.ADMIN, ROLES.MANAGER, ROLES.AUDITOR, ROLES.USER],
+  PAYMENTS_VIEW_HISTORY: [ROLES.MANAGER, ROLES.AUDITOR, ROLES.USER],
   PAYMENTS_UPI: [ROLES.USER],
   PAYMENTS_BANK_TRANSFER: [ROLES.USER],
 
   // Audit & Compliance (Read-Only Access)
-  AUDIT_VIEW: [ROLES.ADMIN, ROLES.AUDITOR],
-  AUDIT_EXPORT: [ROLES.ADMIN, ROLES.AUDITOR],
-  
+  AUDIT_VIEW: [ROLES.AUDITOR],
+  AUDIT_EXPORT: [ROLES.AUDITOR],
+
   // Security & System Management (Admin Only)
-  SECURITY_VIEW: [ROLES.ADMIN],
-  SECURITY_MANAGE: [ROLES.ADMIN],
-  USERS_MANAGE: [ROLES.ADMIN],
-  ROLES_MANAGE: [ROLES.ADMIN],
-  SYSTEM_SETTINGS: [ROLES.ADMIN],
+  // Nothing to list here — Admin gets these automatically below, and no
+  // other role should ever have them.
+  SECURITY_VIEW: [],
+  SECURITY_MANAGE: [],
+  USERS_MANAGE: [],
+  ROLES_MANAGE: [],
+  SYSTEM_SETTINGS: [],
 
   // Reports & Analytics
-  REPORTS_VIEW: [ROLES.ADMIN, ROLES.MANAGER, ROLES.AUDITOR],
-  REPORTS_EXPORT: [ROLES.ADMIN, ROLES.MANAGER, ROLES.AUDITOR],
+  REPORTS_VIEW: [ROLES.MANAGER, ROLES.AUDITOR],
+  REPORTS_EXPORT: [ROLES.MANAGER, ROLES.AUDITOR],
 
   // Dashboard Access
-  DASHBOARD_ADMIN: [ROLES.ADMIN],
+  DASHBOARD_ADMIN: [],
   DASHBOARD_MANAGER: [ROLES.MANAGER],
   DASHBOARD_CUSTOMER_MANAGER: [ROLES.CUSTOMER_MANAGER],
   DASHBOARD_USER: [ROLES.USER],
-} as const;
+} as const satisfies Record<string, readonly Role[]>;
 
-export type Permission = keyof typeof PERMISSIONS;
+// Permissions Admin is deliberately excluded from. Empty by default — add a
+// key here only with a comment explaining why, since it's an easy place for
+// a silent bug to hide.
+const ADMIN_EXCLUDED = new Set<PermissionKey>([]);
+
+type PermissionKey = keyof typeof PERMISSION_BASE;
+export type Permission = PermissionKey;
+
+export const PERMISSIONS: Record<PermissionKey, Role[]> = Object.fromEntries(
+  (Object.keys(PERMISSION_BASE) as PermissionKey[]).map((key) => {
+    const baseRoles = PERMISSION_BASE[key] as readonly Role[];
+    const roles = ADMIN_EXCLUDED.has(key)
+      ? [...baseRoles]
+      : Array.from(new Set<Role>([ROLES.ADMIN, ...baseRoles]));
+    return [key, roles];
+  })
+) as Record<PermissionKey, Role[]>;
 
 /**
  * Check if user has specific permission
  */
 export function hasPermission(userRoles: string[], permission: Permission): boolean {
   if (!userRoles || userRoles.length === 0) return false;
-  
-  const allowedRoles = PERMISSIONS[permission] as readonly Role[];
+
+  const allowedRoles = PERMISSIONS[permission];
   return userRoles.some(role => allowedRoles.includes(role as Role));
 }
 
@@ -127,7 +171,7 @@ export function hasAllRoles(userRoles: string[], ...roles: Role[]): boolean {
  */
 export function getPrimaryRole(userRoles: string[]): Role | null {
   if (!userRoles || userRoles.length === 0) return null;
-  
+
   const roleHierarchy = [
     ROLES.ADMIN,
     ROLES.MANAGER,
@@ -135,13 +179,13 @@ export function getPrimaryRole(userRoles: string[]): Role | null {
     ROLES.AUDITOR,
     ROLES.USER,
   ];
-  
+
   for (const role of roleHierarchy) {
     if (userRoles.includes(role)) {
       return role;
     }
   }
-  
+
   return null;
 }
 
@@ -150,7 +194,7 @@ export function getPrimaryRole(userRoles: string[]): Role | null {
  */
 export function getDashboardRoute(userRoles: string[]): string {
   const primaryRole = getPrimaryRole(userRoles);
-  
+
   switch (primaryRole) {
     case ROLES.ADMIN:
       return '/admin';
@@ -248,18 +292,18 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     icon: ArrowLeftRight,
     roles: [ROLES.USER],
   },
-    {
-      path: '/cards',
-      label: 'Cards',
-      icon: CreditCard,
-      roles: [ROLES.USER, ROLES.ADMIN, ROLES.MANAGER],
-    },
-    {
-      path: '/loans',
-      label: 'Loans & EMI',
-      icon: TrendingUp,
-      roles: [ROLES.USER],
-    },
+  {
+    path: '/cards',
+    label: 'Cards',
+    icon: CreditCard,
+    roles: [ROLES.USER, ROLES.ADMIN, ROLES.MANAGER],
+  },
+  {
+    path: '/loans',
+    label: 'Loans & EMI',
+    icon: TrendingUp,
+    roles: [ROLES.USER],
+  },
   {
     path: '/profile',
     label: 'Profile',
@@ -347,4 +391,44 @@ export function getVisibleNavItems(userRoles: string[]): NavigationItem[] {
     seenRoutes.add(resolvedPath);
     return true;
   });
+}
+
+/* -------------------------------------------------------------------------
+ * DEV-TIME SANITY CHECK (optional)
+ * -------------------------------------------------------------------------
+ * Catches the exact class of bug that started this: a role that can EDIT a
+ * resource but can't CREATE it (or vice versa), which is very rarely
+ * intentional. Call this once in a test file or at app startup in dev mode:
+ *
+ *   if (import.meta.env.DEV) checkPermissionConsistency();
+ *
+ * It only warns — it never throws — so it's safe to leave in.
+ * ---------------------------------------------------------------------- */
+export function checkPermissionConsistency(): string[] {
+  const warnings: string[] = [];
+  const keys = Object.keys(PERMISSIONS) as PermissionKey[];
+
+  for (const key of keys) {
+    if (!key.endsWith('_EDIT')) continue;
+    const createKey = key.replace('_EDIT', '_CREATE') as PermissionKey;
+    if (!(createKey in PERMISSIONS)) continue;
+
+    const editRoles = new Set(PERMISSIONS[key]);
+    const createRoles = new Set(PERMISSIONS[createKey]);
+
+    for (const role of editRoles) {
+      if (!createRoles.has(role)) {
+        warnings.push(
+          `${role} has ${key} but not ${createKey} — verify this is intentional.`
+        );
+      }
+    }
+  }
+
+  if (warnings.length > 0) {
+    // eslint-disable-next-line no-console
+    console.warn('[rbac] Permission consistency warnings:\n' + warnings.join('\n'));
+  }
+
+  return warnings;
 }

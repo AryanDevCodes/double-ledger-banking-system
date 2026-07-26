@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { toast } from 'sonner';
 import { loadProfilePhotoUrl, persistProfilePhotoUrl } from '@/lib/profile-photo';
 import { authApi, API_BASE_URL } from '@/lib/api-client';
-import type { AuthResponseDTO } from '@/types/api';
 
 interface User {
   userId: number;

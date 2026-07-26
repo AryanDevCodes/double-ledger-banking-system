@@ -65,11 +65,15 @@ public class CompositeBankingService {
      */
     @Transactional(readOnly = true)
     public AccountOverviewDTO getMyOverview(Long userId) {
-        List<AccountResponseDTO> accounts = accountsService.findByUserId(userId);
+        List<Account> accountEntities = accountRepository.findByCustomerUserId(userId);
+        List<AccountResponseDTO> accounts = accountEntities.stream()
+                .map(accountMapper::toResponseDTO)
+                .toList();
 
-        BigDecimal totalBalance = accounts.stream()
-                .map(a -> a.getBalance() != null ? a.getBalance() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalBalance = accountEntities.stream()
+                .map(a -> ledgerRepository.calculateBalance(a.getId()))
+                .map(balance -> balance == null ? BigDecimal.ZERO : balance)
+                .reduce(BigDecimal.ZERO, (left, right) -> left.add(right));
 
         List<TransactionResponseDTO> allTxns = transactionService.getTransactionsForUser(userId);
         List<TransactionResponseDTO> recentTxns = allTxns.stream()
@@ -137,7 +141,10 @@ public class CompositeBankingService {
 
         BigDecimal totalBalance = accounts.stream()
                 .map(a -> ledgerRepository.calculateBalance(a.getId()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .map(balance -> balance != null ? balance : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, (sum, balance) ->
+                        (sum != null ? sum : BigDecimal.ZERO)
+                                .add(balance != null ? balance : BigDecimal.ZERO));
 
         long customerCount = accounts.stream()
                 .map(a -> a.getCustomer() != null ? a.getCustomer().getId() : null)
@@ -227,12 +234,12 @@ public class CompositeBankingService {
         List<Account> accountEntities = accountRepository.findByCustomerId(customerId);
 
         List<AccountResponseDTO> accountDTOs = accountEntities.stream()
-                .map(a -> accountsService.findByAccountNumber(a.getAccountNumber()))
+                .map(accountMapper::toResponseDTO)
                 .toList();
 
-        BigDecimal totalBalance = accountDTOs.stream()
-                .map(a -> a.getBalance() != null ? a.getBalance() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalBalance = accountEntities.stream()
+                .map(a -> ledgerRepository.calculateBalance(a.getId()))
+                .reduce(BigDecimal.ZERO, (left, right) -> left.add(right));
 
         List<TransactionResponseDTO> allTxns = transactionService.getTransactionsForCustomer(customerId);
         List<TransactionResponseDTO> recentTxns = allTxns.stream()

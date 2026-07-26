@@ -37,10 +37,10 @@ public class SecurityConfig {
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http.csrf(AbstractHttpConfigurer::disable)
+    http.csrf(csrf -> csrf.disable())
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
         .authorizeHttpRequests(
-            auth -> auth.requestMatchers("/auth/login")
+            auth -> auth.requestMatchers("/auth/login", "/auth/refresh")
                 .permitAll()
                 .requestMatchers("/auth/forgot-password", "/auth/reset-password")
                 .permitAll()
@@ -62,8 +62,8 @@ public class SecurityConfig {
 
   @Bean
   public AuthenticationProvider authenticationProvider() {
-    DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(passwordEncoder);
-    authProvider.setUserDetailsService(userDetailsService);
+    DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
+    authProvider.setPasswordEncoder(passwordEncoder);
     return authProvider;
   }
 

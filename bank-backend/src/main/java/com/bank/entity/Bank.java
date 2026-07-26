@@ -55,6 +55,7 @@ public class Bank {
   private void generateId() {
     if (this.id == null || this.id.isEmpty()) {
       this.id = bankName + "_" + generateAccountNumber();
+      // ICICI_12345678901234567890
     }
   }
 

@@ -12,7 +12,6 @@ import com.bank.dto.auth.RefreshTokenRequestDTO;
 import com.bank.dto.auth.ResetPasswordRequestDTO;
 import com.bank.dto.auth.UserResponseDTO;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Slf4j
 public class AuthController {
 

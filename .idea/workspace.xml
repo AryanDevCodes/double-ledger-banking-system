@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="BackgroundAgentGlobalSettings">
+    <option name="selectedModelId" value="auto" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="d6288aad-b2db-4f42-8785-4c208e2cb252" name="Changes" comment="ci: improve backend-only sync auth + ensure safe force-push strategy">
+      <change beforePath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/controller/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/controller/AuthController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/repository/TransactionRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/repository/TransactionRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/security/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/security/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/security/ratelimit/RateLimitFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/security/ratelimit/RateLimitFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/service/composite/CompositeBankingService.java" beforeDir="false" afterPath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/service/composite/CompositeBankingService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-backend/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/bank-backend/src/main/resources/application.yml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CopilotPersistence">
+    <persistenceIdMap>
+      <entry key="_/home/ashish/Music/double-ledger-banking-system" value="3Gkt7AOWMpX5LRHCXSAZa9C3FuX" />
+    </persistenceIdMap>
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="663" />
+    <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="GitHub Workflow" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/.github/workflows/sync-backend.yml" root0="FORCE_HIGHLIGHTING" />
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.1040226065536083" />
+      <entry key="MS500" value="2.5744928655608508" />
+      <entry key="S2" value="5.485500421709957" />
+      <entry key="S5" value="6.825377571800219" />
+      <entry key="S10" value="7.379853793758201" />
+      <entry key="S30" value="7.790148031115077" />
+      <entry key="S60" value="8.134968198369021" />
+      <entry key="M2" value="9.898702522115881" />
+      <entry key="M5" value="17.35364626351649" />
+      <entry key="M10" value="38.87284700574505" />
+      <entry key="M15" value="78.05904482172296" />
+      <entry key="M30" value="241.35081277220453" />
+      <entry key="H1" value="503.55725545683435" />
+      <entry key="H2" value="755.6499776782606" />
+      <entry key="H4" value="933.7141511390699" />
+      <entry key="D1" value="1118.3874674561048" />
+      <entry key="W1" value="1153.9517398490589" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="1.1119543446521761E-185" />
+      <entry key="S30" value="2.2320075125190964E-62" />
+      <entry key="S60" value="1.4939904660067423E-31" />
+      <entry key="M2" value="3.8652172849747295E-16" />
+      <entry key="M5" value="6.837062740000024E-7" />
+      <entry key="M10" value="8.268653300266069E-4" />
+      <entry key="M15" value="0.008809606734996416" />
+      <entry key="M30" value="0.0938595052991251" />
+      <entry key="H1" value="0.3063649870646494" />
+      <entry key="H2" value="0.5535024725009384" />
+      <entry key="H4" value="0.7439774677373863" />
+      <entry key="D1" value="0.9519043185329827" />
+      <entry key="W1" value="0.9929831971032141" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="0.9177343113048022" />
+      <entry key="MS500" value="2.4886571330606935" />
+      <entry key="S2" value="5.442197255005274" />
+      <entry key="S5" value="6.804064594804431" />
+      <entry key="S10" value="7.368371053670164" />
+      <entry key="S30" value="7.786115528099443" />
+      <entry key="S60" value="8.132841201808159" />
+      <entry key="M2" value="9.897350562035742" />
+      <entry key="M5" value="17.35269428836297" />
+      <entry key="M10" value="38.872651083238765" />
+      <entry key="M15" value="78.06648392104185" />
+      <entry key="M30" value="241.4424321093454" />
+      <entry key="H1" value="503.8611311119325" />
+      <entry key="H2" value="756.2015339046859" />
+      <entry key="H4" value="934.4568984523573" />
+      <entry key="D1" value="1119.3391212276845" />
+      <entry key="W1" value="1154.9446859851153" />
+    </decayedShown>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 6
+}</component>
+  <component name="ProjectId" id="3Gkt7AOWMpX5LRHCXSAZa9C3FuX" />
+  <component name="ProjectSessionTemplates">
+    <option name="panelTemplate">
+      <template>
+        <option name="modeId" value="Agent" />
+        <option name="model">
+          <model>
+            <option name="modelType" value="builtin_id" />
+            <option name="modelValue" value="auto" />
+          </model>
+        </option>
+        <option name="targetType" value="BACKGROUND" />
+        <option name="worktreeMode" value="WORKSPACE" />
+      </template>
+    </option>
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;copilot.chat.legacySessionMetadata.migrated&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;backend-alignment-upgrade&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/.github/workflows" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="BankApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="bank" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.bank.BankApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-37e91769500f-intellij.indexing.shared.core-IU-261.25134.95" />
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-IU-261.25134.95" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="d6288aad-b2db-4f42-8785-4c208e2cb252" name="Changes" comment="" />
+      <created>1784463562342</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1784463562342</updated>
+      <workItem from="1784463567088" duration="5994000" />
+      <workItem from="1784527253303" duration="639000" />
+      <workItem from="1785047647715" duration="166000" />
+      <workItem from="1785047848564" duration="1181000" />
+    </task>
+    <task id="LOCAL-00001" summary="ci: improve backend-only sync auth + ensure safe force-push strategy">
+      <option name="closed" value="true" />
+      <created>1784472195760</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1784472195760</updated>
+    </task>
+    <task id="LOCAL-00002" summary="ci: improve backend-only sync auth + ensure safe force-push strategy">
+      <option name="closed" value="true" />
+      <created>1784472292115</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1784472292115</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="ci: improve backend-only sync auth + ensure safe force-push strategy" />
+    <option name="LAST_COMMIT_MESSAGE" value="ci: improve backend-only sync auth + ensure safe force-push strategy" />
+  </component>
+</project>

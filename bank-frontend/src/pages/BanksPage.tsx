@@ -9,20 +9,36 @@ import EmptyState from "@/components/EmptyState";
 import { Can } from "@/components/PermissionGate";
 import { bankApi } from "@/lib/api-client";
 import { exportToCSV, exportToExcel, exportToPDF } from "@/lib/export";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Search, Pencil, Building2, MoreHorizontal, Eye, RefreshCw } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Plus,
+  Search,
+  Pencil,
+  Building2,
+  MoreHorizontal,
+  Eye,
+  RefreshCw,
+  MapPin,
+  Landmark,
+  CreditCard,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { TableSkeleton } from "@/components/LoadingStates";
+import { CardSkeleton } from "@/components/LoadingStates";
 import type { BankResponseDTO } from "@/types/api";
 import { toast } from "sonner";
 
@@ -44,6 +60,10 @@ export default function BanksPage() {
   const [banks, setBanks] = useState<BankResponseDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+
+  // Dialog state lives independently of any permission gate below, so a
+  // slow/failed permission check can never prevent an already-open dialog
+  // from rendering.
   const [open, setOpen] = useState(false);
   const [editingBank, setEditingBank] = useState<BankResponseDTO | null>(null);
 
@@ -77,7 +97,10 @@ export default function BanksPage() {
   };
 
   const filtered = banks.filter(
-    (b) => b.bankName.toLowerCase().includes(search.toLowerCase()) || b.ifscCode.toLowerCase().includes(search.toLowerCase())
+    (b) =>
+      b.bankName.toLowerCase().includes(search.toLowerCase()) ||
+      b.ifscCode.toLowerCase().includes(search.toLowerCase()) ||
+      (b.city ?? "").toLowerCase().includes(search.toLowerCase())
   );
 
   const resetForm = () => {
@@ -92,27 +115,18 @@ export default function BanksPage() {
     setEditingBank(null);
   };
 
+  const openCreateDialog = () => {
+    resetForm();
+    setOpen(true);
+  };
+
   const handleSubmit = async (values: BankValues) => {
     try {
       if (editingBank) {
-        await bankApi.update(editingBank.id, {
-          bankName: values.bankName,
-          branch: values.branch,
-          ifscCode: values.ifscCode,
-          city: values.city,
-          state: values.state,
-          branchAddress: values.branchAddress,
-        });
+        await bankApi.update(editingBank.id, values);
         toast.success("Bank updated successfully");
       } else {
-        await bankApi.create({
-          bankName: values.bankName,
-          branch: values.branch,
-          ifscCode: values.ifscCode,
-          city: values.city,
-          state: values.state,
-          branchAddress: values.branchAddress,
-        });
+        await bankApi.create(values);
         toast.success("Bank created successfully");
       }
       resetForm();
@@ -137,25 +151,25 @@ export default function BanksPage() {
     setOpen(true);
   };
 
-  const handleExport = (format: 'csv' | 'excel' | 'pdf') => {
+  const handleExport = (format: "csv" | "excel" | "pdf") => {
     try {
-      const exportData = filtered.map(bank => ({
+      const exportData = filtered.map((bank) => ({
         ID: bank.id,
-        'Bank Name': bank.bankName,
+        "Bank Name": bank.bankName,
         Branch: bank.branch,
-        'IFSC Code': bank.ifscCode,
-        City: bank.city || 'N/A',
-        State: bank.state || 'N/A',
+        "IFSC Code": bank.ifscCode,
+        City: bank.city || "N/A",
+        State: bank.state || "N/A",
         Address: bank.branchAddress,
-        'Account Count': bank.accountNumbers?.length ?? 0
+        "Account Count": bank.accountNumbers?.length ?? 0,
       }));
 
-      if (format === 'csv') {
-        exportToCSV(exportData, `banks-${new Date().toISOString().split('T')[0]}.csv`);
-      } else if (format === 'excel') {
-        exportToExcel(exportData, `banks-${new Date().toISOString().split('T')[0]}.xlsx`, 'Banks');
+      if (format === "csv") {
+        exportToCSV(exportData, `banks-${new Date().toISOString().split("T")[0]}.csv`);
+      } else if (format === "excel") {
+        exportToExcel(exportData, `banks-${new Date().toISOString().split("T")[0]}.xlsx`, "Banks");
       } else {
-        exportToPDF(exportData, 'Banks Report');
+        exportToPDF(exportData, "Banks Report");
       }
       toast.success(`Exported ${filtered.length} banks to ${format.toUpperCase()}`);
     } catch (error) {
@@ -177,182 +191,234 @@ export default function BanksPage() {
               Refresh
             </Button>
             <ExportMenu onExport={handleExport} disabled={loading || filtered.length === 0} />
+            {/* Permission gate wraps ONLY the trigger button, never the
+                Dialog itself. This avoids the dialog + form silently
+                failing to render if the permission check is still loading
+                or errors out. */}
             <Can permission="BANKS_CREATE">
-              <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm(); }}>
-                <DialogTrigger asChild>
-                  <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 shadow-md hover:from-cyan-600 hover:to-blue-700">
-                    <Plus className="h-4 w-4 mr-2" /> Add Bank
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="glass-panel border-[var(--glass-border)]">
-                  <DialogHeader>
-                    <DialogTitle>{editingBank ? "Edit Bank" : "Create New Bank"}</DialogTitle>
-                  </DialogHeader>
-                  <Form {...form}>
-                    <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-4 py-2">
-                    <FormField
-                      control={form.control}
-                      name="bankName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Bank Name *</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="branch"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Branch *</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="ifscCode"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>IFSC Code *</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="branchAddress"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Branch Address *</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <FormField
-                        control={form.control}
-                        name="city"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>City</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="state"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>State</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <DialogFooter className="pt-2">
-                      <Button type="button" variant="outline" className="rounded-xl" onClick={() => { setOpen(false); resetForm(); }}>Cancel</Button>
-                      <Button type="submit" className="bg-gradient-to-r from-cyan-500 to-blue-600 shadow-md hover:from-cyan-600 hover:to-blue-700" disabled={form.formState.isSubmitting}>
-                        {form.formState.isSubmitting ? "Saving..." : editingBank ? "Save Changes" : "Create Bank"}
-                      </Button>
-                    </DialogFooter>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
+              <Button
+                className="bg-gradient-to-r from-cyan-500 to-blue-600 shadow-md hover:from-cyan-600 hover:to-blue-700"
+                onClick={openCreateDialog}
+              >
+                <Plus className="h-4 w-4 mr-2" /> Add Bank
+              </Button>
             </Can>
           </>
         }
       />
 
-      <div className="glass-elevated transition-shadow">
-        <div className="border-b border-[var(--glass-border)] bg-gradient-to-r from-[var(--accent-primary)]/8 to-transparent p-4">
-          <div className="relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search banks..." className="h-9 rounded-xl border-border/70 bg-card/70 pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
-          </div>
-        </div>
-        
-        {loading ? (
-          <TableSkeleton columns={7} rows={6} className="p-2" />
-        ) : filtered.length === 0 ? (
-          <EmptyState
-            type={search ? "search" : "banks"}
-            action={!search ? { label: "Add Bank", onClick: () => setOpen(true) } : undefined}
+      {/* Search bar */}
+      <div className="flex items-center gap-3 mb-5">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by bank, IFSC, or city..."
+            className="h-9 rounded-xl border-border/70 bg-card/70 pl-9"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           />
-        ) : (
-          <Table>
-            <TableHeader className="bg-card/80 backdrop-blur-xl">
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Bank Name</TableHead>
-                <TableHead>Branch</TableHead>
-                <TableHead>IFSC</TableHead>
-                <TableHead>City</TableHead>
-                <TableHead>Accounts</TableHead>
-                <TableHead className="w-[80px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((bank) => (
-                <TableRow key={bank.id} className="hover:bg-muted/35 transition-colors">
-                  <TableCell className="font-mono text-xs">{bank.id}</TableCell>
-                  <TableCell className="font-medium">{bank.bankName}</TableCell>
-                  <TableCell>{bank.branch}</TableCell>
-                  <TableCell className="font-mono text-xs">{bank.ifscCode}</TableCell>
-                  <TableCell>{bank.city || "—"}</TableCell>
-                  <TableCell>{bank.accountNumbers?.length ?? 0}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="rounded-xl">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="glass-panel rounded-xl border-[var(--glass-border)]">
-                        <DropdownMenuItem onClick={() => toast.info(`Viewing ${bank.bankName}`)}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <Can permission="BANKS_EDIT">
-                          <DropdownMenuItem onClick={() => handleEdit(bank)}>
-                            <Pencil className="h-4 w-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                        </Can>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
+        </div>
+        <span className="text-xs text-muted-foreground whitespace-nowrap">
+          {filtered.length} of {banks.length} banks
+        </span>
       </div>
 
-      <div className="text-xs text-muted-foreground text-center mt-4">
-        Showing {filtered.length} of {banks.length} banks
-      </div>
+      {/* Card grid layout instead of table */}
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <CardSkeleton key={i} />
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          type={search ? "search" : "banks"}
+          action={!search ? { label: "Add Bank", onClick: openCreateDialog } : undefined}
+        />
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map((bank) => (
+            <div
+              key={bank.id}
+              className="glass-elevated rounded-2xl p-4 border border-[var(--glass-border)] hover:shadow-lg transition-shadow relative"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-cyan-500/15 to-blue-600/15 flex items-center justify-center shrink-0">
+                    <Landmark className="h-4 w-4 text-cyan-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{bank.bankName}</p>
+                    <p className="text-xs text-muted-foreground truncate">{bank.branch}</p>
+                  </div>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="rounded-xl h-8 w-8 shrink-0">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="glass-panel rounded-xl border-[var(--glass-border)]">
+                    <DropdownMenuItem onClick={() => toast.info(`Viewing ${bank.bankName}`)}>
+                      <Eye className="h-4 w-4 mr-2" />
+                      View Details
+                    </DropdownMenuItem>
+                    <Can permission="BANKS_EDIT">
+                      <DropdownMenuItem onClick={() => handleEdit(bank)}>
+                        <Pencil className="h-4 w-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                    </Can>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                <Badge variant="secondary" className="font-mono text-[10px]">
+                  {bank.ifscCode}
+                </Badge>
+                {bank.city && (
+                  <Badge variant="outline" className="text-[10px] gap-1">
+                    <MapPin className="h-3 w-3" />
+                    {bank.city}
+                    {bank.state ? `, ${bank.state}` : ""}
+                  </Badge>
+                )}
+              </div>
+
+              <p className="mt-2 text-xs text-muted-foreground line-clamp-2">{bank.branchAddress}</p>
+
+              <div className="mt-3 pt-3 border-t border-[var(--glass-border)] flex items-center justify-between">
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <CreditCard className="h-3.5 w-3.5" />
+                  {bank.accountNumbers?.length ?? 0} accounts
+                </span>
+                <span className="text-[10px] font-mono text-muted-foreground/70">#{bank.id}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Dialog is mounted unconditionally — its visibility is controlled
+          purely by `open` state, not by any permission-gated JSX branch. */}
+      <Dialog
+        open={open}
+        onOpenChange={(o) => {
+          setOpen(o);
+          if (!o) resetForm();
+        }}
+      >
+        <DialogContent className="glass-panel border-[var(--glass-border)] z-50">
+          <DialogHeader>
+            <DialogTitle>{editingBank ? "Edit Bank" : "Create New Bank"}</DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-4 py-2">
+              <FormField
+                control={form.control}
+                name="bankName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Bank Name *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="branch"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Branch *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="ifscCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>IFSC Code *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="branchAddress"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Branch Address *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>City</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="state"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>State</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <DialogFooter className="pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-xl"
+                  onClick={() => {
+                    setOpen(false);
+                    resetForm();
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="bg-gradient-to-r from-cyan-500 to-blue-600 shadow-md hover:from-cyan-600 hover:to-blue-700"
+                  disabled={form.formState.isSubmitting}
+                >
+                  {form.formState.isSubmitting ? "Saving..." : editingBank ? "Save Changes" : "Create Bank"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </PageWrapper>
   );
 }

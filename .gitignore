@@ -4,7 +4,6 @@ bank-frontend/node_modules/
 node_modules/
 bank-frontend/node_modules/
 node_modules/
-target/
 bank-frontend/node_modules/
 node_modules/
 bank-backend/src/main/resources/application.yml

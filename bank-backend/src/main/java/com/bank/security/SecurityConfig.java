@@ -39,19 +39,23 @@ public class SecurityConfig {
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.csrf(csrf -> csrf.disable())
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-        .authorizeHttpRequests(
-            auth -> auth.requestMatchers("/auth/login", "/auth/refresh")
-                .permitAll()
-                .requestMatchers("/auth/forgot-password", "/auth/reset-password")
-                .permitAll()
-                .requestMatchers("/stream/events")
-                .permitAll()
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html")
-                .permitAll()
-                .requestMatchers("/actuator/**")
-                .hasRole("ADMIN")
-                .anyRequest()
-                .authenticated())
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers(
+                "/auth/login",
+                "/auth/refresh",
+                "/auth/forgot-password",
+                "/auth/reset-password")
+            .permitAll()
+            .requestMatchers("/stream/events").permitAll()
+            .requestMatchers("/actuator/health").permitAll()
+            .requestMatchers("/actuator/info").permitAll()
+            .requestMatchers(
+                "/swagger-ui/**",
+                "/v3/api-docs/**",
+                "/swagger-ui.html")
+            .permitAll()
+            .requestMatchers("/actuator/**").hasRole("ADMIN")
+            .anyRequest().authenticated())
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authenticationProvider(authenticationProvider())

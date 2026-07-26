@@ -56,7 +56,7 @@ app:
 
   mail:
     enabled: ${MAIL_ENABLED:false}
-    from: ${MAIL_FROM:no-reply@yourdomain.com}
+    from: ${MAIL_FROM:no-reply@myDomain.com}
     reset-link-base: ${FRONTEND_URL}/reset-password
 
   rate-limit:
@@ -81,3 +81,17 @@ logging:
     root: INFO
     org.springframework: INFO
     org.hibernate.SQL: WARN
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+  health:
+    mail:
+      enabled: false
+    redis:
+      enabled: false

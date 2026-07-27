@@ -17,12 +17,14 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class BankServiceIMPL implements BankService {
   private final BankRepository repository;
   private final BankMapper mapper;
 
   @Override
+  @Transactional(readOnly = true)
   @Cacheable(value = "banksById", key = "#id")
   public BankResponseDTO findById(String id) {
     if (id == null || id.trim().isEmpty()) {
@@ -33,6 +35,7 @@ public class BankServiceIMPL implements BankService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   @Cacheable(value = "banksAll")
   public List<BankResponseDTO> findAllBank() {
     List<Bank> banks = repository.findAll();
@@ -40,6 +43,7 @@ public class BankServiceIMPL implements BankService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   @Cacheable(value = "banksByUpi", key = "#upiId")
   public BankResponseDTO findByUpiId(String upiId) {
     if (upiId == null || upiId.trim().isEmpty()) {
@@ -53,7 +57,7 @@ public class BankServiceIMPL implements BankService {
   }
 
   @Override
-  @SuppressWarnings("null")
+  @Transactional
   @Caching(evict = {
       @CacheEvict(value = "banksAll", allEntries = true),
       @CacheEvict(value = "banksByUpi", allEntries = true)

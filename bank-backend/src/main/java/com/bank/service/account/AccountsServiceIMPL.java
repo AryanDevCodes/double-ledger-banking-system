@@ -38,6 +38,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class AccountsServiceIMPL implements AccountsService {
   private final AccountRepository accountRepository;
@@ -236,6 +237,7 @@ public class AccountsServiceIMPL implements AccountsService {
 
   @Override
   @Transactional
+  @SuppressWarnings("deprecation")
   public AccountResponseDTO createAccount(String bankName, AccountRequestDTO dto) {
     // Validate input parameters
     validateCreateAccountRequest(bankName, dto);

@@ -9,8 +9,6 @@ import com.bank.exception.ResourceNotFoundException;
 import com.bank.repository.CustomerRepository;
 import com.bank.service.customer.mapper.CustomerMapper;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.Authentication;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +18,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class CustomerServiceIMPL implements CustomerService {
   private final CustomerRepository customerRepository;
@@ -55,21 +54,8 @@ public class CustomerServiceIMPL implements CustomerService {
     if (bankName == null || bankName.trim().isEmpty()) {
       throw new InvalidDataException("bank should not be null or empty");
     }
-    // Admins can query any bank
     List<Customer> customers = customerRepository.findCustomerByAccount_Bank_BankName(bankName);
     return customers.stream().map(customerMapper::toResponseDTO).collect(Collectors.toList());
-  }
-
-  /**
-   * Check if current user has ROLE_ADMIN
-   */
-  private boolean isAdminUser() {
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    if (auth == null) {
-      return false;
-    }
-    return auth.getAuthorities().stream()
-        .anyMatch(grantedAuth -> "ROLE_ADMIN".equals(grantedAuth.getAuthority()));
   }
 
   @Override

@@ -8,9 +8,9 @@ spring:
       mode: always
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://ep-long-truth-az0zfw4b-pooler.c-3.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channelBinding=require
-    username: neondb_owner
-    password: ${DB_PASSWORD:npg_P1i6urfXIKOA}
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
   jpa:
     open-in-view: true
     hibernate:
@@ -19,44 +19,40 @@ spring:
     properties:
       hibernate:
         format_sql: true
-  # Caching - defaults to in-memory simple cache; set to 'redis' to use Redis.
   cache:
     type: simple
   data:
     redis:
-      host: localhost
-      port: 6379
-  # Mail - by default disabled (logs to console). Configure SMTP to actually send.
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
   mail:
-    host: localhost
-    port: 25
-    username:
-    password:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:25}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
-          auth: false
+          auth: ${MAIL_SMTP_AUTH:false}
           starttls:
-            enable: false
+            enable: ${MAIL_STARTTLS_ENABLE:false}
 
 jwt:
-  secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+  secret: ${JWT_SECRET}
   expiration: 86400000
   refresh:
     expiration: 604800000
 
-# Application-level toggles
 app:
   cors:
-    # Comma-separated or YAML list are both fine. This list is used by Spring Security CORS.
     allowed-origins:
       - http://localhost:5173
       - http://localhost:3000
       - http://localhost:8081
   mail:
-    enabled: false               # set true once SMTP is configured
-    from: no-reply@bank.local
-    reset-link-base: http://localhost:5173/reset-password
+    enabled: ${MAIL_ENABLED:false}
+    from: ${MAIL_FROM:no-reply@bank.local}
+    reset-link-base: ${RESET_LINK_BASE:http://localhost:5173/reset-password}
   rate-limit:
     enabled: true
     login:        { capacity: 10, refill-seconds: 60 }

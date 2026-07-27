@@ -1,1 +1,68 @@
+server:
+  servlet:
+    context-path: /api
 
+spring:
+  sql:
+    init:
+      mode: always
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://ep-long-truth-az0zfw4b-pooler.c-3.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channelBinding=require
+    username: neondb_owner
+    password: ${DB_PASSWORD:npg_P1i6urfXIKOA}
+  jpa:
+    open-in-view: true
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  # Caching - defaults to in-memory simple cache; set to 'redis' to use Redis.
+  cache:
+    type: simple
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  # Mail - by default disabled (logs to console). Configure SMTP to actually send.
+  mail:
+    host: localhost
+    port: 25
+    username:
+    password:
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+
+jwt:
+  secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+  expiration: 86400000
+  refresh:
+    expiration: 604800000
+
+# Application-level toggles
+app:
+  cors:
+    # Comma-separated or YAML list are both fine. This list is used by Spring Security CORS.
+    allowed-origins:
+      - http://localhost:5173
+      - http://localhost:3000
+      - http://localhost:8081
+  mail:
+    enabled: false               # set true once SMTP is configured
+    from: no-reply@bank.local
+    reset-link-base: http://localhost:5173/reset-password
+  rate-limit:
+    enabled: true
+    login:        { capacity: 10, refill-seconds: 60 }
+    forgot:       { capacity: 5,  refill-seconds: 60 }
+    upi-pay:      { capacity: 20, refill-seconds: 60 }
+  webhook:
+    connect-timeout-ms: 3000
+    read-timeout-ms: 5000
+    max-retries: 3

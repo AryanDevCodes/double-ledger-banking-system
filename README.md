@@ -272,6 +272,24 @@ Frontend: `http://localhost:8081` (or `http://localhost:5173`)
 
 ---
 
+## 🔔 Recent Changes (2026-08-04)
+
+- Backend:
+  - Hardened production configuration and JPA transactional boundaries to avoid LazyInitialization issues in production.
+  - Enforced KYC checks: transactions now require KYC-verified sender and receiver; card request flows accept ACTIVE KYC states where appropriate.
+  - Adjusted controller authorization for card and credit-plan endpoints to align manager/admin roles.
+  - Added unit tests for KYC, authorization, and transaction rules (ran `./mvnw test`).
+
+- Frontend:
+  - Added a new public `HomePage` at `/` with an operational overview and primary actions.
+  - Centralized API error parsing in `src/lib/api-client.ts` (`getApiErrorMessage`, `getResponseErrorMessage`) so backend messages surface consistently in toasts.
+  - Replaced many ad-hoc error toasts across pages/hooks to use the shared error helpers.
+  - Built a production bundle and validated preview locally (`npm run build` then `npm run preview`).
+
+If you need the exact file/line changes or want me to open a PR with these commits, tell me and I'll push a branch and create the PR.
+
+---
+
 ## 👥 Roles & Access Control
 
 The system implements five roles enforced via `@PreAuthorize` on every endpoint:

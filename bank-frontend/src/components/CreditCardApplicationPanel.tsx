@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { CreditCard, TrendingUp, Zap, AlertCircle } from 'lucide-react';
+import { getApiErrorMessage } from '@/lib/api-client';
 
 interface AccountOption {
   accountNumber: string;
@@ -97,7 +98,7 @@ export default function CreditCardApplicationPanel({
       }
     } catch (error) {
       console.error(error);
-      toast.error('Failed to load applications');
+      toast.error(getApiErrorMessage(error, 'Failed to load applications'));
     } finally {
       setLoading(false);
     }
@@ -125,7 +126,7 @@ export default function CreditCardApplicationPanel({
       await loadApplications();
     } catch (error) {
       console.error(error);
-      toast.error('Failed to submit application');
+      toast.error(getApiErrorMessage(error, 'Failed to submit application'));
     }
   };
 
@@ -157,7 +158,7 @@ export default function CreditCardApplicationPanel({
       queryClient.invalidateQueries({ queryKey: ['creditCards'] });
     } catch (error) {
       console.error(error);
-      toast.error('Failed to process decision');
+      toast.error(getApiErrorMessage(error, 'Failed to process decision'));
     }
   };
 

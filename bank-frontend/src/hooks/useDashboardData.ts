@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
-import { bankApi, customerApi, accountApi, upiApi, transactionApi } from "@/lib/api-client";
+import { bankApi, customerApi, accountApi, upiApi, transactionApi, getApiErrorMessage } from "@/lib/api-client";
 import type {
   BankResponseDTO,
   CustomerResponseDTO,
@@ -123,7 +123,7 @@ export function useDashboardData(
       }
     } catch (err) {
       if (!isPolling) {
-        toast.error("Failed to load dashboard data");
+        toast.error(getApiErrorMessage(err, "Failed to load dashboard data"));
         console.error(err);
       }
     } finally {

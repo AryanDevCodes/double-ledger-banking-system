@@ -61,6 +61,7 @@ import type { BankResponseDTO } from "@/types/api";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { getApiErrorMessage } from "@/lib/api-client";
 
 const accountSchema = z.object({
   bankName: z.string().min(1, "Please select a bank"),
@@ -228,7 +229,7 @@ export default function Dashboard() {
       }
       reload();
     } catch (error: any) {
-      toast.error("Failed to create account", { description: error?.data?.message || "An error occurred" });
+      toast.error("Failed to create account", { description: getApiErrorMessage(error, "An error occurred") });
     }
   };
 

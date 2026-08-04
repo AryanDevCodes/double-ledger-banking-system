@@ -15,7 +15,7 @@ import QRCodeGenerator from "@/components/QRCodeGenerator";
 import { Can } from "@/components/PermissionGate";
 import { TableSkeleton } from "@/components/LoadingStates";
 
-import { upiApi, accountApi, ApiError } from "@/lib/api-client";
+import { upiApi, accountApi, getApiErrorMessage } from "@/lib/api-client";
 import { exportToCSV, exportToExcel, exportToPDF } from "@/lib/export";
 import { formatDate } from "@/lib/format";
 import { ROLES, hasPermission } from "@/lib/rbac";
@@ -101,7 +101,7 @@ export default function UpiPage() {
       setProfiles(profilesData);
       setAccounts(accountsData);
     } catch (error) {
-      toast.error("Failed to load data");
+      toast.error(getApiErrorMessage(error, "Failed to load data"));
       console.error(error);
     } finally {
       setLoading(false);
@@ -186,7 +186,7 @@ export default function UpiPage() {
       }
       toast.success(`Exported ${filtered.length} UPI profiles to ${format.toUpperCase()}`);
     } catch (error) {
-      toast.error("Failed to export UPI profiles");
+      toast.error(getApiErrorMessage(error, "Failed to export UPI profiles"));
       console.error(error);
     }
   };
@@ -205,18 +205,7 @@ export default function UpiPage() {
       toast.success("UPI profile registered");
       loadData();
     } catch (error) {
-      const apiMessage = (() => {
-        if (!(error instanceof ApiError)) return undefined;
-        const data: unknown = error.data;
-        if (!data || typeof data !== "object") return undefined;
-        if (!("message" in data)) return undefined;
-        const messageValue = (data as Record<string, unknown>).message;
-        return typeof messageValue === "string" ? messageValue : undefined;
-      })();
-
-      const message =
-        apiMessage ?? (error instanceof Error ? error.message : "Failed to register UPI profile");
-      toast.error(message);
+      toast.error(getApiErrorMessage(error, "Failed to register UPI profile"));
       console.error(error);
     }
   };
@@ -228,7 +217,7 @@ export default function UpiPage() {
       toast.success("Status updated");
       loadData();
     } catch (error) {
-      toast.error("Failed to update status");
+      toast.error(getApiErrorMessage(error, "Failed to update status"));
       console.error(error);
     }
   };
@@ -240,7 +229,7 @@ export default function UpiPage() {
       setSelectedUpiIds((prev) => prev.filter((id) => id !== upiId));
       loadData();
     } catch (error) {
-      toast.error("Failed to delete UPI profile");
+      toast.error(getApiErrorMessage(error, "Failed to delete UPI profile"));
       console.error(error);
     } finally {
       setDeleteTargetUpi(null);

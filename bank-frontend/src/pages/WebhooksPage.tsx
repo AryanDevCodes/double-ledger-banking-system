@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableSkeleton } from "@/components/LoadingStates";
 import { Badge } from "@/components/ui/badge";
-import { webhookApi, type WebhookSubscription } from "@/lib/api-client";
+import { webhookApi, type WebhookSubscription, getApiErrorMessage } from "@/lib/api-client";
 import { toast } from "sonner";
 import { RefreshCw, Plus, Link2 } from "lucide-react";
 
@@ -52,7 +52,7 @@ export default function WebhooksPage() {
       const items = await webhookApi.list();
       setWebhooks(items);
     } catch (error) {
-      toast.error("Failed to load webhooks");
+      toast.error(getApiErrorMessage(error, "Failed to load webhooks"));
       console.error(error);
     } finally {
       setLoading(false);
@@ -76,7 +76,7 @@ export default function WebhooksPage() {
       setOpen(false);
       loadData();
     } catch (error) {
-      toast.error("Failed to create webhook");
+      toast.error(getApiErrorMessage(error, "Failed to create webhook"));
       console.error(error);
     }
   };
@@ -87,7 +87,7 @@ export default function WebhooksPage() {
       toast.success(hook.active ? "Webhook deactivated" : "Webhook activated");
       loadData();
     } catch (error) {
-      toast.error("Failed to update webhook status");
+      toast.error(getApiErrorMessage(error, "Failed to update webhook status"));
       console.error(error);
     }
   };
@@ -99,7 +99,7 @@ export default function WebhooksPage() {
       toast.success("Webhook deleted");
       loadData();
     } catch (error) {
-      toast.error("Failed to delete webhook");
+      toast.error(getApiErrorMessage(error, "Failed to delete webhook"));
       console.error(error);
     }
   };

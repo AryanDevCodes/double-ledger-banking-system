@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { notificationApi, receiptApi, type NotificationDTO, type TransactionReceiptDTO } from "@/lib/api-client";
+import { notificationApi, receiptApi, type NotificationDTO, type TransactionReceiptDTO, getApiErrorMessage } from "@/lib/api-client";
 import { toast } from "sonner";
 
 export const useNotifications = (page = 0, size = 20) => {
@@ -34,8 +34,8 @@ export const useMarkNotificationAsRead = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
-    onError: () => {
-      toast.error("Failed to mark notification as read");
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Failed to mark notification as read"));
     },
   });
 };
@@ -49,8 +49,8 @@ export const useMarkAllNotificationsAsRead = () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
       toast.success("All notifications marked as read");
     },
-    onError: () => {
-      toast.error("Failed to mark all notifications as read");
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Failed to mark all notifications as read"));
     },
   });
 };

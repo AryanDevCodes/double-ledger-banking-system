@@ -11,6 +11,7 @@ import DataTableToolbar from "@/components/DataTableToolbar";
 import EmptyState from "@/components/EmptyState";
 import { customerApi, transactionApi } from "@/lib/api-client";
 import { exportToCSV, exportToExcel, exportToPDF } from "@/lib/export";
+import { getApiErrorMessage } from "@/lib/api-client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,7 +79,7 @@ export default function CustomersPage() {
       const data = await customerApi.getAll();
       setCustomers(data);
     } catch (error) {
-      toast.error("Failed to load customers");
+      toast.error(getApiErrorMessage(error, "Failed to load customers"));
       console.error(error);
     } finally {
       setLoading(false);
@@ -126,7 +127,7 @@ export default function CustomersPage() {
       setOpen(false);
       loadCustomers();
     } catch (error) {
-      toast.error(editingCustomer ? "Failed to update customer" : "Failed to create customer");
+      toast.error(getApiErrorMessage(error, editingCustomer ? "Failed to update customer" : "Failed to create customer"));
       console.error(error);
     }
   };
@@ -173,7 +174,7 @@ export default function CustomersPage() {
       await navigator.clipboard.writeText(customer.accountNumbers.join(", "));
       toast.success("Account numbers copied");
     } catch (error) {
-      toast.error("Unable to copy account numbers");
+      toast.error(getApiErrorMessage(error, "Unable to copy account numbers"));
       console.error(error);
     }
   };
@@ -212,7 +213,7 @@ export default function CustomersPage() {
       }
       toast.success(`Exported ${filtered.length} customers to ${format.toUpperCase()}`);
     } catch (error) {
-      toast.error("Failed to export customers");
+      toast.error(getApiErrorMessage(error, "Failed to export customers"));
       console.error(error);
     }
   };

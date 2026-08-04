@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Shield, Lock, AlertTriangle, RefreshCw, LogOut, Activity, UserCheck } from "lucide-react";
-import { securityApi } from "@/lib/api-client";
+import { securityApi, getApiErrorMessage } from "@/lib/api-client";
 import type { AccessLogEntry, SessionInfo } from "@/lib/api-client";
 import { toast } from "sonner";
 
@@ -39,7 +39,7 @@ export default function SecurityPage() {
       setSessions(sessionsData);
       setAccessLogs(accessLogsData);
     } catch (error) {
-      toast.error("Failed to load security data");
+      toast.error(getApiErrorMessage(error, "Failed to load security data"));
       console.error(error);
     } finally {
       setLoading(false);
@@ -52,7 +52,7 @@ export default function SecurityPage() {
       toast.success("Session terminated");
       loadData();
     } catch (error) {
-      toast.error("Failed to terminate session");
+      toast.error(getApiErrorMessage(error, "Failed to terminate session"));
       console.error(error);
     }
   };
@@ -63,7 +63,7 @@ export default function SecurityPage() {
       toast.success("All other sessions terminated");
       loadData();
     } catch (error) {
-      toast.error("Failed to terminate sessions");
+      toast.error(getApiErrorMessage(error, "Failed to terminate sessions"));
       console.error(error);
     }
   };

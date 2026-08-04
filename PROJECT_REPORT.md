@@ -1198,6 +1198,24 @@ User ──1:1──> Customer (partial unique index; single bank constraint)
                               │                               ref──> Transaction
                               ├──1:N──> DebitCard
                               ├──1:N──> DebitCardRequest
+
+---
+
+## Recent Updates (2026-08-04)
+
+- Backend fixes and hardening:
+  - Resolved production LazyInitializationException by aligning JPA `open-in-view` settings and moving DTO mapping into transactional service methods.
+  - Enforced KYC verification at transaction time: both sender and receiver must be KYC-verified for transfers.
+  - Adjusted card request lifecycle to accept `ACTIVE` KYC states where applicable and aligned controller `@PreAuthorize` rules for card operations and credit-plan assignments.
+  - Added and ran unit tests for KYC and transaction rules; backend test suite passed (`./mvnw test`).
+
+- Frontend updates:
+  - Added a new public `HomePage` mounted at `/` (`bank-frontend/src/pages/HomePage.tsx`).
+  - Centralized API error parsing in `bank-frontend/src/lib/api-client.ts` (`getApiErrorMessage`, `getResponseErrorMessage`) and updated UI to surface backend messages.
+  - Replaced many ad-hoc error toasts across pages and hooks to use the shared error helpers.
+  - Verified production build and preview locally (`npm run build` and `npm run preview`).
+
+See the project README for brief run and build steps.
                               ├──1:N──> CreditCard ──M:1──> CreditPlan
                               └──1:N──> Loan ──1:N──> EMI
 

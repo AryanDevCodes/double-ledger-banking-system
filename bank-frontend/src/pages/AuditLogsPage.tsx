@@ -7,7 +7,7 @@ import AuditLogTable from "@/components/AuditLogTable";
 import { StatCardSkeleton, TableSkeleton } from "@/components/LoadingStates";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, FileText, RefreshCw, ShieldCheck } from "lucide-react";
-import { auditApi, type AuditLogEntry } from "@/lib/api-client";
+import { auditApi, type AuditLogEntry, getApiErrorMessage } from "@/lib/api-client";
 import { toast } from "sonner";
 
 const ACTION_OPTIONS = [
@@ -64,7 +64,7 @@ export default function AuditLogsPage() {
         setPage(response.totalPages);
       }
     } catch (error) {
-      toast.error("Failed to load audit logs");
+      toast.error(getApiErrorMessage(error, "Failed to load audit logs"));
       console.error(error);
     } finally {
       setLoading(false);

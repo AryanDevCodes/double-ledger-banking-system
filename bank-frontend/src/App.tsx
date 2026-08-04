@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { FEATURES } from "@/lib/features";
 
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
+const HomePage = lazy(() => import("@/pages/HomePage"));
 const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage"));
 const DashboardLayout = lazy(() => import("@/components/DashboardLayout"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
@@ -71,6 +72,7 @@ const App = () => (
               >
                 <Routes>
                 {/* Public Routes */}
+                <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                 <Route path="/set-password" element={
@@ -85,7 +87,6 @@ const App = () => (
                     <DashboardLayout />
                   </ProtectedRoute>
                 }>
-                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
                   <Route path="/dashboard" element={<RoleDashboardRedirect />} />
                   <Route path="/banks" element={<BanksPage />} />
                   <Route path="/customers" element={<CustomersPage />} />

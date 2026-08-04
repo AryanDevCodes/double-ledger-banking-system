@@ -9,6 +9,7 @@ import EmptyState from "@/components/EmptyState";
 import { Can } from "@/components/PermissionGate";
 import { bankApi } from "@/lib/api-client";
 import { exportToCSV, exportToExcel, exportToPDF } from "@/lib/export";
+import { getApiErrorMessage } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -89,7 +90,7 @@ export default function BanksPage() {
       const data = await bankApi.getAll();
       setBanks(data);
     } catch (error) {
-      toast.error("Failed to load banks");
+      toast.error(getApiErrorMessage(error, "Failed to load banks"));
       console.error(error);
     } finally {
       setLoading(false);
@@ -133,7 +134,7 @@ export default function BanksPage() {
       setOpen(false);
       loadBanks();
     } catch (error) {
-      toast.error(editingBank ? "Failed to update bank" : "Failed to create bank");
+      toast.error(getApiErrorMessage(error, editingBank ? "Failed to update bank" : "Failed to create bank"));
       console.error(error);
     }
   };
@@ -173,7 +174,7 @@ export default function BanksPage() {
       }
       toast.success(`Exported ${filtered.length} banks to ${format.toUpperCase()}`);
     } catch (error) {
-      toast.error("Failed to export data");
+      toast.error(getApiErrorMessage(error, "Failed to export data"));
       console.error(error);
     }
   };

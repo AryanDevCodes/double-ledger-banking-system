@@ -11,7 +11,7 @@ import {
   securityApi,
   notificationApi,
   receiptApi,
-  ApiError,
+  getApiErrorMessage,
 } from "@/lib/api-client";
 import type {
   BankRequestDTO,
@@ -30,13 +30,7 @@ import type { AuditLogEntry, SessionInfo, AccessLogEntry } from "@/lib/api-clien
 
 // Error handler helper
 const handleApiError = (error: unknown) => {
-  if (error instanceof ApiError) {
-    toast.error(`Error ${error.status}: ${error.message}`);
-  } else if (error instanceof Error) {
-    toast.error(error.message);
-  } else {
-    toast.error("An unexpected error occurred");
-  }
+  toast.error(getApiErrorMessage(error));
 };
 
 // ============= Bank Hooks =============

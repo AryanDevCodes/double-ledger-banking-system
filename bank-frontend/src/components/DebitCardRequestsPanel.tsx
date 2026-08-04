@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { debitCardRequestApi, type DebitCardRequestDTO } from '@/lib/api-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { getApiErrorMessage } from '@/lib/api-client';
 
 interface AccountOption {
   accountNumber: string;
@@ -86,7 +87,7 @@ export default function DebitCardRequestsPanel({
       setIssuedRequests(issued);
     } catch (error) {
       console.error(error);
-      toast.error('Failed to load card requests');
+      toast.error(getApiErrorMessage(error, 'Failed to load card requests'));
     } finally {
       setLoading(false);
     }
@@ -122,7 +123,7 @@ export default function DebitCardRequestsPanel({
       await loadRequests();
     } catch (error) {
       console.error(error);
-      toast.error('Failed to submit request');
+      toast.error(getApiErrorMessage(error, 'Failed to submit request'));
     }
   };
 
@@ -175,7 +176,7 @@ export default function DebitCardRequestsPanel({
       queryClient.invalidateQueries({ queryKey: ['debitCards'] });
     } catch (error) {
       console.error(error);
-      toast.error('Failed to process request');
+      toast.error(getApiErrorMessage(error, 'Failed to process request'));
     }
   };
 
@@ -187,7 +188,7 @@ export default function DebitCardRequestsPanel({
       queryClient.invalidateQueries({ queryKey: ['debitCards'] });
     } catch (error) {
       console.error(error);
-      toast.error('Failed to issue card');
+      toast.error(getApiErrorMessage(error, 'Failed to issue card'));
     }
   };
 
@@ -215,7 +216,7 @@ export default function DebitCardRequestsPanel({
       await loadRequests();
     } catch (error) {
       console.error(error);
-      toast.error('Failed to dispatch card');
+      toast.error(getApiErrorMessage(error, 'Failed to dispatch card'));
     }
   };
 
@@ -226,7 +227,7 @@ export default function DebitCardRequestsPanel({
       await loadRequests();
     } catch (error) {
       console.error(error);
-      toast.error('Failed to confirm delivery');
+      toast.error(getApiErrorMessage(error, 'Failed to confirm delivery'));
     }
   };
 

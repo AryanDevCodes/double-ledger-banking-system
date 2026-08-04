@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { getApiErrorMessage } from "@/lib/api-client";
 
 import PageWrapper from "@/components/PageWrapper";
 import PageHeader from "@/components/PageHeader";
@@ -77,7 +78,7 @@ export default function MyTransactionsPage() {
       setAccounts(accs);
       setUpiProfiles(upis);
     } catch (err) {
-      toast.error("Failed to load your transactions");
+      toast.error(getApiErrorMessage(err, "Failed to load your transactions"));
       console.error(err);
     } finally {
       setLoading(false);

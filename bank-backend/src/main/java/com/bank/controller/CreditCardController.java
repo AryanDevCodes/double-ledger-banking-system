@@ -37,25 +37,25 @@ public class CreditCardController {
     }
 
     @PutMapping("/{cardId}/toggle-contactless")
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_USER')")
     public ResponseEntity<CreditCardDTO> toggleContactless(@PathVariable Long cardId, @RequestParam Boolean enabled) {
         return ResponseEntity.ok(creditCardService.toggleContactless(cardId, Boolean.TRUE.equals(enabled)));
     }
 
     @PutMapping("/{cardId}/toggle-international")
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_USER')")
     public ResponseEntity<CreditCardDTO> toggleInternational(@PathVariable Long cardId, @RequestParam Boolean enabled) {
         return ResponseEntity.ok(creditCardService.toggleInternational(cardId, Boolean.TRUE.equals(enabled)));
     }
 
     @PutMapping("/{cardId}/toggle-otp")
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_USER')")
     public ResponseEntity<CreditCardDTO> toggleOtp(@PathVariable Long cardId, @RequestParam Boolean enabled) {
         return ResponseEntity.ok(creditCardService.toggleOtp(cardId, Boolean.TRUE.equals(enabled)));
     }
 
     @PutMapping("/{cardId}/limits")
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_USER')")
     public ResponseEntity<CreditCardDTO> updateLimits(
             @PathVariable Long cardId, @RequestBody CardLimitUpdateRequest request) {
         return ResponseEntity
@@ -63,33 +63,33 @@ public class CreditCardController {
     }
 
     @PutMapping("/{cardId}/merchant-blocks")
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_USER')")
     public ResponseEntity<CreditCardDTO> updateMerchantBlocks(
             @PathVariable Long cardId, @RequestBody MerchantBlockUpdateRequest request) {
         return ResponseEntity.ok(creditCardService.updateMerchantBlocks(cardId, request.getCategories()));
     }
 
     @PostMapping("/{cardId}/freeze")
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_USER')")
     public ResponseEntity<CreditCardDTO> freezeCard(@PathVariable Long cardId,
             @RequestParam(required = false) String reason) {
         return ResponseEntity.ok(creditCardService.freezeCard(cardId, reason));
     }
 
     @PostMapping("/{cardId}/unfreeze")
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_USER')")
     public ResponseEntity<CreditCardDTO> unfreezeCard(@PathVariable Long cardId) {
         return ResponseEntity.ok(creditCardService.unfreezeCard(cardId));
     }
 
     @PostMapping("/{cardId}/replace")
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_USER')")
     public ResponseEntity<CreditCardDTO> replaceCard(@PathVariable Long cardId) {
         return ResponseEntity.ok(creditCardService.replaceCard(cardId));
     }
 
     @PutMapping("/{cardId}/block")
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_USER')")
     public ResponseEntity<CreditCardDTO> blockCard(@PathVariable Long cardId, @RequestParam String reason) {
         return ResponseEntity.ok(creditCardService.freezeCard(cardId, reason));
     }

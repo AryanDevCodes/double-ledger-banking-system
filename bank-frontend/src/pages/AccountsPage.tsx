@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import PageWrapper from "@/components/PageWrapper";
 import PageHeader from "@/components/PageHeader";
 import { accountApi, bankApi } from "@/lib/api-client";
+import { getApiErrorMessage } from "@/lib/api-client";
 import { formatCurrency } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -181,7 +182,7 @@ export default function AccountsPage() {
       setBanks(banksData);
       setLastUpdated(new Date());
     } catch (error) {
-      toast.error("Failed to load data");
+      toast.error(getApiErrorMessage(error, "Failed to load data"));
       console.error(error);
     } finally {
       setLoading(false);
@@ -270,8 +271,7 @@ export default function AccountsPage() {
       }
       loadData();
     } catch (error: any) {
-      const description = error?.data?.message || error?.data?.error || error?.message || "An unexpected error occurred";
-      toast.error("Failed to create account", { description });
+      toast.error("Failed to create account", { description: getApiErrorMessage(error, "An unexpected error occurred") });
       console.error(error);
     }
   };
@@ -299,7 +299,7 @@ export default function AccountsPage() {
       setSelectedAccount(null);
       await loadData();
     } catch (error) {
-      toast.error("Failed to update compliance details");
+      toast.error(getApiErrorMessage(error, "Failed to update compliance details"));
       console.error(error);
     }
   };
@@ -319,7 +319,7 @@ export default function AccountsPage() {
       toast.dismiss(loadingToast);
       toast.success(`Statement downloaded (${format.toUpperCase()})`);
     } catch (error) {
-      toast.error("Failed to download statement");
+      toast.error(getApiErrorMessage(error, "Failed to download statement"));
       console.error(error);
     }
   };

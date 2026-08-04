@@ -24,6 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { getApiErrorMessage } from '@/lib/api-client';
 
 export default function CardsPage() {
   const { user, token } = useAuth();
@@ -120,7 +121,7 @@ export default function CardsPage() {
       queryClient.invalidateQueries({ queryKey: ['creditCards'] });
       setLimitDialogOpen(false);
     } catch (error) {
-      toast.error('Failed to update limits');
+      toast.error(getApiErrorMessage(error, 'Failed to update limits'));
       console.error(error);
     }
   };
@@ -148,7 +149,7 @@ export default function CardsPage() {
       queryClient.invalidateQueries({ queryKey: ['creditCards'] });
       setMerchantDialogOpen(false);
     } catch (error) {
-      toast.error('Failed to update merchant blocks');
+      toast.error(getApiErrorMessage(error, 'Failed to update merchant blocks'));
       console.error(error);
     }
   };
@@ -161,7 +162,7 @@ export default function CardsPage() {
       queryClient.invalidateQueries({ queryKey: ['creditCards'] });
       setPlanDialogOpen(false);
     } catch (error) {
-      toast.error('Failed to apply plan');
+      toast.error(getApiErrorMessage(error, 'Failed to apply plan'));
       console.error(error);
     }
   };

@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import TransactionReceipt from "@/components/TransactionReceipt";
 import { TableSkeleton, StatCardSkeleton } from "@/components/LoadingStates";
-import { accountApi, transactionApi, upiApi } from "@/lib/api-client";
+import { accountApi, transactionApi, upiApi, getApiErrorMessage } from "@/lib/api-client";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import type { AccountResponseDTO, ReceiverValidationResponseDTO, TransactionResponseDTO, UpiProfileResponseDTO } from "@/types/api";
 
@@ -89,7 +89,7 @@ export default function SendMoneyPage(): JSX.Element {
       setTransactions(enriched);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to load data");
+      toast.error(getApiErrorMessage(err, "Failed to load data"));
     } finally {
       setLoading(false);
     }
@@ -144,7 +144,7 @@ export default function SendMoneyPage(): JSX.Element {
       setReceiverValidation(null);
       loadData();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Transfer failed");
+      toast.error(getApiErrorMessage(e, "Transfer failed"));
     } finally {
       setLoading(false);
     }
@@ -182,7 +182,7 @@ export default function SendMoneyPage(): JSX.Element {
         if (!alive) return;
         setReceiverValidation({
           valid: false,
-          message: error instanceof Error ? error.message : "Unable to find account",
+          message: getApiErrorMessage(error, "Unable to find account"),
           matchedAccountCount: 0,
         });
         form.setValue("receiverName", "", { shouldValidate: true, shouldDirty: true });

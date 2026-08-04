@@ -40,7 +40,7 @@ public class CreditPlanController {
   }
 
   @PostMapping("/{planId}/assign/{cardId}")
-  @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_USER')")
+  @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER')")
   public ResponseEntity<CreditPlanDTO> assignPlan(
       @PathVariable Long planId, @PathVariable Long cardId) {
     return ResponseEntity.ok(creditPlanService.assignPlanToCard(planId, cardId));

@@ -28,7 +28,7 @@ export class ApiError extends Error {
     public statusText: string,
     public data?: unknown
   ) {
-    super(`API Error: ${status} ${statusText}`);
+    super((getMessageFromData(data) ?? statusText) || `Request failed with status ${status}`);
     this.name = "ApiError";
   }
 }
@@ -76,6 +76,81 @@ export interface ForgotPasswordResponse {
   message: string;
   resetToken?: string;
   expiresAt?: string;
+}
+
+function getMessageFromData(data: unknown): string | null {
+  if (typeof data === "string") {
+    const trimmed = data.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+
+  if (!data || typeof data !== "object") {
+    return null;
+  }
+
+  const record = data as Record<string, unknown>;
+  const messageKeys = ["message", "detail", "error_description", "error", "title", "description"];
+
+  for (const key of messageKeys) {
+    const value = record[key];
+    if (typeof value === "string" && value.trim().length > 0) {
+      return value.trim();
+    }
+  }
+
+  const nestedErrors = record.errors ?? record.violations ?? record.fieldErrors;
+  if (Array.isArray(nestedErrors) && nestedErrors.length > 0) {
+    const nestedMessage = nestedErrors
+      .map((entry) => getMessageFromData(entry))
+      .filter((entry): entry is string => Boolean(entry))
+      .join("; ");
+    if (nestedMessage.length > 0) {
+      return nestedMessage;
+    }
+  }
+
+  return null;
+}
+
+export function getApiErrorMessage(error: unknown, fallback = "An unexpected error occurred"): string {
+  if (error instanceof ApiError) {
+    return getMessageFromData(error.data) ?? (error.statusText || fallback);
+  }
+
+  if (typeof error === "string") {
+    const trimmed = error.trim();
+    return trimmed.length > 0 ? trimmed : fallback;
+  }
+
+  if (error instanceof Error && error.message.trim().length > 0) {
+    return error.message;
+  }
+
+  return fallback;
+}
+
+export async function getResponseErrorMessage(response: Response, fallback = "An unexpected error occurred"): Promise<string> {
+  const data = await readErrorResponse(response);
+  return getMessageFromData(data) ?? fallback;
+}
+
+async function readErrorResponse(response: Response): Promise<unknown> {
+  const text = await response.text().catch(() => "");
+  if (!text.trim()) {
+    return null;
+  }
+
+  const contentType = response.headers.get("content-type") || "";
+  const looksLikeJson = contentType.includes("application/json") || text.trim().startsWith("{") || text.trim().startsWith("[");
+  if (looksLikeJson) {
+    try {
+      return JSON.parse(text);
+    } catch {
+      // Fall back to raw text below.
+    }
+  }
+
+  return text.trim();
 }
 
 // Generic fetch wrapper with timeout and error handling
@@ -130,7 +205,7 @@ async function apiRequest<T>(
   const response = await fetchWithTimeout(url, options);
 
   if (!response.ok) {
-    const data = await response.json().catch(() => null);
+    const data = await readErrorResponse(response);
     throw new ApiError(response.status, response.statusText, data);
   }
 
@@ -151,7 +226,7 @@ async function apiRequestBlob(
   const response = await fetchWithTimeout(url, options);
 
   if (!response.ok) {
-    const data = await response.json().catch(() => null);
+    const data = await readErrorResponse(response);
     throw new ApiError(response.status, response.statusText, data);
   }
 

@@ -22,6 +22,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import TransactionReceipt from "@/components/TransactionReceipt";
 import { accountApi, transactionApi, upiApi, compositeApi, ApiError } from "@/lib/api-client";
+import { getApiErrorMessage } from "@/lib/api-client";
 import { exportToCSV, exportToExcel, exportToPDF } from "@/lib/export";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { useAuth } from "@/contexts/AuthContext";
@@ -115,15 +116,7 @@ export default function PaymentsPage() {
   });
 
   const getErrorMessage = (error: unknown, fallback: string) => {
-    if (error instanceof ApiError) {
-      const data: unknown = error.data;
-      if (data && typeof data === "object" && "message" in data) {
-        const messageValue = (data as Record<string, unknown>).message;
-        if (typeof messageValue === "string" && messageValue.trim().length > 0) return messageValue;
-      }
-    }
-    if (error instanceof Error && error.message.trim().length > 0) return error.message;
-    return fallback;
+    return getApiErrorMessage(error, fallback);
   };
 
   const roles = user?.roles || [];
@@ -177,7 +170,7 @@ export default function PaymentsPage() {
         setTransactions(transactionsData);
       }
     } catch (error) {
-      toast.error("Failed to load payment data");
+      toast.error(getApiErrorMessage(error, "Failed to load payment data"));
       console.error(error);
     } finally {
       setLoading(false);
@@ -398,7 +391,7 @@ export default function PaymentsPage() {
       }
       toast.success(`Exported ${filteredHistory.length} transactions`);
     } catch (error) {
-      toast.error("Failed to export history");
+      toast.error(getApiErrorMessage(error, "Failed to export history"));
       console.error(error);
     }
   };

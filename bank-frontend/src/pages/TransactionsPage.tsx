@@ -45,6 +45,7 @@ import type { AccountResponseDTO, TransactionResponseDTO } from "@/types/api";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROLES } from "@/lib/rbac";
+import { getApiErrorMessage } from "@/lib/api-client";
 
 const transferSchema = z
   .object({
@@ -111,7 +112,7 @@ export default function TransactionsPage() {
       setTransactions(transactionsData);
       setAccounts(accountsData);
     } catch (error) {
-      toast.error("Failed to load data");
+      toast.error(getApiErrorMessage(error, "Failed to load data"));
       console.error(error);
     } finally {
       setLoading(false);
@@ -248,8 +249,7 @@ export default function TransactionsPage() {
       setOpen(false);
       await loadData();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Transaction failed";
-      toast.error(message);
+      toast.error(getApiErrorMessage(error, "Transaction failed"));
       console.error(error);
     }
   };
@@ -281,7 +281,7 @@ export default function TransactionsPage() {
 
       toast.success(`Exported ${filtered.length} transactions to ${format.toUpperCase()}`);
     } catch (error) {
-      toast.error("Failed to export transactions");
+      toast.error(getApiErrorMessage(error, "Failed to export transactions"));
       console.error(error);
     }
   };
@@ -304,7 +304,7 @@ export default function TransactionsPage() {
       setReverseReason("");
       await loadData();
     } catch (error) {
-      toast.error("Failed to reverse transaction");
+      toast.error(getApiErrorMessage(error, "Failed to reverse transaction"));
       console.error(error);
     } finally {
       setReverseSubmitting(false);

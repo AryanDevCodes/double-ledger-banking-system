@@ -21,7 +21,7 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { TableSkeleton, StatCardSkeleton } from "@/components/LoadingStates";
-import { accountApi, upiApi } from "@/lib/api-client";
+import { accountApi, upiApi, getApiErrorMessage } from "@/lib/api-client";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import type { AccountResponseDTO, UpiProfileResponseDTO } from "@/types/api";
 
@@ -81,7 +81,7 @@ export default function UpiPayPage() {
       setAccounts(accountsData);
       setUpiProfiles(upiData);
     } catch (error) {
-      toast.error("Failed to load UPI data");
+      toast.error(getApiErrorMessage(error, "Failed to load UPI data"));
       console.error(error);
     } finally {
       setLoading(false);
@@ -122,7 +122,7 @@ export default function UpiPayPage() {
       paymentForm.reset();
       loadData();
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "Payment failed");
+      toast.error(getApiErrorMessage(error, "Payment failed"));
     } finally {
       setLoading(false);
     }
@@ -139,7 +139,7 @@ export default function UpiPayPage() {
       registrationForm.reset();
       loadData();
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "Registration failed");
+      toast.error(getApiErrorMessage(error, "Registration failed"));
     } finally {
       setLoading(false);
     }

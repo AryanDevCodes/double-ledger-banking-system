@@ -8,12 +8,40 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d6288aad-b2db-4f42-8785-4c208e2cb252" name="Changes" comment="ci: improve backend-only sync auth + ensure safe force-push strategy">
-      <change beforePath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/controller/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/controller/AuthController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/repository/TransactionRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/repository/TransactionRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/security/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/security/SecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/security/ratelimit/RateLimitFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/security/ratelimit/RateLimitFilter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/service/composite/CompositeBankingService.java" beforeDir="false" afterPath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/service/composite/CompositeBankingService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/bank-backend/src/test/java/com/bank/controller/AuthorizationAnnotationTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/bank-backend/src/test/java/com/bank/service/card/DebitCardRequestServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/bank-backend/src/test/java/com/bank/service/transaction/TransactionServiceIMPLTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/bank-frontend/src/pages/HomePage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/controller/CreditCardController.java" beforeDir="false" afterPath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/controller/CreditCardController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/controller/CreditPlanController.java" beforeDir="false" afterPath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/controller/CreditPlanController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/controller/DebitCardController.java" beforeDir="false" afterPath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/controller/DebitCardController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/service/card/DebitCardRequestService.java" beforeDir="false" afterPath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/service/card/DebitCardRequestService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/service/transaction/TransactionServiceIMPL.java" beforeDir="false" afterPath="$PROJECT_DIR$/bank-backend/src/main/java/com/bank/service/transaction/TransactionServiceIMPL.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bank-backend/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/bank-backend/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-backend/src/test/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/bank-backend/src/test/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-frontend/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/bank-frontend/src/App.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-frontend/src/components/CreditCardApplicationPanel.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/bank-frontend/src/components/CreditCardApplicationPanel.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-frontend/src/components/DebitCardRequestsPanel.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/bank-frontend/src/components/DebitCardRequestsPanel.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-frontend/src/contexts/AuthContext.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/bank-frontend/src/contexts/AuthContext.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-frontend/src/hooks/use-api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/bank-frontend/src/hooks/use-api.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-frontend/src/hooks/useDashboardData.ts" beforeDir="false" afterPath="$PROJECT_DIR$/bank-frontend/src/hooks/useDashboardData.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-frontend/src/hooks/useNotifications.ts" beforeDir="false" afterPath="$PROJECT_DIR$/bank-frontend/src/hooks/useNotifications.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-frontend/src/lib/api-client.ts" beforeDir="false" afterPath="$PROJECT_DIR$/bank-frontend/src/lib/api-client.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-frontend/src/pages/AccountsPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/bank-frontend/src/pages/AccountsPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-frontend/src/pages/AuditLogsPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/bank-frontend/src/pages/AuditLogsPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-frontend/src/pages/BanksPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/bank-frontend/src/pages/BanksPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-frontend/src/pages/CardsPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/bank-frontend/src/pages/CardsPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-frontend/src/pages/CustomersPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/bank-frontend/src/pages/CustomersPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-frontend/src/pages/Dashboard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/bank-frontend/src/pages/Dashboard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-frontend/src/pages/Index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/bank-frontend/src/pages/Index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-frontend/src/pages/MyTransactionsPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/bank-frontend/src/pages/MyTransactionsPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-frontend/src/pages/PaymentsPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/bank-frontend/src/pages/PaymentsPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-frontend/src/pages/SecurityPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/bank-frontend/src/pages/SecurityPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-frontend/src/pages/SendMoneyPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/bank-frontend/src/pages/SendMoneyPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-frontend/src/pages/TransactionsPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/bank-frontend/src/pages/TransactionsPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-frontend/src/pages/UpiPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/bank-frontend/src/pages/UpiPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-frontend/src/pages/UpiPayPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/bank-frontend/src/pages/UpiPayPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank-frontend/src/pages/WebhooksPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/bank-frontend/src/pages/WebhooksPage.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -181,6 +209,7 @@
       <workItem from="1784527253303" duration="639000" />
       <workItem from="1785047647715" duration="166000" />
       <workItem from="1785047848564" duration="1181000" />
+      <workItem from="1785226822168" duration="37000" />
     </task>
     <task id="LOCAL-00001" summary="ci: improve backend-only sync auth + ensure safe force-push strategy">
       <option name="closed" value="true" />

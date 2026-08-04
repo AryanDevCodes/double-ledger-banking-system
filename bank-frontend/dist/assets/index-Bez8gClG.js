@@ -1,0 +1,1 @@
+import{r,ad as n,aP as s}from"./index-DMtTuPbv.js";var i=s[" useId ".trim().toString()]||(()=>{}),u=0;function x(e){const[t,a]=r.useState(i());return n(()=>{a(o=>o??String(u++))},[e]),t?`radix-${t}`:""}var c=r.createContext(void 0);function f(e){const t=r.useContext(c);return e||t||"ltr"}export{f as a,x as u};

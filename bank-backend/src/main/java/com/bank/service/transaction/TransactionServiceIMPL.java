@@ -194,12 +194,15 @@ public class TransactionServiceIMPL implements TransactionService {
 
     if (sender.getStatus() != Status.ACTIVE) {
       throw new InvalidDataException(
-          "Sender account is not active (status=" + sender.getStatus() + ")");
+          "Sender account is not active");
     }
     if (receiver.getStatus() != Status.ACTIVE) {
       throw new InvalidDataException(
-          "Receiver account is not active (status=" + receiver.getStatus() + ")");
+          "Receiver account is not active");
     }
+
+    requireKycVerified(sender, "sender");
+    requireKycVerified(receiver, "receiver");
 
     BigDecimal senderBalance = ledgerRepository.calculateBalance(sender.getId());
     if (senderBalance.compareTo(dto.getAmount()) < 0) {
@@ -325,6 +328,24 @@ public class TransactionServiceIMPL implements TransactionService {
               .build());
     } catch (Exception ignored) {
       // Event publishing must never break the business transaction.
+    }
+  }
+
+  private void requireKycVerified(Account account, String role) {
+    if (account == null || account.getCustomer() == null) {
+      throw new InvalidDataException("" + role + " account does not have a customer profile");
+    }
+
+    Status kycStatus = account.getCustomer().getKycStatus();
+    boolean verified = kycStatus == Status.ACTIVE
+        || kycStatus == Status.COMPLETED
+        || kycStatus == Status.SUCCESS;
+    if (!verified) {
+      throw new InvalidDataException(
+          role.substring(0, 1).toUpperCase() + role.substring(1)
+              + " account is not KYC verified ",
+          "kycStatus",
+          kycStatus);
     }
   }
 

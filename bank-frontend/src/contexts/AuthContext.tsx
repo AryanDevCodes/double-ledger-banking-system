@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from 'sonner';
 import { loadProfilePhotoUrl, persistProfilePhotoUrl } from '@/lib/profile-photo';
-import { authApi, API_BASE_URL } from '@/lib/api-client';
+import { authApi, API_BASE_URL, getResponseErrorMessage, getApiErrorMessage } from '@/lib/api-client';
 
 interface User {
   userId: number;
@@ -70,7 +70,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
 
       if (!response.ok) {
-        throw new Error('Login failed');
+        throw new Error(await getResponseErrorMessage(response, 'Invalid username or password'));
       }
 
       const data = await response.json();
@@ -98,7 +98,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       toast.success(`Welcome back, ${data.fullName}!`);
       return { needsPasswordChange };
     } catch (error) {
-      toast.error('Invalid username or password');
+      toast.error(getApiErrorMessage(error, 'Invalid username or password'));
       throw error;
     }
   };
@@ -130,7 +130,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
 
     if (!response.ok) {
-      const message = response.status === 401 ? 'Session expired. Please login again.' : 'Unable to change password';
+      const backendMessage = await getResponseErrorMessage(
+        response,
+        response.status === 401 ? 'Session expired. Please login again.' : 'Unable to change password'
+      );
+      const message = backendMessage;
       toast.error(message);
       if (response.status === 401) logout();
       throw new Error(message);

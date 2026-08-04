@@ -38,8 +38,9 @@ public class DebitCardRequestService {
     if (account.getCustomer() == null || account.getCustomer().getKycStatus() == null) {
       throw new InvalidDataException("KYC verification required before requesting a card", "kycStatus", null);
     }
-    boolean isKycApproved = account.getCustomer().getKycStatus() == Status.COMPLETED
-        || account.getCustomer().getKycStatus() == Status.SUCCESS;
+    boolean isKycApproved = account.getCustomer().getKycStatus() == Status.ACTIVE
+      || account.getCustomer().getKycStatus() == Status.COMPLETED
+      || account.getCustomer().getKycStatus() == Status.SUCCESS;
     if (!isKycApproved) {
       throw new InvalidDataException("KYC verification required before requesting a card", "kycStatus", account.getCustomer().getKycStatus());
     }

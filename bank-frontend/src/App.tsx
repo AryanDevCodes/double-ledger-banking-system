@@ -40,7 +40,6 @@ const WebhooksPage = lazy(() => import("@/pages/WebhooksPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const CardsPage = lazy(() => import("@/pages/CardsPage"));
 const LoansPage = lazy(() => import("@/pages/LoansPage"));
-const MyAccountPage = lazy(() => import("@/pages/MyAccountPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -130,7 +129,6 @@ const App = () => (
                   />
                   <Route path="/upi" element={<PageWrapper><UpiPage /></PageWrapper>} />
                   <Route path="/profile" element={<PageWrapper><ProfilePage /></PageWrapper>} />
-                  <Route path="/my-account" element={<PageWrapper><MyAccountPage /></PageWrapper>} />
                   {FEATURES.enableAuditModule && (
                     <Route
                       path="/audit"

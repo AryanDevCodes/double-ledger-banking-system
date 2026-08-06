@@ -179,9 +179,9 @@ export default function AdminDashboard() {
                 Updated {lastUpdated.toLocaleTimeString()}
               </div>
             )}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/30">
-              <span className="w-2 h-2 bg-emerald-400 rounded-full pulse-live" />
-              <span className="text-xs text-emerald-400 font-medium">Live</span>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-success/20 border border-success/30">
+              <span className="w-2 h-2 bg-success rounded-full pulse-live" />
+              <span className="text-xs text-success font-medium">Live</span>
             </div>
             <Button variant="outline" size="sm" onClick={reload} disabled={loading}>
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
@@ -202,7 +202,7 @@ export default function AdminDashboard() {
             title="Transaction Volume (6 Months)" 
             type="area" 
             height={320}
-            colors={["#22d3ee", "#a78bfa"]}
+            
           />
         </div>
         <FuturisticChart 
@@ -210,7 +210,7 @@ export default function AdminDashboard() {
           title="Transaction Status" 
           type="pie" 
           height={320}
-          colors={["#10b981", "#f59e0b", "#f43f5e"]}
+          
         />
       </div>
 
@@ -219,22 +219,22 @@ export default function AdminDashboard() {
         <div className="glass-card-futuristic overflow-hidden flex flex-col" style={{ maxHeight: '500px' }}>
           <div className="p-5 border-b border-white/10 flex items-center justify-between sticky top-0 bg-[var(--glass-bg)] backdrop-blur-xl z-10">
             <h3 className="text-sm font-semibold flex items-center gap-2">
-              <Activity className="w-4 h-4 text-cyan-400" />
+              <Activity className="w-4 h-4 text-primary" />
               Live Activity Stream
             </h3>
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/30">
-              <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full pulse-live" />
-              <span className="text-[10px] text-cyan-400 font-medium uppercase tracking-wide">Live</span>
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-primary/15 border border-primary/25">
+              <span className="w-1.5 h-1.5 bg-primary rounded-full pulse-live" />
+              <span className="text-[10px] text-primary font-medium uppercase tracking-wide">Live</span>
             </div>
           </div>
           <div className="flex-1 overflow-y-auto p-5 space-y-3 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
             {activityEvents.map((event) => (
-              <div key={event.id} className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-cyan-500/30 transition-all hover:bg-white/10">
+              <div key={event.id} className="p-4 rounded-xl bg-muted/25 border border-border hover:border-primary/30 transition-all hover:bg-muted/40">
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div className="flex items-center gap-2">
-                    {event.type === "kyc" && <ShieldCheck className="w-4 h-4 text-amber-400" />}
-                    {event.type === "account" && <CreditCard className="w-4 h-4 text-violet-400" />}
-                    {event.type === "transaction" && <ArrowLeftRight className="w-4 h-4 text-cyan-400" />}
+                    {event.type === "kyc" && <ShieldCheck className="w-4 h-4 text-warning" />}
+                    {event.type === "account" && <CreditCard className="w-4 h-4 text-primary" />}
+                    {event.type === "transaction" && <ArrowLeftRight className="w-4 h-4 text-info" />}
                     <span className="text-sm font-medium">{event.title}</span>
                   </div>
                   <span className="text-[10px] text-muted-foreground whitespace-nowrap">{new Date(event.timestamp).toLocaleTimeString()}</span>
@@ -242,7 +242,7 @@ export default function AdminDashboard() {
                 <p className="text-xs text-muted-foreground mb-2">{event.description}</p>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">• {event.user}</span>
-                  {event.amount && <span className="text-sm font-semibold text-cyan-400">{event.amount}</span>}
+                  {event.amount && <span className="text-sm font-semibold text-primary">{event.amount}</span>}
                   <span className={`badge-futuristic badge-futuristic--${event.status === 'success' ? 'success' : event.status === 'pending' ? 'warning' : 'danger'} text-[10px] px-2 py-0.5`}>
                     {event.status}
                   </span>
@@ -258,9 +258,9 @@ export default function AdminDashboard() {
               <Server className="w-4 h-4 text-emerald-400" />
               System Health
             </h3>
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30">
-              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-              <span className="text-[10px] text-emerald-400 font-medium uppercase tracking-wide">All Systems Operational</span>
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-success/20 border border-success/30">
+              <CheckCircle2 className="w-3 h-3 text-success" />
+              <span className="text-[10px] text-success font-medium uppercase tracking-wide">All Systems Operational</span>
             </div>
           </div>
           <div className="flex-1 overflow-y-auto p-5 space-y-3 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
@@ -272,24 +272,24 @@ export default function AdminDashboard() {
               { name: "Auth Service", status: "healthy", latency: "45ms", uptime: "99.85%" },
               { name: "Webhook Handler", status: "healthy", latency: "15ms", uptime: "99.92%" },
             ].map((service, i) => (
-              <div key={i} className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-emerald-500/30 transition-all hover:bg-white/10">
+              <div key={i} className="p-4 rounded-xl bg-muted/25 border border-border hover:border-success/30 transition-all hover:bg-muted/40">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-medium">{service.name}</span>
                   <div className="flex items-center gap-1.5">
-                    <span className={`w-2 h-2 rounded-full ${service.status === 'healthy' ? 'bg-emerald-400' : 'bg-amber-400'} pulse-live`} />
-                    <span className="text-[10px] text-emerald-400 font-medium uppercase">Healthy</span>
+                    <span className={`w-2 h-2 rounded-full ${service.status === 'healthy' ? 'bg-success' : 'bg-warning'} pulse-live`} />
+                    <span className="text-[10px] text-success font-medium uppercase">Healthy</span>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex items-center gap-2 text-xs">
-                    <Zap className="w-3 h-3 text-amber-400" />
+                    <Zap className="w-3 h-3 text-warning" />
                     <span className="text-muted-foreground">Latency:</span>
-                    <span className="font-semibold text-amber-400">{service.latency}</span>
+                    <span className="font-semibold text-warning">{service.latency}</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs">
-                    <Activity className="w-3 h-3 text-emerald-400" />
+                    <Activity className="w-3 h-3 text-success" />
                     <span className="text-muted-foreground">Uptime:</span>
-                    <span className="font-semibold text-emerald-400">{service.uptime}</span>
+                    <span className="font-semibold text-success">{service.uptime}</span>
                   </div>
                 </div>
               </div>
@@ -305,7 +305,7 @@ export default function AdminDashboard() {
           title="Bank Distribution" 
           type="bar" 
           height={280}
-          colors={["#22d3ee", "#a78bfa", "#10b981", "#f59e0b"]}
+          
         />
         
         <FuturisticQuickActions
@@ -327,10 +327,10 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="glass-card-futuristic p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Globe className="w-4 h-4 text-cyan-400" />
+            <Globe className="w-4 h-4 text-primary" />
             <span className="text-xs text-muted-foreground">Active Sessions</span>
           </div>
-          <p className="text-2xl font-bold text-cyan-400">{customers.length * 3 + 247}</p>
+          <p className="text-2xl font-bold text-primary">{customers.length * 3 + 247}</p>
           <p className="text-xs text-emerald-400 mt-1">Real-time count</p>
         </div>
         <div className="glass-card-futuristic p-4">

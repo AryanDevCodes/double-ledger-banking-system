@@ -125,8 +125,8 @@ export default function ForgotPasswordPage() {
           <aside className="auth-rail">
             <div className="space-y-5">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--accent-primary)]/30 bg-[var(--accent-primary)]/15">
-                  <KeyRound className="h-6 w-6 text-[var(--accent-primary)]" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/30 bg-primary/10">
+                  <KeyRound className="h-6 w-6 text-primary" />
                 </div>
                 <div>
                   <p className="font-display text-xl text-foreground">Password Recovery</p>
@@ -137,15 +137,15 @@ export default function ForgotPasswordPage() {
                 <p className="text-foreground font-semibold">Recovery checklist</p>
                 <ul className="space-y-2">
                   <li className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent-primary)]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                     Request token from your registered email
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent-primary)]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                     Set a compliant, strong password
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent-primary)]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                     Confirm updates in the audit log
                   </li>
                 </ul>
@@ -156,9 +156,9 @@ export default function ForgotPasswordPage() {
 
           <div className="auth-card overflow-hidden">
             {/* Header */}
-            <div className="px-7 pt-8 pb-6 text-center border-b border-border/70 bg-gradient-to-br from-[var(--accent-primary)]/10 to-transparent">
+            <div className="px-7 pt-8 pb-6 text-center border-b border-border/70 bg-gradient-to-br from-primary/10 to-transparent">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-border/70 bg-card/80 shadow-sm">
-                <KeyRound className="h-8 w-8 text-[var(--accent-primary)]" />
+                <KeyRound className="h-8 w-8 text-primary" />
               </div>
               <h1 className="text-2xl font-semibold text-foreground">Forgot Password</h1>
               <p className="mt-1 text-sm text-muted-foreground">Request a reset link and set a new password.</p>
@@ -166,7 +166,7 @@ export default function ForgotPasswordPage() {
 
             <div className="px-7 py-6 space-y-6">
               <Form {...requestForm}>
-                <form onSubmit={requestForm.handleSubmit(handleRequestToken)} className="space-y-4 glass-panel--subtle rounded-2xl border border-[var(--glass-border)] p-4">
+                <form onSubmit={requestForm.handleSubmit(handleRequestToken)} className="space-y-4 glass-panel--subtle rounded-2xl border border-border p-4">
                   <p className="text-sm font-semibold">1. Request Reset Link</p>
                   <FormField
                     control={requestForm.control}
@@ -191,7 +191,7 @@ export default function ForgotPasswordPage() {
                   />
 
                   {requestMessage ? (
-                    <p className="text-xs text-muted-foreground rounded-xl glass-panel--subtle border border-[var(--glass-border)] px-3 py-2">
+                    <p className="text-xs text-muted-foreground rounded-xl glass-panel--subtle border border-border px-3 py-2">
                       {requestMessage}
                     </p>
                   ) : null}
@@ -203,7 +203,7 @@ export default function ForgotPasswordPage() {
               </Form>
 
               <Form {...resetForm}>
-                <form onSubmit={resetForm.handleSubmit(handleResetPassword)} className="space-y-4 glass-panel--subtle rounded-2xl border border-[var(--glass-border)] p-4">
+                <form onSubmit={resetForm.handleSubmit(handleResetPassword)} className="space-y-4 glass-panel--subtle rounded-2xl border border-border p-4">
                   <p className="text-sm font-semibold">2. Set New Password</p>
 
                   <FormField

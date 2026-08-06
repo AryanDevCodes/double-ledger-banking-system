@@ -19,7 +19,7 @@ export default function Sparkline({
   if (!data || data.length < 2) return null;
 
   const resolvedColor =
-    color ?? (positive === false ? "#ef4444" : "#6366f1");
+    color ?? (positive === false ? "hsl(var(--destructive))" : "hsl(var(--primary))");
 
   const chartData = data.map((value, index) => ({ index, value }));
 

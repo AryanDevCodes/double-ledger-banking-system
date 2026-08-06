@@ -1,3 +1,4 @@
+// App.tsx
 import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -12,10 +13,12 @@ import { getDashboardRoute } from "@/lib/rbac";
 import { useAuth } from "@/contexts/AuthContext";
 import { FEATURES } from "@/lib/features";
 
+// Eager-load layout (not lazy!) — this prevents sidebar/header flash on every route change
+import DashboardLayout from "@/components/DashboardLayout";
+
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const HomePage = lazy(() => import("@/pages/HomePage"));
 const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage"));
-const DashboardLayout = lazy(() => import("@/components/DashboardLayout"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const SetPasswordPage = lazy(() => import("@/pages/SetPasswordPage"));
 const BanksPage = lazy(() => import("@/pages/BanksPage"));
@@ -37,11 +40,12 @@ const WebhooksPage = lazy(() => import("@/pages/WebhooksPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const CardsPage = lazy(() => import("@/pages/CardsPage"));
 const LoansPage = lazy(() => import("@/pages/LoansPage"));
+const MyAccountPage = lazy(() => import("@/pages/MyAccountPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 5 * 60 * 1000,
       retry: 1,
       refetchOnWindowFocus: false,
     },
@@ -54,6 +58,24 @@ const RoleDashboardRedirect = () => {
   return <Navigate to={target} replace />;
 };
 
+// Page wrapper that adds Suspense per-route
+function PageWrapper({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center py-20 text-muted-foreground animate-pulse">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+            <span className="text-sm font-medium">Loading page…</span>
+          </div>
+        </div>
+      }
+    >
+      {children}
+    </Suspense>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -62,115 +84,157 @@ const App = () => (
           <BrandProvider>
             <Toaster />
             <Sonner />
-            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-              <Suspense
-                fallback={
-                  <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground">
-                    Loading secure workspace...
-                  </div>
-                }
-              >
-                <Routes>
+            {/* Remove future flags — they cause transition bugs with Suspense */}
+            <BrowserRouter>
+              <Routes>
                 {/* Public Routes */}
-                <Route path="/" element={<HomePage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                <Route path="/set-password" element={
-                  <ProtectedRoute>
-                    <SetPasswordPage />
-                  </ProtectedRoute>
-                } />
-                
-                {/* Protected Routes */}
-                <Route element={
-                  <ProtectedRoute>
-                    <DashboardLayout />
-                  </ProtectedRoute>
-                }>
+                <Route path="/" element={<PageWrapper><HomePage /></PageWrapper>} />
+                <Route path="/login" element={<PageWrapper><LoginPage /></PageWrapper>} />
+                <Route path="/forgot-password" element={<PageWrapper><ForgotPasswordPage /></PageWrapper>} />
+                <Route
+                  path="/set-password"
+                  element={
+                    <ProtectedRoute>
+                      <PageWrapper><SetPasswordPage /></PageWrapper>
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Protected Routes — Layout stays mounted! */}
+                <Route
+                  element={
+                    <ProtectedRoute>
+                      <DashboardLayout />
+                    </ProtectedRoute>
+                  }
+                >
                   <Route path="/dashboard" element={<RoleDashboardRedirect />} />
-                  <Route path="/banks" element={<BanksPage />} />
-                  <Route path="/customers" element={<CustomersPage />} />
-                  <Route path="/accounts" element={<AccountsPage />} />
-                  <Route path="/transactions" element={
-                    <ProtectedRoute requiredRoles={['ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_AUDITOR', 'ROLE_CUSTOMER_MANAGER']}>
-                      <TransactionsPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/my-transactions" element={
-                    <ProtectedRoute requiredRoles={['ROLE_USER']}>
-                      <MyTransactionsPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/upi" element={<UpiPage />} />
-                  <Route path="/profile" element={<ProfilePage />} />
-                  {FEATURES.enableAuditModule && (
-                    <Route path="/audit" element={
-                      <ProtectedRoute requiredRoles={['ROLE_ADMIN', 'ROLE_AUDITOR']}>
-                        <AuditLogsPage />
+                  <Route path="/banks" element={<PageWrapper><BanksPage /></PageWrapper>} />
+                  <Route path="/customers" element={<PageWrapper><CustomersPage /></PageWrapper>} />
+                  <Route path="/accounts" element={<PageWrapper><AccountsPage /></PageWrapper>} />
+                  <Route
+                    path="/transactions"
+                    element={
+                      <ProtectedRoute requiredRoles={["ROLE_ADMIN", "ROLE_MANAGER", "ROLE_AUDITOR", "ROLE_CUSTOMER_MANAGER"]}>
+                        <PageWrapper><TransactionsPage /></PageWrapper>
                       </ProtectedRoute>
-                    } />
+                    }
+                  />
+                  <Route
+                    path="/my-transactions"
+                    element={
+                      <ProtectedRoute requiredRoles={["ROLE_USER"]}>
+                        <PageWrapper><MyTransactionsPage /></PageWrapper>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="/upi" element={<PageWrapper><UpiPage /></PageWrapper>} />
+                  <Route path="/profile" element={<PageWrapper><ProfilePage /></PageWrapper>} />
+                  <Route path="/my-account" element={<PageWrapper><MyAccountPage /></PageWrapper>} />
+                  {FEATURES.enableAuditModule && (
+                    <Route
+                      path="/audit"
+                      element={
+                        <ProtectedRoute requiredRoles={["ROLE_ADMIN", "ROLE_AUDITOR"]}>
+                          <PageWrapper><AuditLogsPage /></PageWrapper>
+                        </ProtectedRoute>
+                      }
+                    />
                   )}
                   {FEATURES.enableSecurityModule && (
-                    <Route path="/security" element={
-                      <ProtectedRoute requiredRoles={['ROLE_ADMIN']}>
-                        <SecurityPage />
-                      </ProtectedRoute>
-                    } />
+                    <Route
+                      path="/security"
+                      element={
+                        <ProtectedRoute requiredRoles={["ROLE_ADMIN"]}>
+                          <PageWrapper><SecurityPage /></PageWrapper>
+                        </ProtectedRoute>
+                      }
+                    />
                   )}
-                  <Route path="/webhooks" element={
-                    <ProtectedRoute requiredRoles={['ROLE_ADMIN', 'ROLE_MANAGER']}>
-                      <WebhooksPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/admin" element={
-                    <ProtectedRoute requiredRoles={['ROLE_ADMIN']}>
-                      <AdminDashboard />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/manager" element={
-                    <ProtectedRoute requiredRoles={['ROLE_ADMIN', 'ROLE_MANAGER']}>
-                      <ManagerDashboard />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/customer-manager" element={
-                    <ProtectedRoute requiredRoles={['ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_CUSTOMER_MANAGER']}>
-                      <CustomerManagerDashboard />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/auditor" element={
-                    <ProtectedRoute requiredRoles={['ROLE_ADMIN', 'ROLE_AUDITOR']}>
-                      <AuditorDashboard />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/user" element={
-                    <ProtectedRoute requiredRoles={['ROLE_USER']}>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/send-money" element={
-                    <ProtectedRoute requiredRoles={['ROLE_USER']}>
-                      <SendMoneyPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/upi-pay" element={
-                    <ProtectedRoute requiredRoles={['ROLE_USER']}>
-                      <UpiPayPage />
-                    </ProtectedRoute>
-                  } />
-                    <Route path="/cards" element={
-                      <ProtectedRoute requiredRoles={['ROLE_USER', 'ROLE_ADMIN', 'ROLE_MANAGER']}>
-                        <CardsPage />
+                  <Route
+                    path="/webhooks"
+                    element={
+                      <ProtectedRoute requiredRoles={["ROLE_ADMIN", "ROLE_MANAGER"]}>
+                        <PageWrapper><WebhooksPage /></PageWrapper>
                       </ProtectedRoute>
-                    } />
-                    <Route path="/loans" element={
-                      <ProtectedRoute requiredRoles={['ROLE_USER']}>
-                        <LoansPage />
+                    }
+                  />
+                  <Route
+                    path="/admin"
+                    element={
+                      <ProtectedRoute requiredRoles={["ROLE_ADMIN"]}>
+                        <PageWrapper><AdminDashboard /></PageWrapper>
                       </ProtectedRoute>
-                    } />
+                    }
+                  />
+                  <Route
+                    path="/manager"
+                    element={
+                      <ProtectedRoute requiredRoles={["ROLE_ADMIN", "ROLE_MANAGER"]}>
+                        <PageWrapper><ManagerDashboard /></PageWrapper>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/customer-manager"
+                    element={
+                      <ProtectedRoute requiredRoles={["ROLE_ADMIN", "ROLE_MANAGER", "ROLE_CUSTOMER_MANAGER"]}>
+                        <PageWrapper><CustomerManagerDashboard /></PageWrapper>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/auditor"
+                    element={
+                      <ProtectedRoute requiredRoles={["ROLE_ADMIN", "ROLE_AUDITOR"]}>
+                        <PageWrapper><AuditorDashboard /></PageWrapper>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/user"
+                    element={
+                      <ProtectedRoute requiredRoles={["ROLE_USER"]}>
+                        <PageWrapper><Dashboard /></PageWrapper>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/send-money"
+                    element={
+                      <ProtectedRoute requiredRoles={["ROLE_USER"]}>
+                        <PageWrapper><SendMoneyPage /></PageWrapper>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/upi-pay"
+                    element={
+                      <ProtectedRoute requiredRoles={["ROLE_USER"]}>
+                        <PageWrapper><UpiPayPage /></PageWrapper>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/cards"
+                    element={
+                      <ProtectedRoute requiredRoles={["ROLE_USER", "ROLE_ADMIN", "ROLE_MANAGER"]}>
+                        <PageWrapper><CardsPage /></PageWrapper>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/loans"
+                    element={
+                      <ProtectedRoute requiredRoles={["ROLE_USER"]}>
+                        <PageWrapper><LoansPage /></PageWrapper>
+                      </ProtectedRoute>
+                    }
+                  />
                 </Route>
-                <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
+
+                <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
+              </Routes>
             </BrowserRouter>
           </BrandProvider>
         </AuthProvider>

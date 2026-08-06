@@ -1,1 +1,0 @@
-import{u as a,_ as o,j as s}from"./index-DMtTuPbv.js";const i=({permission:e,children:n,fallback:t=null})=>{const{user:r}=a();return!r||!o(r.roles,e)?s.jsx(s.Fragment,{children:t}):s.jsx(s.Fragment,{children:n})};export{i as C};

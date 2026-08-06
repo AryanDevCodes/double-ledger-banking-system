@@ -86,7 +86,7 @@ export default function GlobalCommandPalette({
             <CommandGroup heading="Unavailable Modules">
               {disabledModules.map((item) => (
                 <CommandItem key={item.key} value={`Unavailable ${item.label}`} disabled>
-                  <AlertTriangle className="mr-2 h-4 w-4 text-amber-500" />
+                  <AlertTriangle className="mr-2 h-4 w-4 text-warning" />
                   <span>{item.label} is disabled</span>
                   <CommandShortcut>{item.envVar}</CommandShortcut>
                 </CommandItem>

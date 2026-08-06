@@ -119,9 +119,9 @@ export default function CustomerManagerDashboard() {
                 {lastUpdated.toLocaleTimeString()}
               </div>
             )}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/20 border border-cyan-500/30">
-              <Shield className="w-3 h-3 text-cyan-400" />
-              <span className="text-xs text-cyan-400 font-medium">KYC Active</span>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-info/20 border border-info/30">
+              <Shield className="w-3 h-3 text-info" />
+              <span className="text-xs text-info font-medium">KYC Active</span>
             </div>
             <Button variant="outline" size="sm" onClick={reload} disabled={loading}>
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
@@ -144,7 +144,7 @@ export default function CustomerManagerDashboard() {
             title="KYC Verifications (Weekly)" 
             type="area" 
             height={300}
-            colors={["#22d3ee", "#10b981"]}
+            
           />
         </div>
         <FuturisticChart 
@@ -152,7 +152,7 @@ export default function CustomerManagerDashboard() {
           title="Customer Status Distribution" 
           type="pie" 
           height={300}
-          colors={["#10b981", "#f59e0b", "#f43f5e", "#22d3ee"]}
+          
         />
       </div>
 
@@ -166,15 +166,15 @@ export default function CustomerManagerDashboard() {
         <div className="lg:col-span-2">
           <div className="glass-card-futuristic p-5">
             <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-              <ClipboardCheck className="w-4 h-4 text-cyan-400" />
+              <ClipboardCheck className="w-4 h-4 text-primary" />
               KYC Review Queue
             </h3>
             <div className="space-y-3">
               {customers.filter(c => c.kycStatus === "PENDING").slice(0, 3).map((cust, i) => (
-                <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 hover:border-cyan-500/30 transition-colors">
+                <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-muted/25 border border-border hover:border-primary/30 transition-colors">
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-cyan-500/20">
-                      <UserCircle2 className="w-4 h-4 text-cyan-400" />
+                      <UserCircle2 className="w-4 h-4 text-primary" />
                     </div>
                     <div>
                       <p className="text-sm font-medium">{cust.fullName || cust.email}</p>
@@ -186,7 +186,7 @@ export default function CustomerManagerDashboard() {
                       <Clock className="w-3 h-3 mr-1" />
                       Pending
                     </span>
-                    <Button size="sm" variant="outline" className="h-8 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20">
+                    <Button size="sm" variant="outline" className="h-8 border-primary/30 text-primary hover:bg-primary/20">
                       Review
                     </Button>
                   </div>
@@ -218,7 +218,7 @@ export default function CustomerManagerDashboard() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Customers Onboarded</span>
-              <span className="text-lg font-bold text-cyan-400">{customers.filter(c => c.customerStatus === "ACTIVE").length}</span>
+              <span className="text-lg font-bold text-primary">{customers.filter(c => c.customerStatus === "ACTIVE").length}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">KYC Verified</span>

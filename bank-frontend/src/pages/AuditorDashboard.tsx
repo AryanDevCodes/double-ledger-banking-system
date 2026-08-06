@@ -59,8 +59,7 @@ export default function AuditorDashboard() {
   });
 
   const totalTransactions = transactions.length;
-  const flaggedTransactions = transactions.filter((t) => t.status === "PENDING" || t.status === "FLAGGED").length;
-  const activeAccounts = accounts.filter((a) => a.status === "ACTIVE").length;
+const flaggedTransactions = transactions.filter((t) => t.status === "PENDING").length;  const activeAccounts = accounts.filter((a) => a.status === "ACTIVE").length;
   const pendingAccounts = accounts.filter((a) => a.status === "PENDING").length;
 
   const auditEvents = useMemo(() => generateAuditEvents(), []);
@@ -105,7 +104,7 @@ export default function AuditorDashboard() {
             title="Audit Events (Daily)" 
             type="bar" 
             height={320}
-            colors={["#a78bfa", "#22d3ee"]}
+            
           />
         </div>
         <FuturisticChart 
@@ -113,7 +112,7 @@ export default function AuditorDashboard() {
           title="Risk Distribution" 
           type="pie" 
           height={320}
-          colors={["#10b981", "#f59e0b", "#f43f5e", "#ef4444"]}
+          
         />
       </div>
 
@@ -139,7 +138,7 @@ export default function AuditorDashboard() {
               ].map((item, i) => (
                 <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 hover:border-violet-500/30 transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${item.status === 'pass' ? 'bg-emerald-500/20' : 'bg-amber-500/20'}`}>
+                    <div className={`p-2 rounded-lg ${item.status === 'pass' ? 'bg-success/20' : 'bg-warning/20'}`}>
                       {item.status === 'pass' ? (
                         <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                       ) : (

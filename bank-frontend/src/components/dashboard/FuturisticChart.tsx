@@ -37,12 +37,19 @@ interface FuturisticChartProps {
   animated?: boolean;
 }
 
-const DEFAULT_COLORS = ["#22d3ee", "#a78bfa", "#10b981", "#f59e0b", "#f43f5e", "#6366f1"];
+const DEFAULT_COLORS = [
+  "hsl(var(--chart-1))",
+  "hsl(var(--chart-2))",
+  "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))",
+  "hsl(var(--chart-5))",
+  "hsl(var(--chart-6))",
+];
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="glass-panel p-3 rounded-lg border border-cyan-500/30 shadow-lg">
+      <div className="glass-panel p-3 rounded-lg border border-border shadow-lg">
         <p className="text-xs text-muted-foreground mb-1">{label}</p>
         {payload.map((entry: any, index: number) => (
           <p key={index} className="text-sm font-medium" style={{ color: entry.color }}>
@@ -78,16 +85,16 @@ function FuturisticAreaChart({ data, dataKey = "value", colors = DEFAULT_COLORS,
             <stop offset="95%" stopColor={colors[0]} stopOpacity={0} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.5)" vertical={false} />
         <XAxis 
           dataKey="name" 
-          stroke="rgba(255,255,255,0.5)" 
+          stroke="hsl(var(--muted-foreground) / 0.6)" 
           fontSize={11}
           tickLine={false}
           axisLine={false}
         />
         <YAxis 
-          stroke="rgba(255,255,255,0.5)" 
+          stroke="hsl(var(--muted-foreground) / 0.6)" 
           fontSize={11}
           tickLine={false}
           axisLine={false}
@@ -116,16 +123,16 @@ function FuturisticBarChart({ data, dataKey = "value", colors = DEFAULT_COLORS, 
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.5)" vertical={false} />
         <XAxis 
           dataKey="name" 
-          stroke="rgba(255,255,255,0.5)" 
+          stroke="hsl(var(--muted-foreground) / 0.6)" 
           fontSize={11}
           tickLine={false}
           axisLine={false}
         />
         <YAxis 
-          stroke="rgba(255,255,255,0.5)" 
+          stroke="hsl(var(--muted-foreground) / 0.6)" 
           fontSize={11}
           tickLine={false}
           axisLine={false}
@@ -181,16 +188,16 @@ function FuturisticLineChart({ data, dataKey = "value", colors = DEFAULT_COLORS,
   return (
     <ResponsiveContainer width="100%" height={height}>
       <LineChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.5)" vertical={false} />
         <XAxis 
           dataKey="name" 
-          stroke="rgba(255,255,255,0.5)" 
+          stroke="hsl(var(--muted-foreground) / 0.6)" 
           fontSize={11}
           tickLine={false}
           axisLine={false}
         />
         <YAxis 
-          stroke="rgba(255,255,255,0.5)" 
+          stroke="hsl(var(--muted-foreground) / 0.6)" 
           fontSize={11}
           tickLine={false}
           axisLine={false}
@@ -242,8 +249,8 @@ export default function FuturisticChart({
       className={cn("chart-container-futuristic", className)}
     >
       {title && (
-        <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-          <span className="w-1 h-4 bg-cyan-400 rounded-full" />
+          <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
+          <span className="w-1 h-4 bg-primary rounded-full" />
           {title}
         </h3>
       )}

@@ -29,10 +29,10 @@ export default function PageHeader({
         <div className="flex items-center gap-3">
           {icon ? (
             <div className={cn(
-              "flex shrink-0 items-center justify-center rounded-2xl text-white",
-              "bg-gradient-to-br from-[var(--accent-primary)] to-amber-600",
-              "shadow-[0_4px_20px_rgba(183,121,31,0.50)]",
-              "ring-1 ring-[var(--accent-primary)]/30",
+              "flex shrink-0 items-center justify-center rounded-2xl text-primary-foreground",
+              "bg-primary",
+              "shadow-[var(--shadow-md)]",
+              "ring-1 ring-primary/30",
               "h-11 w-11",
             )}>
               {icon}

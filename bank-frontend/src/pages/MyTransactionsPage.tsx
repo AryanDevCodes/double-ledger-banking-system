@@ -271,10 +271,10 @@ export default function MyTransactionsPage() {
             </p>
             {enriched.length === 0 && (
               <Button variant="outline" size="sm" className="mt-4" asChild>
-                <Link to="/send-money">
+                            ? "bg-info/15 text-info"
                   <Send className="h-4 w-4 mr-2" />
-                  Make your first payment
-                </Link>
+                              ? "bg-success/15 text-success"
+                              : "bg-destructive/15 text-destructive"
               </Button>
             )}
           </div>
@@ -301,10 +301,10 @@ export default function MyTransactionsPage() {
                       <span
                         className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
                           t.direction === "INTERNAL"
-                            ? "bg-blue-500/15 text-blue-600 dark:text-blue-400"
+                            ? "bg-info/15 text-info"
                             : isReceived
-                              ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                              : "bg-rose-500/15 text-rose-600 dark:text-rose-400"
+                              ? "bg-success/15 text-success"
+                              : "bg-destructive/15 text-destructive"
                         }`}
                       >
                         {isReceived ? (
@@ -321,7 +321,7 @@ export default function MyTransactionsPage() {
                     </TableCell>
                     <TableCell
                       className={`text-right font-mono font-semibold ${
-                        isReceived ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+                        isReceived ? "text-success" : "text-destructive"
                       }`}
                     >
                       {isReceived ? "+" : "-"}

@@ -1,19 +1,33 @@
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { 
-  Eye, 
-  Plus, 
-  Pencil, 
-  Trash2, 
-  LogIn, 
-  LogOut, 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Eye,
+  Plus,
+  Pencil,
+  Trash2,
+  LogIn,
+  LogOut,
   Download,
   CheckCircle,
-  XCircle 
+  XCircle,
 } from "lucide-react";
 import type { AuditLogEntry } from "@/lib/api-client";
+
+/* ───────────────────────────────────────────
+   Audit Log Table v2.0
+   Premium data table with semantic action
+   badges, status indicators, and improved
+   information density.
+   ─────────────────────────────────────────── */
 
 interface AuditLogTableProps {
   logs: AuditLogEntry[];
@@ -21,97 +35,160 @@ interface AuditLogTableProps {
   compact?: boolean;
 }
 
-const actionIcons = {
-  CREATE: Plus,
-  UPDATE: Pencil,
-  DELETE: Trash2,
-  VIEW: Eye,
-  LOGIN: LogIn,
-  LOGOUT: LogOut,
-  EXPORT: Download,
+const ACTION_META: Record<
+  string,
+  { icon: typeof Eye; label: string; variant: string }
+> = {
+  CREATE: { icon: Plus, label: "Create", variant: "badge-success" },
+  UPDATE: { icon: Pencil, label: "Update", variant: "badge-info" },
+  DELETE: { icon: Trash2, label: "Delete", variant: "badge-destructive" },
+  VIEW: { icon: Eye, label: "View", variant: "badge-neutral" },
+  LOGIN: { icon: LogIn, label: "Login", variant: "badge-success" },
+  LOGOUT: { icon: LogOut, label: "Logout", variant: "badge-neutral" },
+  EXPORT: { icon: Download, label: "Export", variant: "badge-warning" },
 };
 
-const actionColors = {
-  CREATE: "bg-success/10 text-success border-success/20",
-  UPDATE: "bg-info/10 text-info border-info/20",
-  DELETE: "bg-destructive/10 text-destructive border-destructive/20",
-  VIEW: "bg-muted text-muted-foreground border-border",
-  LOGIN: "bg-primary/10 text-primary border-primary/20",
-  LOGOUT: "bg-muted text-muted-foreground border-border",
-  EXPORT: "bg-warning/10 text-warning border-warning/20",
-};
+function ActionBadge({ action }: { action: string }) {
+  const meta = ACTION_META[action] || {
+    icon: Eye,
+    label: action,
+    variant: "badge-neutral",
+  };
+  const Icon = meta.icon;
 
-export default function AuditLogTable({ logs, className, compact = false }: AuditLogTableProps) {
   return (
-    <div className={cn("overflow-x-auto", className)}>
+    <Badge
+      variant="outline"
+      className={cn(
+        "gap-1.5 font-medium text-[11px] px-2 py-0.5 rounded-md border",
+        meta.variant
+      )}
+    >
+      <Icon className="h-3 w-3" />
+      {meta.label}
+    </Badge>
+  );
+}
+
+function StatusIndicator({ status }: { status: string }) {
+  const isSuccess = status === "SUCCESS";
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 text-xs font-semibold",
+        isSuccess ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
+      )}
+    >
+      {isSuccess ? (
+        <CheckCircle className="h-3.5 w-3.5" />
+      ) : (
+        <XCircle className="h-3.5 w-3.5" />
+      )}
+      {isSuccess ? "Success" : "Failed"}
+    </span>
+  );
+}
+
+export default function AuditLogTable({
+  logs,
+  className,
+  compact = false,
+}: AuditLogTableProps) {
+  const colCount = compact ? 5 : 7;
+
+  return (
+    <div
+      className={cn(
+        "overflow-x-auto rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm",
+        className
+      )}
+    >
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead className="w-[140px]">Timestamp</TableHead>
-            <TableHead>User</TableHead>
-            <TableHead className="w-[100px]">Action</TableHead>
-            <TableHead>Resource</TableHead>
-            {!compact && <TableHead>Details</TableHead>}
-            <TableHead className="w-[100px]">Status</TableHead>
-            {!compact && <TableHead className="w-[120px]">IP Address</TableHead>}
+          <TableRow className="border-b border-border/60 hover:bg-transparent">
+            <TableHead className="w-[140px] text-[10px] uppercase tracking-wider">
+              Timestamp
+            </TableHead>
+            <TableHead className="text-[10px] uppercase tracking-wider">
+              User
+            </TableHead>
+            <TableHead className="w-[100px] text-[10px] uppercase tracking-wider">
+              Action
+            </TableHead>
+            <TableHead className="text-[10px] uppercase tracking-wider">
+              Resource
+            </TableHead>
+            {!compact && (
+              <TableHead className="text-[10px] uppercase tracking-wider">
+                Details
+              </TableHead>
+            )}
+            <TableHead className="w-[100px] text-[10px] uppercase tracking-wider">
+              Status
+            </TableHead>
+            {!compact && (
+              <TableHead className="w-[120px] text-[10px] uppercase tracking-wider">
+                IP Address
+              </TableHead>
+            )}
           </TableRow>
         </TableHeader>
         <TableBody>
-          {logs.map((log) => {
-            const ActionIcon = actionIcons[log.action];
-            return (
-              <TableRow key={log.id}>
-                <TableCell className="font-mono text-xs text-muted-foreground">
-                  {formatDate(log.timestamp, true)}
+          {logs.map((log) => (
+            <TableRow
+              key={log.id}
+              className="border-b border-border/30 transition-colors hover:bg-muted/30"
+            >
+              <TableCell className="font-mono text-[11px] text-muted-foreground/80">
+                {formatDate(log.timestamp, true)}
+              </TableCell>
+              <TableCell>
+                <div>
+                  <p className="text-sm font-medium">{log.userName}</p>
+                  <p className="text-[11px] text-muted-foreground font-mono">
+                    {log.userId}
+                  </p>
+                </div>
+              </TableCell>
+              <TableCell>
+                <ActionBadge action={log.action} />
+              </TableCell>
+              <TableCell>
+                <div>
+                  <p className="text-sm">{log.resource}</p>
+                  <p className="text-[11px] text-muted-foreground font-mono">
+                    {log.resourceId}
+                  </p>
+                </div>
+              </TableCell>
+              {!compact && (
+                <TableCell className="max-w-[300px]">
+                  <p className="text-xs text-muted-foreground truncate">
+                    {log.details}
+                  </p>
                 </TableCell>
-                <TableCell>
-                  <div>
-                    <p className="text-sm font-medium">{log.userName}</p>
-                    <p className="text-xs text-muted-foreground font-mono">{log.userId}</p>
-                  </div>
+              )}
+              <TableCell>
+                <StatusIndicator status={log.status} />
+              </TableCell>
+              {!compact && (
+                <TableCell className="font-mono text-[11px] text-muted-foreground/80">
+                  {log.ipAddress}
                 </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={cn("gap-1", actionColors[log.action])}>
-                    <ActionIcon className="h-3 w-3" />
-                    {log.action}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div>
-                    <p className="text-sm">{log.resource}</p>
-                    <p className="text-xs text-muted-foreground font-mono">{log.resourceId}</p>
-                  </div>
-                </TableCell>
-                {!compact && (
-                  <TableCell className="max-w-[300px]">
-                    <p className="text-xs text-muted-foreground truncate">{log.details}</p>
-                  </TableCell>
-                )}
-                <TableCell>
-                  {log.status === "SUCCESS" ? (
-                    <span className="inline-flex items-center gap-1 text-success text-xs font-medium">
-                      <CheckCircle className="h-3.5 w-3.5" />
-                      Success
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-destructive text-xs font-medium">
-                      <XCircle className="h-3.5 w-3.5" />
-                      Failed
-                    </span>
-                  )}
-                </TableCell>
-                {!compact && (
-                  <TableCell className="font-mono text-xs text-muted-foreground">
-                    {log.ipAddress}
-                  </TableCell>
-                )}
-              </TableRow>
-            );
-          })}
+              )}
+            </TableRow>
+          ))}
+
           {logs.length === 0 && (
             <TableRow>
-              <TableCell colSpan={compact ? 5 : 7} className="text-center py-8 text-muted-foreground">
-                No audit logs found
+              <TableCell
+                colSpan={colCount}
+                className="text-center py-12 text-muted-foreground/60"
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <Eye className="h-5 w-5 opacity-40" />
+                  <span className="text-sm">No audit logs found</span>
+                </div>
               </TableCell>
             </TableRow>
           )}

@@ -310,9 +310,9 @@ export default function DebitCardRequestsPanel({
   };
 
   return (
-    <Card className="overflow-hidden border border-slate-200/70 dark:border-slate-700/60 bg-white/80 dark:bg-slate-900/70 backdrop-blur">
-      <CardHeader className="relative overflow-hidden border-b border-slate-200/70 dark:border-slate-800/70">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.12),_transparent_55%)] dark:bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.15),_transparent_60%)]" />
+    <Card className="overflow-hidden border border-border bg-card/80 backdrop-blur">
+      <CardHeader className="relative overflow-hidden border-b border-border">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,hsl(var(--chart-1)/0.10),transparent_55%)]" />
         <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <CardTitle className="text-xl">Debit Card Requests</CardTitle>
@@ -321,11 +321,11 @@ export default function DebitCardRequestsPanel({
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Badge className="bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900">
+            <Badge className="bg-foreground text-background">
               {formattedRequests.length} My requests
             </Badge>
             {isApprover ? (
-              <Badge className="bg-blue-100 text-blue-700">{pendingRequests.length} Pending review</Badge>
+              <Badge className="bg-info/15 text-info">{pendingRequests.length} Pending review</Badge>
             ) : null}
             <Button onClick={() => setCreateOpen(true)} disabled={!canSubmit}>
               New request
@@ -353,7 +353,7 @@ export default function DebitCardRequestsPanel({
             ) : (
               <div className="grid gap-4 lg:grid-cols-2">
                 {formattedRequests.map((request) => (
-                  <div key={request.id} className="rounded-2xl border border-slate-200/70 dark:border-slate-700/60 bg-white/70 dark:bg-slate-900/50 p-4 shadow-sm">
+                  <div key={request.id} className="rounded-2xl border border-border bg-card/70 p-4 shadow-sm">
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="text-sm font-semibold">{request.accountNumber}</div>
@@ -369,14 +369,14 @@ export default function DebitCardRequestsPanel({
                       <div>Virtual: {request.isVirtual ? 'Yes' : 'No'}</div>
                       <div>Daily limit: {request.dailyLimit ?? 'Default'}</div>
                     </div>
-                    <div className="mt-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/60 p-3">
-                      <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Timeline</div>
+                    <div className="mt-3 rounded-xl bg-muted/30 p-3">
+                      <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Timeline</div>
                       <div className="mt-2 grid gap-2 md:grid-cols-3">
                         {timelineSteps(request).map((step) => (
                           <div key={step.key} className="flex items-center gap-2">
-                            <span className={`h-2 w-2 rounded-full ${step.done ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                            <span className={`h-2 w-2 rounded-full ${step.done ? 'bg-success' : 'bg-muted-foreground/30'}`} />
                             <div className="text-xs">
-                              <div className="font-medium text-slate-700 dark:text-slate-200">{step.label}</div>
+                              <div className="font-medium text-foreground">{step.label}</div>
                               <div className="text-[11px] text-muted-foreground">{formatDate(step.at)}</div>
                             </div>
                           </div>

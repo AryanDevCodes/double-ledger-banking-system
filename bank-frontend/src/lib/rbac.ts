@@ -226,11 +226,11 @@ export const ROLE_LABELS: Record<string, string> = {
  * Role badge colors for UI
  */
 export const ROLE_COLORS: Record<string, string> = {
-  [ROLES.ADMIN]: 'bg-red-500/20 text-red-400 border-red-500/30',
-  [ROLES.MANAGER]: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-  [ROLES.CUSTOMER_MANAGER]: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  [ROLES.AUDITOR]: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-  [ROLES.USER]: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+  [ROLES.ADMIN]: 'bg-destructive/20 text-destructive border-destructive/30',
+  [ROLES.MANAGER]: 'bg-warning/20 text-warning border-warning/30',
+  [ROLES.CUSTOMER_MANAGER]: 'bg-info/20 text-info border-info/30',
+  [ROLES.AUDITOR]: 'bg-primary/20 text-primary border-primary/30',
+  [ROLES.USER]: 'bg-success/20 text-success border-success/30',
 };
 
 /**
@@ -303,6 +303,12 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     label: 'Loans & EMI',
     icon: TrendingUp,
     roles: [ROLES.USER],
+  },
+  {
+    path: '/my-account',
+    label: 'My Account',
+    icon: UserCircle2,
+    roles: 'all',
   },
   {
     path: '/profile',

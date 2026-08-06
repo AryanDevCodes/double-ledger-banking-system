@@ -1,1 +1,0 @@
-import{r,j as e,f as o}from"./index-DMtTuPbv.js";import{g as m}from"./format-N1OTjWVW.js";const p=r.forwardRef(({status:a,className:s},t)=>e.jsx("span",{ref:t,className:o("status-badge",m(a),s),children:a}));p.displayName="StatusBadge";export{p as S};

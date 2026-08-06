@@ -187,7 +187,7 @@ export default function CardsPage() {
       case 'EXPIRED':
         return 'bg-gray-100 text-gray-800 dark:bg-gray-500/20 dark:text-gray-400';
       default:
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-400';
+        return 'bg-info/15 text-info';
     }
   };
 
@@ -501,7 +501,7 @@ export default function CardsPage() {
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {creditCardList.map((card) => (
-                  <Card key={card.id} className="overflow-hidden border-amber-100 dark:border-amber-500/20">
+                  <Card key={card.id} className="overflow-hidden border-border">
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div>
@@ -699,7 +699,7 @@ export default function CardsPage() {
                 isRequester={isRequester}
               />
               <CreditCardApplicationPanel
-                accountNumber={selectedAccountNumber}
+                accountNumber={selectedAccountNumber} 
                 accountOptions={accountOptions}
                 onAccountChange={(value) => setSelectedAccountNumber(value)}
                 isApprover={isApprover}

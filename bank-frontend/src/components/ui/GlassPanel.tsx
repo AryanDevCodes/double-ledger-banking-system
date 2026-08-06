@@ -1,10 +1,18 @@
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
+const TINT_STYLES = {
+  neutral: "",
+  indigo: "bg-indigo-500/5 border-indigo-500/20",
+  emerald: "bg-emerald-500/5 border-emerald-500/20",
+  rose: "bg-rose-500/5 border-rose-500/20",
+  amber: "bg-amber-500/5 border-amber-500/20",
+};
+
 export interface GlassPanelProps {
   variant?: "default" | "elevated" | "subtle" | "interactive";
-  blur?: "sm" | "md" | "lg" | "xl";
-  tint?: "neutral" | "indigo" | "emerald" | "rose" | "amber";
+  blur?: "sm" | "md" | "lg" | "xl"; // we'll use backdrop-blur-* classes
+  tint?: keyof typeof TINT_STYLES;
   className?: string;
   children: ReactNode;
   style?: React.CSSProperties;
@@ -12,11 +20,11 @@ export interface GlassPanelProps {
   as?: keyof JSX.IntrinsicElements;
 }
 
-const blurStyle: Record<NonNullable<GlassPanelProps["blur"]>, string> = {
-  sm: "blur(8px)",
-  md: "blur(12px)",
-  lg: "blur(16px)",
-  xl: "blur(20px)",
+const blurMap = {
+  sm: "backdrop-blur-sm",
+  md: "backdrop-blur-md",
+  lg: "backdrop-blur-lg",
+  xl: "backdrop-blur-xl",
 };
 
 export default function GlassPanel({
@@ -29,23 +37,21 @@ export default function GlassPanel({
   onClick,
   as: Tag = "div",
 }: GlassPanelProps) {
-  const blurValue = blurStyle[blur];
+  const tintClass = TINT_STYLES[tint] || "";
+  const blurClass = blurMap[blur] || "backdrop-blur-lg";
 
   return (
     <Tag
       className={cn(
-        "glass-panel rounded-2xl",
-        variant === "elevated" && "glass-panel--elevated",
-        variant === "subtle" && "glass-panel--subtle",
-        variant === "interactive" && "glass-panel--interactive",
-        tint !== "neutral" && `glass-panel--${tint}`,
-        className,
+        "rounded-2xl border border-border/40 bg-card/60 transition-all duration-300",
+        blurClass,
+        variant === "elevated" && "shadow-lg shadow-black/5",
+        variant === "subtle" && "bg-card/40 border-border/20",
+        variant === "interactive" && "hover:bg-card/80 hover:border-border/60 hover:-translate-y-0.5 hover:shadow-lg",
+        tintClass,
+        className
       )}
-      style={{
-        backdropFilter: blurValue,
-        WebkitBackdropFilter: blurValue,
-        ...style,
-      }}
+      style={style}
       onClick={onClick}
     >
       {children}

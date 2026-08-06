@@ -5,8 +5,7 @@ function GlassSkeleton({ className }: { className?: string }) {
     <div
       className={cn(
         "rounded-lg overflow-hidden",
-        "bg-[linear-gradient(90deg,var(--glass-border)_0%,rgba(255,255,255,0.35)_50%,var(--glass-border)_100%)]",
-        "dark:bg-[linear-gradient(90deg,rgba(255,255,255,0.04)_0%,rgba(255,255,255,0.1)_50%,rgba(255,255,255,0.04)_100%)]",
+        "bg-[linear-gradient(90deg,var(--glass-border)_0%,hsl(var(--foreground)/0.12)_50%,var(--glass-border)_100%)]",
         "bg-[length:200%_100%] animate-shimmer",
         className,
       )}
@@ -23,13 +22,13 @@ interface TableSkeletonProps {
 export function TableSkeleton({ columns = 5, rows = 5, className }: TableSkeletonProps) {
   return (
     <div className={cn("w-full glass-panel rounded-2xl overflow-hidden", className)}>
-      <div className="flex gap-4 border-b border-[var(--glass-border)] p-4">
+      <div className="flex gap-4 border-b border-border p-4">
         {Array.from({ length: columns }).map((_, i) => (
           <GlassSkeleton key={i} className="h-3.5 flex-1" />
         ))}
       </div>
       {Array.from({ length: rows }).map((_, rowIndex) => (
-        <div key={rowIndex} className="flex gap-4 border-b border-[var(--glass-border)]/50 p-4 last:border-0">
+        <div key={rowIndex} className="flex gap-4 border-b border-border/50 p-4 last:border-0">
           {Array.from({ length: columns }).map((_, colIndex) => (
             <GlassSkeleton
               key={colIndex}

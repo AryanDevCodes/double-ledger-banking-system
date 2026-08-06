@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import PageWrapper from "@/components/PageWrapper";
 import PageHeader from "@/components/PageHeader";
-import { accountApi, bankApi } from "@/lib/api-client";
 import { getApiErrorMessage } from "@/lib/api-client";
 import { formatCurrency } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -41,12 +40,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import type { AccountResponseDTO, BankResponseDTO } from "@/types/api";
+import type { AccountResponseDTO } from "@/types/api";
 import { toast } from "sonner";
 import FuturisticStatsGrid, { type FuturisticStatWidget } from "@/components/dashboard/FuturisticStatsGrid";
 import FuturisticChart from "@/components/dashboard/FuturisticChart";
 import FuturisticActivityFeed, { type ActivityEvent } from "@/components/dashboard/FuturisticActivityFeed";
+import { useAccounts } from "@/hooks/useAccount";
 
+// ---- Schemas (unchanged) ----
 const accountSchema = z.object({
   bankName: z.string().min(1, "Please select a bank"),
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
@@ -88,13 +89,13 @@ type ComplianceValues = z.infer<typeof complianceSchema>;
 const STEPS = ["bank", "setup", "extra"] as const;
 type Step = (typeof STEPS)[number];
 
-// Fields that must be valid before the user can move off a given step.
 const STEP_FIELDS: Record<Step, (keyof AccountValues)[]> = {
   bank: ["bankName", "fullName", "email", "phoneNumber", "username"],
   setup: ["password", "initialDeposit"],
   extra: ["age", "address", "termsAccepted"],
 };
 
+// ---- Helper functions for charts (unchanged) ----
 const generateActivityEvents = (accounts: AccountResponseDTO[]): ActivityEvent[] => {
   return accounts.slice(0, 8).map((a, i) => ({
     id: String(i + 1),
@@ -129,10 +130,22 @@ const generateBankData = (accounts: AccountResponseDTO[]) => {
     .map(([name, value]) => ({ name, value }));
 };
 
+// ---- Main Component ----
 export default function AccountsPage() {
-  const [accounts, setAccounts] = useState<AccountResponseDTO[]>([]);
-  const [banks, setBanks] = useState<BankResponseDTO[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Use the React Query hook
+  const {
+    accounts,
+    banks,
+    isLoading,
+    isRefreshing,
+    refetch,
+    createAccount,
+    updateCompliance,
+    exportStatement,
+    dataUpdatedAt,
+  } = useAccounts();
+
+  // UI state (filters, dialogs, etc.)
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [bankFilter, setBankFilter] = useState<string>("all");
@@ -141,8 +154,8 @@ export default function AccountsPage() {
   const [complianceDialogOpen, setComplianceDialogOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<AccountResponseDTO | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
+  // Forms
   const form = useForm<AccountValues>({
     resolver: zodResolver(accountSchema),
     defaultValues: {
@@ -171,28 +184,7 @@ export default function AccountsPage() {
 
   const passwordValue = form.watch("password") || "";
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const [accountsData, banksData] = await Promise.all([
-        accountApi.getAll(),
-        bankApi.getAll()
-      ]);
-      setAccounts(accountsData);
-      setBanks(banksData);
-      setLastUpdated(new Date());
-    } catch (error) {
-      toast.error(getApiErrorMessage(error, "Failed to load data"));
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
+  // Derived data (filtering, stats)
   const filtered = useMemo(() => {
     const searchLower = search.toLowerCase();
     return accounts.filter(a => {
@@ -223,6 +215,7 @@ export default function AccountsPage() {
     { id: "pending", title: "Pending KYC", value: pendingKYC, icon: <ShieldCheck className="h-5 w-5" />, tint: "amber" },
   ];
 
+  // Dialog helpers
   const resetAccountDialog = () => {
     form.reset();
     setStep("bank");
@@ -232,7 +225,6 @@ export default function AccountsPage() {
   const goToStep = async (target: Step) => {
     const targetIndex = STEPS.indexOf(target);
     const currentIndex = STEPS.indexOf(step);
-    // Only validate when moving forward — always allow going back.
     if (targetIndex > currentIndex) {
       const valid = await form.trigger(STEP_FIELDS[step]);
       if (!valid) return;
@@ -240,19 +232,23 @@ export default function AccountsPage() {
     setStep(target);
   };
 
+  // Handlers using mutations
   const handleAdd = async (values: AccountValues) => {
     try {
-      const response = await accountApi.create(values.bankName, {
-        initialDeposit: values.initialDeposit ? parseFloat(values.initialDeposit) : undefined,
-        customer: {
-          fullName: values.fullName,
-          email: values.email,
-          phoneNumber: values.phoneNumber,
-          username: values.username || undefined,
-          password: values.password || undefined,
-          age: values.age ? parseInt(values.age) : undefined,
-          address: values.address || undefined,
-        }
+      const response = await createAccount({
+        bankName: values.bankName,
+        data: {
+          initialDeposit: values.initialDeposit ? parseFloat(values.initialDeposit) : undefined,
+          customer: {
+            fullName: values.fullName,
+            email: values.email,
+            phoneNumber: values.phoneNumber,
+            username: values.username || undefined,
+            password: values.password || undefined,
+            age: values.age ? parseInt(values.age) : undefined,
+            address: values.address || undefined,
+          },
+        },
       });
       resetAccountDialog();
       setOpenAccountDialog(false);
@@ -269,7 +265,7 @@ export default function AccountsPage() {
       } else {
         toast.success("Account created successfully!");
       }
-      loadData();
+      // No need to call loadData – hook invalidates and refetches
     } catch (error: any) {
       toast.error("Failed to create account", { description: getApiErrorMessage(error, "An unexpected error occurred") });
       console.error(error);
@@ -289,15 +285,17 @@ export default function AccountsPage() {
   const handleComplianceUpdate = async (values: ComplianceValues) => {
     if (!selectedAccount) return;
     try {
-      await accountApi.updateCompliance(selectedAccount.accountNumber, {
-        accountStatus: values.accountStatus,
-        kycStatus: values.kycStatus,
-        customerStatus: values.customerStatus,
+      await updateCompliance({
+        accountNumber: selectedAccount.accountNumber,
+        data: {
+          accountStatus: values.accountStatus,
+          kycStatus: values.kycStatus,
+          customerStatus: values.customerStatus,
+        },
       });
       toast.success("Compliance details updated successfully");
       setComplianceDialogOpen(false);
       setSelectedAccount(null);
-      await loadData();
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Failed to update compliance details"));
       console.error(error);
@@ -307,7 +305,7 @@ export default function AccountsPage() {
   const downloadStatement = async (accountNumber: string, format: "csv" | "pdf") => {
     try {
       const loadingToast = toast.loading("Downloading statement...");
-      const blob = await accountApi.exportStatement(accountNumber, format);
+      const blob = await exportStatement(accountNumber, format);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -336,8 +334,11 @@ export default function AccountsPage() {
   };
 
   const hasFilters = search || statusFilter !== "all" || bankFilter !== "all";
-
   const stepIndex = STEPS.indexOf(step);
+  const loading = isLoading || isRefreshing;
+
+  // Last updated time from React Query (optional)
+  const lastUpdated = dataUpdatedAt ? new Date(dataUpdatedAt) : null;
 
   return (
     <PageWrapper>
@@ -353,11 +354,11 @@ export default function AccountsPage() {
                 {lastUpdated.toLocaleTimeString()}
               </div>
             )}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/30">
-              <span className="w-2 h-2 bg-emerald-400 rounded-full pulse-live" />
-              <span className="text-xs text-emerald-400 font-medium">Live</span>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-success/20 border border-success/30">
+              <span className="w-2 h-2 bg-success rounded-full pulse-live" />
+              <span className="text-xs text-success font-medium">Live</span>
             </div>
-            <Button variant="outline" size="sm" onClick={loadData} disabled={loading}>
+            <Button variant="outline" size="sm" onClick={() => refetch()} disabled={loading}>
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
               Sync
             </Button>
@@ -376,12 +377,10 @@ export default function AccountsPage() {
 
       <FuturisticStatsGrid widgets={widgets} loading={loading} columnsClassName="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" />
 
-      {/* Different layout: charts + activity feed side by side instead of
-          charts spanning the full width with the feed computed but unused. */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
         <div className="xl:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <FuturisticChart data={statusData} title="Account Status" type="pie" height={240} colors={["#10b981", "#f59e0b", "#f43f5e"]} />
-          <FuturisticChart data={bankData} title="Accounts by Bank" type="bar" height={240} colors={["#22d3ee", "#a78bfa", "#10b981", "#f59e0b", "#f43f5e"]} />
+          <FuturisticChart data={statusData} title="Account Status" type="pie" height={240} />
+          <FuturisticChart data={bankData} title="Accounts by Bank" type="bar" height={240} />
         </div>
         <FuturisticActivityFeed events={activityEvents} title="Recent Activity" />
       </div>
@@ -426,8 +425,7 @@ export default function AccountsPage() {
         </div>
       </div>
 
-      {/* Card grid instead of a wide table — no horizontal scroll needed,
-          reads better on narrow screens. */}
+      {/* Card grid */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -449,7 +447,7 @@ export default function AccountsPage() {
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="font-mono text-sm text-cyan-400 truncate">{account.accountNumber}</span>
+                    <span className="font-mono text-sm text-primary truncate">{account.accountNumber}</span>
                     <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0" onClick={() => copyToClipboard(account.accountNumber)}>
                       <Copy className="w-3 h-3" />
                     </Button>
@@ -500,17 +498,7 @@ export default function AccountsPage() {
         </div>
       )}
 
-      {/* ------------------------------------------------------------------
-          OPEN ACCOUNT DIALOG
-          ------------------------------------------------------------------
-          Height and scroll are set explicitly on this element instead of
-          relying on the base Sheet/Dialog component's own CSS. Structure:
-            - outer: fixed height (h-[85vh]), flex-col, nothing scrolls here
-            - header: shrink-0 (never scrolls, never shrinks)
-            - middle: flex-1 + overflow-y-auto  <-- the ONLY scroll region
-            - footer: shrink-0 (always visible, no "sticky" hacks needed)
-          This guarantees a scrollbar appears whenever content overflows,
-          regardless of what ui/dialog.tsx or ui/sheet.tsx do internally. */}
+      {/* Open Account Dialog – unchanged structure but uses hook */}
       <Dialog
         open={openAccountDialog}
         onOpenChange={(o) => {
@@ -524,7 +512,6 @@ export default function AccountsPage() {
             <DialogDescription>Step {stepIndex + 1} of {STEPS.length}</DialogDescription>
           </DialogHeader>
 
-          {/* Step indicator */}
           <div className="shrink-0 px-6 pt-4">
             <Tabs value={step} onValueChange={(v) => goToStep(v as Step)}>
               <TabsList className="grid grid-cols-3 w-full">
@@ -537,7 +524,6 @@ export default function AccountsPage() {
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleAdd)} className="flex flex-col flex-1 min-h-0">
-              {/* THE scroll region — everything else in this dialog is fixed */}
               <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
                 {step === "bank" && (
                   <>
@@ -649,8 +635,6 @@ export default function AccountsPage() {
                 )}
               </div>
 
-              {/* Footer is a normal shrink-0 flex item now — no `sticky`
-                  needed, and it can never be scrolled out of view. */}
               <DialogFooter className="shrink-0 px-6 py-4 border-t border-white/10 flex-row items-center justify-between sm:justify-between">
                 <div>
                   {stepIndex > 0 && (
@@ -677,6 +661,7 @@ export default function AccountsPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Compliance Dialog */}
       <Dialog open={complianceDialogOpen} onOpenChange={setComplianceDialogOpen}>
         <DialogContent>
           <DialogHeader>

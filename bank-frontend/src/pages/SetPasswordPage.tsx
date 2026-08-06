@@ -65,12 +65,12 @@ export default function SetPasswordPage() {
       <div className="relative z-10 w-full max-w-md">
         <div className="glass-panel rounded-3xl overflow-hidden">
           {/* Header */}
-          <div className="px-7 pt-8 pb-6 text-center border-b border-[var(--glass-border)] bg-gradient-to-b from-emerald-500/10 to-transparent">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-600/15 border border-[var(--glass-border)] shadow-glass">
-              <ShieldCheck className="h-8 w-8 text-emerald-500" />
+          <div className="px-7 pt-8 pb-6 text-center border-b border-border bg-gradient-to-b from-success/10 to-transparent">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-success/10 border border-border shadow-sm">
+              <ShieldCheck className="h-8 w-8 text-success" />
             </div>
-            <h1 className="text-2xl font-bold text-[var(--ink-primary)]">Set Your Password</h1>
-            <p className="mt-1 text-sm text-[var(--ink-muted)]">For security, please set a new password before continuing.</p>
+            <h1 className="text-2xl font-bold text-foreground">Set Your Password</h1>
+            <p className="mt-1 text-sm text-muted-foreground">For security, please set a new password before continuing.</p>
           </div>
 
         <Form {...form}>
@@ -172,7 +172,7 @@ export default function SetPasswordPage() {
             </div>
 
             {/* Footer */}
-            <div className="px-7 py-5 border-t border-[var(--glass-border)] bg-white/10 dark:bg-white/[0.02]">
+            <div className="px-7 py-5 border-t border-border bg-card/60">
               <GradientButton type="submit" fullWidth variant="success" loading={form.formState.isSubmitting}>
                 {form.formState.isSubmitting ? "Updating…" : "Update Password"}
               </GradientButton>

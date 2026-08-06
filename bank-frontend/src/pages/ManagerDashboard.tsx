@@ -139,9 +139,9 @@ export default function ManagerDashboard() {
                 {lastUpdated.toLocaleTimeString()}
               </div>
             )}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/30">
-              <Clock className="w-3 h-3 text-amber-400" />
-              <span className="text-xs text-amber-400 font-medium">{pendingApprovals + pendingKyc} Pending</span>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-warning/20 border border-warning/30">
+              <Clock className="w-3 h-3 text-warning" />
+              <span className="text-xs text-warning font-medium">{pendingApprovals + pendingKyc} Pending</span>
             </div>
             <Button variant="outline" size="sm" onClick={reload} disabled={loading}>
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
@@ -160,7 +160,7 @@ export default function ManagerDashboard() {
             title="Daily Transaction Volume" 
             type="bar" 
             height={320}
-            colors={["#f59e0b", "#22d3ee"]}
+            
           />
         </div>
         <FuturisticChart 
@@ -168,7 +168,7 @@ export default function ManagerDashboard() {
           title="Pending Approvals" 
           type="pie" 
           height={320}
-          colors={["#f59e0b", "#22d3ee", "#10b981", "#f43f5e"]}
+          
         />
       </div>
 
@@ -182,15 +182,15 @@ export default function ManagerDashboard() {
         <div className="lg:col-span-2">
           <div className="glass-card-futuristic p-5">
             <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-              <ClipboardCheck className="w-4 h-4 text-amber-400" />
+              <ClipboardCheck className="w-4 h-4 text-warning" />
               Quick Review Actions
             </h3>
             <div className="space-y-3">
               {accounts.filter(a => a.status === "PENDING").slice(0, 3).map((acc, i) => (
-                <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 hover:border-amber-500/30 transition-colors">
+                <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-muted/25 border border-border hover:border-warning/30 transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-amber-500/20">
-                      <CreditCard className="w-4 h-4 text-amber-400" />
+                    <div className="p-2 rounded-lg bg-warning/20">
+                      <CreditCard className="w-4 h-4 text-warning" />
                     </div>
                     <div>
                       <p className="text-sm font-medium">Account: {acc.accountNumber}</p>
@@ -198,10 +198,10 @@ export default function ManagerDashboard() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button size="sm" variant="outline" className="h-8 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20">
+                    <Button size="sm" variant="outline" className="h-8 border-success/30 text-success hover:bg-success/20">
                       <CheckCircle2 className="w-3 h-3 mr-1" /> Approve
                     </Button>
-                    <Button size="sm" variant="outline" className="h-8 border-rose-500/30 text-rose-400 hover:bg-rose-500/20">
+                    <Button size="sm" variant="outline" className="h-8 border-destructive/30 text-destructive hover:bg-destructive/20">
                       <XCircle className="w-3 h-3 mr-1" /> Reject
                     </Button>
                   </div>
@@ -229,25 +229,25 @@ export default function ManagerDashboard() {
         
         <div className="glass-card-futuristic p-5">
           <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-            <FileCheck className="w-4 h-4 text-emerald-400" />
+              <FileCheck className="w-4 h-4 text-success" />
             Today's Performance
           </h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Accounts Opened</span>
-              <span className="text-lg font-bold text-emerald-400">{accounts.filter(a => a.status === "ACTIVE").length}</span>
+              <span className="text-lg font-bold text-success">{accounts.filter(a => a.status === "ACTIVE").length}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">KYC Verified</span>
-              <span className="text-lg font-bold text-cyan-400">{customers.filter(c => c.kycStatus === "COMPLETED").length}</span>
+              <span className="text-lg font-bold text-primary">{customers.filter(c => c.kycStatus === "COMPLETED").length}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Transactions Processed</span>
-              <span className="text-lg font-bold text-amber-400">{transactions.length}</span>
+              <span className="text-lg font-bold text-warning">{transactions.length}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Success Rate</span>
-              <span className="text-lg font-bold text-violet-400">{successRate}%</span>
+              <span className="text-lg font-bold text-info">{successRate}%</span>
             </div>
             <div className="pt-4 border-t border-white/10">
               <div className="progress-futuristic">

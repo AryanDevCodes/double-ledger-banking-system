@@ -26,7 +26,7 @@ const NAV_GROUPS = [
   { label: "Payments",   paths: ["/send-money", "/upi-pay", "/payments", "/upi"] },
   { label: "Compliance", paths: ["/audit", "/security", "/webhooks"] },
   { label: "Cards & Loans", paths: ["/cards", "/loans", "/emi"] },
-  { label: "Account",    paths: ["/profile"] },
+  { label: "Account",    paths: ["/profile", "/my-account"] },
 ];
 
 export default function AppSidebar({ collapsed: controlledCollapsed, onCollapsedChange }: AppSidebarProps) {

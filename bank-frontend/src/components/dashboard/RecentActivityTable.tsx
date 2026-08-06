@@ -44,9 +44,9 @@ export default function RecentActivityTable({
 
   return (
     <div className="glass-panel rounded-2xl mt-5">
-      <div className="flex items-center justify-between border-b border-[var(--glass-border)] bg-gradient-to-r from-[var(--accent-primary)]/8 to-transparent p-4">
+      <div className="flex items-center justify-between border-b border-border bg-gradient-to-r from-primary/10 to-transparent p-4">
         <div className="flex items-center gap-2">
-          <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+          <CheckCircle2 className="h-5 w-5 text-success" />
           <h2 className="text-base font-semibold">{title}</h2>
         </div>
         <Button variant="ghost" size="sm" asChild>

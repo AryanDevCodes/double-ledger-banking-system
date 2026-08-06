@@ -28,7 +28,7 @@ export default function LoansPage() {
       case 'ACTIVE':
         return 'bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-400';
       case 'CLOSED':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-400';
+        return 'bg-info/15 text-info';
       case 'OVERDUE':
         return 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-400';
       default:
@@ -230,7 +230,7 @@ export default function LoansPage() {
                               </>
                             ) : (
                               <>
-                                <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-500/20">
+                                <Badge className="bg-info/15 text-info">
                                   Upcoming
                                 </Badge>
                                 <Button size="sm" variant="outline">

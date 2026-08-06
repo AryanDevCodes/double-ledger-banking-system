@@ -661,10 +661,10 @@ export default function UpiPage() {
             <div className="grid md:grid-cols-2 gap-6">
               <QRCodeGenerator upiId={qrUpiId} />
               <div className="space-y-4">
-                <div className="glass-panel rounded-2xl p-6" style={{background: 'linear-gradient(135deg, rgba(168,85,247,0.10), rgba(139,92,246,0.06))'}}>
+                <div className="glass-panel rounded-2xl p-6 bg-gradient-to-br from-primary/10 to-primary/5">
 
                   <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                    <QrCode className="h-5 w-5 text-purple-600" />
+                    <QrCode className="h-5 w-5 text-primary" />
                     Your UPI IDs
                   </h3>
                   <div className="space-y-2 max-h-96 overflow-y-auto">
@@ -673,7 +673,7 @@ export default function UpiPage() {
                       .map((p) => (
                         <div
                           key={p.id}
-                          className="cursor-pointer rounded-xl border border-border/70 bg-white/55 p-3 transition-colors hover:border-primary dark:bg-gray-900/50"
+                          className="cursor-pointer rounded-xl border border-border/70 bg-card/60 p-3 transition-colors hover:border-primary"
                           onClick={() => setQrUpiId(p.upiId)}
                         >
                           <div className="flex items-start justify-between">

@@ -80,8 +80,8 @@ export default function LoginPage() {
           <aside className="auth-rail">
             <div className="space-y-6">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--accent-primary)]/30 bg-[var(--accent-primary)]/15">
-                  <Building2 className="h-6 w-6 text-[var(--accent-primary)]" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/30 bg-primary/10">
+                  <Building2 className="h-6 w-6 text-primary" />
                 </div>
                 <div>
                   <p className="font-display text-xl text-foreground">{brandName}</p>
@@ -93,15 +93,15 @@ export default function LoginPage() {
                 <p className="text-foreground font-semibold">Operational highlights</p>
                 <ul className="space-y-2">
                   <li className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent-primary)]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                     Daily audit trails with full retention
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent-primary)]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                     Role-based approvals and compliance
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent-primary)]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                     Real-time reconciliation monitoring
                   </li>
                 </ul>
@@ -115,9 +115,9 @@ export default function LoginPage() {
 
           <div className="auth-card overflow-hidden">
             {/* Header */}
-            <div className="px-7 pt-8 pb-6 text-center border-b border-border/70 bg-gradient-to-br from-[var(--accent-primary)]/10 to-transparent">
+            <div className="px-7 pt-8 pb-6 text-center border-b border-border/70 bg-gradient-to-br from-primary/10 to-transparent">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-border/70 bg-card/80 shadow-sm">
-                <Building2 className="h-8 w-8 text-[var(--accent-primary)]" />
+                <Building2 className="h-8 w-8 text-primary" />
               </div>
               <h1 className="text-2xl font-semibold text-foreground">Sign in</h1>
               <p className="mt-1 text-sm text-muted-foreground">Access your secure workspace</p>
@@ -215,8 +215,8 @@ export default function LoginPage() {
 
               {isDevMode && (
                 <div className="glass-panel--subtle rounded-xl border border-[var(--glass-border)] p-3 space-y-1.5">
-                  <p className="text-xs font-semibold text-[var(--ink-primary)]">Test Credentials</p>
-                  <div className="space-y-0.5 text-xs text-[var(--ink-muted)]">
+                  <p className="text-xs font-semibold text-foreground">Test Credentials</p>
+                  <div className="space-y-0.5 text-xs text-muted-foreground">
                     <p>Admin: <strong>admin</strong> / <strong>admin123</strong></p>
                     <p>Manager: <strong>manager</strong> / <strong>manager123</strong></p>
                     <p>User: <strong>user</strong> / <strong>user123</strong></p>

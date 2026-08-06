@@ -1,19 +1,13 @@
 import { cn } from "@/lib/utils";
 import type { ReactNode, TdHTMLAttributes, ThHTMLAttributes } from "react";
 
-interface GlassTableProps {
-  children: ReactNode;
-  className?: string;
-  stickyHeader?: boolean;
-}
-
-export function GlassTable({ children, className, stickyHeader = true }: GlassTableProps) {
+export function GlassTable({ children, className, stickyHeader = true }: { children: ReactNode; className?: string; stickyHeader?: boolean }) {
   return (
     <div
       className={cn(
-        "glass-panel rounded-2xl overflow-hidden",
+        "rounded-2xl border border-border/40 bg-card/60 backdrop-blur-xl overflow-hidden",
         stickyHeader && "[&_thead_tr_th]:sticky [&_thead_tr_th]:top-0 [&_thead_tr_th]:z-10",
-        className,
+        className
       )}
     >
       <div className="overflow-x-auto">
@@ -24,15 +18,11 @@ export function GlassTable({ children, className, stickyHeader = true }: GlassTa
 }
 
 export function GlassTableHeader({ children, className }: { children: ReactNode; className?: string }) {
-  return (
-    <thead className={cn("border-b border-[var(--glass-border)]", className)}>
-      {children}
-    </thead>
-  );
+  return <thead className={cn("border-b border-border/60", className)}>{children}</thead>;
 }
 
 export function GlassTableBody({ children, className }: { children: ReactNode; className?: string }) {
-  return <tbody className={cn("divide-y divide-[var(--glass-border)]/50", className)}>{children}</tbody>;
+  return <tbody className={cn("divide-y divide-border/40", className)}>{children}</tbody>;
 }
 
 export function GlassTableRow({
@@ -50,12 +40,12 @@ export function GlassTableRow({
     <tr
       onClick={onClick}
       className={cn(
-        "transition-all duration-150 group",
-        "hover:bg-white/40 dark:hover:bg-white/[0.04] hover:scale-[1.001]",
-        "odd:bg-transparent even:bg-white/[0.02] dark:even:bg-white/[0.015]",
-        selected && "bg-indigo-500/10 dark:bg-indigo-500/15",
+        "transition-colors duration-150",
+        "hover:bg-muted/30",
+        "even:bg-card/30",
+        selected && "bg-primary/10",
         onClick && "cursor-pointer",
-        className,
+        className
       )}
     >
       {children}
@@ -71,10 +61,10 @@ export function GlassTableHead({
   return (
     <th
       className={cn(
-        "px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]",
-        "bg-[var(--glass-bg)] backdrop-blur-glass",
+        "px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground",
+        "bg-card/80 backdrop-blur-sm",
         "whitespace-nowrap",
-        className,
+        className
       )}
       {...props}
     >
@@ -89,10 +79,7 @@ export function GlassTableCell({
   ...props
 }: TdHTMLAttributes<HTMLTableCellElement> & { children?: ReactNode }) {
   return (
-    <td
-      className={cn("px-4 py-3 text-sm text-[var(--ink-primary)]", className)}
-      {...props}
-    >
+    <td className={cn("px-4 py-3 text-sm text-foreground", className)} {...props}>
       {children}
     </td>
   );

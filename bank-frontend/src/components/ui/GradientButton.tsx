@@ -11,13 +11,13 @@ interface GradientButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<NonNullable<GradientButtonProps["variant"]>, string> = {
   primary:
-    "bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 text-white shadow-[0_4px_20px_rgba(99,102,241,0.4)] hover:shadow-[0_4px_28px_rgba(99,102,241,0.55)]",
+    "bg-primary text-primary-foreground shadow-[var(--shadow-md)] hover:bg-primary/90",
   secondary:
-    "bg-[var(--glass-bg)] border border-[var(--glass-border)] text-[var(--ink-primary)] hover:bg-white/70 dark:hover:bg-white/10",
+    "bg-card border border-border text-foreground hover:bg-muted/60",
   danger:
-    "bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 text-white shadow-[0_4px_20px_rgba(239,68,68,0.35)]",
+    "bg-destructive text-destructive-foreground shadow-[var(--shadow-md)] hover:bg-destructive/90",
   success:
-    "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white shadow-[0_4px_20px_rgba(16,185,129,0.35)]",
+    "bg-success text-success-foreground shadow-[var(--shadow-md)] hover:bg-success/90",
 };
 
 const sizeStyles: Record<NonNullable<GradientButtonProps["size"]>, string> = {

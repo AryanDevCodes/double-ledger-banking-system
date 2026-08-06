@@ -63,8 +63,8 @@ export default function HomePage() {
         <header className="sticky top-0 z-20 border-b border-border/60 bg-background/70 backdrop-blur-xl">
           <div className="layout-shell flex h-16 items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] shadow-sm">
-                <Building2 className="h-5 w-5 text-[var(--accent-primary)]" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card shadow-sm">
+                <Building2 className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <p className="font-display text-lg text-foreground">{brandName}</p>
@@ -87,8 +87,8 @@ export default function HomePage() {
         <section className="layout-shell grid gap-8 py-12 lg:grid-cols-[1.1fr_0.9fr] lg:py-20">
           <div className="space-y-8">
             <div className="space-y-4">
-              <Badge className="rounded-full border border-[var(--glass-border)] bg-[var(--glass-bg)] px-4 py-1.5 text-[11px] uppercase tracking-[0.24em] text-[var(--ink-muted)]">
-                <Sparkles className="mr-2 h-3.5 w-3.5 text-[var(--accent-primary)]" />
+              <Badge className="rounded-full border border-border bg-card px-4 py-1.5 text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
+                <Sparkles className="mr-2 h-3.5 w-3.5 text-primary" />
                 Banking control surface
               </Badge>
               <div className="space-y-4">
@@ -114,7 +114,7 @@ export default function HomePage() {
 
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {metrics.map((metric) => (
-                <Card key={metric.label} className="bg-[var(--glass-bg)]/90">
+                <Card key={metric.label} className="bg-card/90">
                   <CardContent className="p-5">
                     <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">{metric.label}</p>
                     <div className="mt-3 text-3xl font-semibold text-foreground">
@@ -131,8 +131,8 @@ export default function HomePage() {
             </div>
           </div>
 
-          <Card className="relative overflow-hidden border-border/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.84),rgba(255,255,255,0.56))] shadow-[var(--glass-shadow-strong)] dark:bg-[linear-gradient(180deg,rgba(12,10,22,0.9),rgba(12,10,22,0.7))]">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(183,121,31,0.18),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(2,132,199,0.16),transparent_32%)]" />
+          <Card className="relative overflow-hidden border-border bg-card shadow-[var(--shadow-lg)]">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,hsl(var(--chart-1)/0.12),transparent_28%),radial-gradient(circle_at_bottom_left,hsl(var(--chart-6)/0.10),transparent_32%)]" />
             <CardHeader className="relative space-y-2">
               <CardDescription className="uppercase tracking-[0.24em]">Operational snapshot</CardDescription>
               <CardTitle className="font-display text-3xl">Structured, visible, and fast.</CardTitle>
@@ -144,10 +144,10 @@ export default function HomePage() {
                     key={item.label}
                     className={cn(
                       "rounded-2xl border p-4 shadow-sm backdrop-blur-sm",
-                      item.tone === "emerald" && "border-emerald-500/20 bg-emerald-500/10",
-                      item.tone === "amber" && "border-amber-500/20 bg-amber-500/10",
-                      item.tone === "violet" && "border-violet-500/20 bg-violet-500/10",
-                      item.tone === "sky" && "border-sky-500/20 bg-sky-500/10",
+                      item.tone === "emerald" && "border-success/20 bg-success/10",
+                      item.tone === "amber" && "border-warning/20 bg-warning/10",
+                      item.tone === "violet" && "border-primary/20 bg-primary/10",
+                      item.tone === "sky" && "border-info/20 bg-info/10",
                     )}
                   >
                     <p className="text-sm font-semibold text-foreground">{item.label}</p>
@@ -162,14 +162,14 @@ export default function HomePage() {
                     <p className="text-sm font-medium text-foreground">Current posture</p>
                     <p className="text-xs text-muted-foreground">Policy-aware access and transfer guardrails</p>
                   </div>
-                  <Lock className="h-5 w-5 text-[var(--accent-primary)]" />
+                  <Lock className="h-5 w-5 text-primary" />
                 </div>
                 <div className="mt-5 flex items-center gap-2 text-sm text-muted-foreground">
-                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-success" />
                   Transactions require verified KYC on both sides
                 </div>
                 <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
-                  <span className="h-2.5 w-2.5 rounded-full bg-sky-500" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-info" />
                   Card approvals and plan assignments stay role-scoped
                 </div>
               </div>
@@ -188,10 +188,10 @@ export default function HomePage() {
             {highlights.map((item) => {
               const Icon = item.icon;
               return (
-                <Card key={item.title} className="bg-[var(--glass-bg)]/90 transition-transform duration-200 hover:-translate-y-1">
+                <Card key={item.title} className="bg-card/90 transition-transform duration-200 hover:-translate-y-1">
                   <CardHeader className="pb-3">
-                    <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--glass-border)] bg-background/70">
-                      <Icon className="h-5 w-5 text-[var(--accent-primary)]" />
+                    <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-background/70">
+                      <Icon className="h-5 w-5 text-primary" />
                     </div>
                     <CardTitle className="text-xl">{item.title}</CardTitle>
                     <CardDescription className="text-sm leading-6">{item.description}</CardDescription>

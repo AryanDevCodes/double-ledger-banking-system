@@ -82,12 +82,12 @@ export default function RegisterPage() {
       <div className="relative z-10 w-full max-w-md">
         <div className="glass-panel rounded-3xl overflow-hidden">
           {/* Header */}
-          <div className="px-7 pt-8 pb-6 text-center border-b border-[var(--glass-border)] bg-gradient-to-b from-violet-500/10 to-transparent">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/20 to-indigo-600/15 border border-[var(--glass-border)] shadow-glass">
-              <Building2 className="h-8 w-8 text-[var(--accent-primary)]" />
+          <div className="px-7 pt-8 pb-6 text-center border-b border-border bg-gradient-to-b from-primary/10 to-transparent">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 border border-border shadow-sm">
+              <Building2 className="h-8 w-8 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold text-[var(--ink-primary)]">Create Account</h1>
-            <p className="mt-1 text-sm text-[var(--ink-muted)]">Register for banking portal access</p>
+            <h1 className="text-2xl font-bold text-foreground">Create Account</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Register for banking portal access</p>
           </div>
 
         <Form {...form}>
@@ -250,13 +250,13 @@ export default function RegisterPage() {
             </div>
 
             {/* Footer */}
-            <div className="px-7 py-5 border-t border-[var(--glass-border)] bg-white/10 dark:bg-white/[0.02] space-y-3">
+            <div className="px-7 py-5 border-t border-border bg-card/60 space-y-3">
               <GradientButton type="submit" fullWidth loading={form.formState.isSubmitting}>
                 {form.formState.isSubmitting ? 'Creating account…' : 'Create Account'}
               </GradientButton>
-              <p className="text-sm text-center text-[var(--ink-muted)]">
+              <p className="text-sm text-center text-muted-foreground">
                 Already have an account?{' '}
-                <Link to="/login" className="text-[var(--accent-primary)] hover:underline font-medium">
+                <Link to="/login" className="text-primary hover:underline font-medium">
                   Sign in here
                 </Link>
               </p>

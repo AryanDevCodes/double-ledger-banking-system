@@ -24,41 +24,41 @@ interface StatusChipProps {
 
 const variantMap: Record<StatusVariant, string> = {
   completed:
-    "bg-emerald-500/12 text-emerald-700 border-emerald-500/25 dark:text-emerald-400",
+    "bg-success/12 text-success border-success/25",
   success:
-    "bg-emerald-500/12 text-emerald-700 border-emerald-500/25 dark:text-emerald-400",
+    "bg-success/12 text-success border-success/25",
   active:
-    "bg-sky-500/12 text-sky-700 border-sky-500/25 dark:text-sky-400",
+    "bg-info/12 text-info border-info/25",
   pending:
-    "bg-amber-500/12 text-amber-700 border-amber-500/25 dark:text-amber-400",
+    "bg-warning/12 text-warning border-warning/25",
   processing:
-    "bg-violet-500/12 text-violet-700 border-violet-500/25 dark:text-violet-400",
+    "bg-primary/12 text-primary border-primary/25",
   failed:
-    "bg-red-500/12 text-red-700 border-red-500/25 dark:text-red-400",
+    "bg-destructive/12 text-destructive border-destructive/25",
   error:
-    "bg-red-500/12 text-red-700 border-red-500/25 dark:text-red-400",
+    "bg-destructive/12 text-destructive border-destructive/25",
   inactive:
-    "bg-slate-500/10 text-slate-500 border-slate-500/20 dark:text-slate-400",
+    "bg-muted/30 text-muted-foreground border-border",
   warning:
-    "bg-amber-500/12 text-amber-700 border-amber-500/25 dark:text-amber-400",
+    "bg-warning/12 text-warning border-warning/25",
   info:
-    "bg-sky-500/12 text-sky-700 border-sky-500/25 dark:text-sky-400",
+    "bg-info/12 text-info border-info/25",
   neutral:
-    "bg-slate-500/10 text-slate-600 border-slate-500/20 dark:text-slate-400",
+    "bg-muted/30 text-muted-foreground border-border",
 };
 
 const dotColorMap: Record<StatusVariant, string> = {
-  completed: "bg-emerald-500",
-  success: "bg-emerald-500",
-  active: "bg-sky-500",
-  pending: "bg-amber-500",
-  processing: "bg-violet-500",
-  failed: "bg-red-500",
-  error: "bg-red-500",
-  inactive: "bg-slate-400",
-  warning: "bg-amber-500",
-  info: "bg-sky-500",
-  neutral: "bg-slate-400",
+  completed: "bg-success",
+  success: "bg-success",
+  active: "bg-info",
+  pending: "bg-warning",
+  processing: "bg-primary",
+  failed: "bg-destructive",
+  error: "bg-destructive",
+  inactive: "bg-muted-foreground",
+  warning: "bg-warning",
+  info: "bg-info",
+  neutral: "bg-muted-foreground",
 };
 
 function normalizeStatus(raw: string): StatusVariant {

@@ -22,13 +22,13 @@ interface FuturisticStatsGridProps {
 }
 
 const TINT_COLORS = {
-  indigo: { primary: "#6366f1", glow: "rgba(99, 102, 241, 0.4)", gradient: "from-indigo-500/30 to-violet-500/15" },
-  emerald: { primary: "#10b981", glow: "rgba(16, 185, 129, 0.4)", gradient: "from-emerald-500/30 to-teal-500/15" },
-  rose: { primary: "#f43f5e", glow: "rgba(244, 63, 94, 0.4)", gradient: "from-rose-500/30 to-pink-500/15" },
-  amber: { primary: "#f59e0b", glow: "rgba(245, 158, 11, 0.4)", gradient: "from-amber-500/30 to-orange-400/15" },
-  sky: { primary: "#0ea5e9", glow: "rgba(14, 165, 233, 0.4)", gradient: "from-sky-500/30 to-blue-500/15" },
-  cyan: { primary: "#22d3ee", glow: "rgba(34, 211, 238, 0.4)", gradient: "from-cyan-500/30 to-sky-500/15" },
-  violet: { primary: "#a78bfa", glow: "rgba(167, 139, 250, 0.4)", gradient: "from-violet-500/30 to-purple-500/15" },
+  indigo: { primary: "hsl(var(--chart-1))", glow: "hsl(var(--chart-1) / 0.4)", gradient: "from-[hsl(var(--chart-1))/30] to-[hsl(var(--chart-2))/15]" },
+  emerald: { primary: "hsl(var(--chart-3))", glow: "hsl(var(--chart-3) / 0.4)", gradient: "from-[hsl(var(--chart-3))/30] to-[hsl(var(--chart-6))/15]" },
+  rose: { primary: "hsl(var(--chart-5))", glow: "hsl(var(--chart-5) / 0.4)", gradient: "from-[hsl(var(--chart-5))/30] to-[hsl(var(--destructive))/15]" },
+  amber: { primary: "hsl(var(--chart-4))", glow: "hsl(var(--chart-4) / 0.4)", gradient: "from-[hsl(var(--chart-4))/30] to-[hsl(var(--chart-6))/15]" },
+  sky: { primary: "hsl(var(--chart-6))", glow: "hsl(var(--chart-6) / 0.4)", gradient: "from-[hsl(var(--chart-6))/30] to-[hsl(var(--chart-1))/15]" },
+  cyan: { primary: "hsl(var(--chart-6))", glow: "hsl(var(--chart-6) / 0.4)", gradient: "from-[hsl(var(--chart-6))/30] to-[hsl(var(--chart-1))/15]" },
+  violet: { primary: "hsl(var(--chart-2))", glow: "hsl(var(--chart-2) / 0.4)", gradient: "from-[hsl(var(--chart-2))/30] to-[hsl(var(--chart-2))/15]" },
 };
 
 function StatCardSkeleton() {
@@ -62,7 +62,7 @@ function FuturisticStatCard({ widget, index }: { widget: FuturisticStatWidget; i
       <div className="flex items-start justify-between">
         <div
           className="p-2.5 rounded-xl bg-gradient-to-br opacity-80 group-hover:opacity-100 transition-opacity"
-          style={{ background: `linear-gradient(135deg, ${colors.primary}30, ${colors.primary}15)` }}
+          style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${colors.primary} 30%, transparent), color-mix(in srgb, ${colors.primary} 15%, transparent))` }}
         >
           <div className="text-white" style={{ color: colors.primary }}>
             {widget.icon}
@@ -73,7 +73,7 @@ function FuturisticStatCard({ widget, index }: { widget: FuturisticStatWidget; i
             className={cn(
               "text-xs font-medium px-2 py-1 rounded-full",
               widget.trend.positive
-                ? "bg-emerald-500/20 text-emerald-400"
+                ? "bg-success/20 text-success"
                 : "bg-rose-500/20 text-rose-400"
             )}
           >

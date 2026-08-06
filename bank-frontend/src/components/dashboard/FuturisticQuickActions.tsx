@@ -41,7 +41,7 @@ export default function FuturisticQuickActions({
   return (
     <div className={cn("glass-card-futuristic p-5", className)}>
       <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-        <span className="w-1 h-4 bg-cyan-400 rounded-full" />
+        <span className="w-1 h-4 bg-primary rounded-full" />
         {title}
       </h3>
       
@@ -58,9 +58,9 @@ export default function FuturisticQuickActions({
             >
               <Link
                 to={action.to}
-                className="group flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-cyan-500/30 transition-all duration-200"
+                className="group flex items-start gap-3 p-3 rounded-xl bg-muted/25 border border-border hover:bg-muted/40 hover:border-primary/30 transition-all duration-200"
               >
-                <div className="p-2 rounded-lg bg-cyan-500/20 text-cyan-400 group-hover:bg-cyan-500/30 group-hover:scale-110 transition-all">
+                <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/15 group-hover:scale-110 transition-all">
                   <Icon className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">

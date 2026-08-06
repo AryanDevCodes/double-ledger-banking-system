@@ -6,26 +6,26 @@
 
 @layer base {
   :root {
-    --background: 36 38% 96%;
-    --foreground: 220 20% 12%;
+    --background: 210 16% 98%;
+    --foreground: 220 12% 8%;
 
-    --card: 36 30% 98%;
-    --card-foreground: 220 20% 12%;
+    --card: 210 16% 100%;
+    --card-foreground: 220 12% 8%;
 
-    --popover: 36 30% 98%;
-    --popover-foreground: 220 20% 12%;
+    --popover: 210 16% 100%;
+    --popover-foreground: 220 12% 8%;
 
-    --primary: 32 68% 42%;
-    --primary-foreground: 36 30% 98%;
+    --primary: 220 90% 45%;
+    --primary-foreground: 210 98% 98%;
 
-    --secondary: 32 18% 90%;
-    --secondary-foreground: 220 18% 16%;
+    --secondary: 215 24% 96%;
+    --secondary-foreground: 220 14% 14%;
 
-    --muted: 32 16% 88%;
-    --muted-foreground: 220 10% 40%;
+    --muted: 220 10% 92%;
+    --muted-foreground: 220 12% 45%;
 
-    --accent: 212 28% 20%;
-    --accent-foreground: 36 30% 98%;
+    --accent: 212 60% 45%;
+    --accent-foreground: 210 98% 98%;
 
     --destructive: 0 72% 50%;
     --destructive-foreground: 0 0% 100%;
@@ -39,9 +39,9 @@
     --info: 207 60% 42%;
     --info-foreground: 0 0% 100%;
 
-    --border: 30 16% 82%;
-    --input: 30 16% 82%;
-    --ring: 32 68% 42%;
+    --border: 210 12% 88%;
+    --input: 210 12% 88%;
+    --ring: 220 90% 45%;
 
     --radius: 0.9rem;
 
@@ -49,126 +49,140 @@
     --font-display: 'Fraunces', 'Times New Roman', serif;
     --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 
-    --sidebar-background: 35 25% 92%;
-    --sidebar-foreground: 220 20% 16%;
-    --sidebar-primary: 32 68% 42%;
-    --sidebar-primary-foreground: 36 30% 98%;
-    --sidebar-accent: 34 18% 86%;
-    --sidebar-accent-foreground: 220 18% 18%;
-    --sidebar-border: 30 16% 82%;
-    --sidebar-ring: 32 68% 42%;
+    --sidebar-background: 210 18% 96%;
+    --sidebar-foreground: 220 14% 12%;
+    --sidebar-primary: 220 90% 45%;
+    --sidebar-primary-foreground: 210 98% 98%;
+    --sidebar-accent: 210 12% 92%;
+    --sidebar-accent-foreground: 220 14% 18%;
+    --sidebar-border: 210 12% 88%;
+    --sidebar-ring: 220 90% 45%;
     --sidebar-muted: 220 10% 46%;
 
-    --shadow-sm: 0 1px 2px hsl(30 10% 20% / 0.08);
-    --shadow-md: 0 2px 8px hsl(30 10% 20% / 0.10), 0 16px 44px hsl(30 10% 20% / 0.12);
-    --shadow-lg: 0 2px 10px hsl(30 10% 20% / 0.10), 0 28px 70px hsl(30 10% 20% / 0.18);
+    --chart-1: 220 90% 45%;
+    --chart-2: 262 83% 58%;
+    --chart-3: 161 84% 40%;
+    --chart-4: 34 86% 46%;
+    --chart-5: 0 72% 50%;
+    --chart-6: 200 94% 42%;
 
-    /* Aurora Glass Design System */
-    --surface-base: #f0ecf7;
-    --surface-aurora-1: #e8d5f5;
-    --surface-aurora-2: #c8ddf5;
-    --surface-aurora-3: #c8f0e8;
-    --surface-aurora-4: #fde8d0;
-    --surface-aurora-5: #f0d0f0;
-    --glass-bg: rgba(255, 255, 255, 0.52);
-    --glass-bg-strong: rgba(255, 255, 255, 0.72);
-    --glass-border: rgba(255, 255, 255, 0.75);
-    --glass-border-subtle: rgba(180, 160, 220, 0.22);
-    --glass-highlight: rgba(255, 255, 255, 1);
-    --glass-shadow: 0 8px 32px rgba(100, 80, 160, 0.12), 0 2px 8px rgba(100, 80, 160, 0.08);
-    --glass-shadow-strong: 0 20px 64px rgba(100, 80, 160, 0.18), 0 4px 16px rgba(100, 80, 160, 0.10);
-    --glass-blur: 32px;
-    --glass-blur-strong: 48px;
-    --glass-glow: 0 0 0 1px rgba(255,255,255,0.6), inset 0 1px 0 rgba(255,255,255,0.9);
-    --ink-primary: #18161f;
-    --ink-muted: #52496a;
-    --accent-primary: #b7791f;
-    --accent-secondary: #1f3b4d;
-    --accent-success: #1f8a5f;
-    --accent-warn: #c27c2c;
-    --accent-danger: #c2413c;
-    --accent-violet: #7c3aed;
-    --accent-sky: #0284c7;
+    --shadow-sm: 0 1px 2px hsl(210 10% 20% / 0.06);
+    --shadow-md: 0 2px 8px hsl(210 10% 20% / 0.08), 0 16px 44px hsl(210 10% 20% / 0.10);
+    --shadow-lg: 0 2px 10px hsl(210 10% 20% / 0.10), 0 28px 70px hsl(210 10% 20% / 0.14);
+
+    /* Light Glass Design System */
+    --surface-base: #fbfbfd;
+    --surface-aurora-1: #f6f3ff;
+    --surface-aurora-2: #eef7ff;
+    --surface-aurora-3: #f0fff7;
+    --surface-aurora-4: #fff8f0;
+    --surface-aurora-5: #fff0fb;
+    --glass-bg: rgba(255, 255, 255, 0.84);
+    --glass-bg-strong: rgba(255, 255, 255, 0.96);
+    --glass-border: rgba(15, 23, 42, 0.06);
+    --glass-border-subtle: rgba(180, 160, 220, 0.12);
+    --glass-highlight: rgba(255, 255, 255, 0.98);
+    --glass-shadow: 0 8px 32px rgba(20, 20, 40, 0.04), 0 2px 8px rgba(20, 20, 40, 0.02);
+    --glass-shadow-strong: 0 20px 64px rgba(20, 20, 40, 0.06), 0 4px 16px rgba(20, 20, 40, 0.03);
+    --glass-blur: 20px;
+    --glass-blur-strong: 36px;
+    --glass-glow: 0 0 0 1px rgba(255,255,255,0.85), inset 0 1px 0 rgba(255,255,255,0.92);
+    --ink-primary: #0b0c10;
+    --ink-muted: #5a5f72;
+    --accent-primary: hsl(var(--primary));
+    --accent-secondary: hsl(var(--info));
+    --accent-success: hsl(var(--success));
+    --accent-warn: hsl(var(--warning));
+    --accent-danger: hsl(var(--destructive));
+    --accent-violet: hsl(var(--chart-2));
+    --accent-sky: hsl(var(--chart-6));
   }
 
   .dark {
-    --background: 224 40% 7%;
-    --foreground: 210 30% 95%;
+    --background: 0 0% 0%;
+    --foreground: 210 20% 96%;
 
-    --card: 224 32% 11%;
-    --card-foreground: 210 30% 95%;
+    --card: 0 0% 4%;
+    --card-foreground: 210 20% 96%;
 
-    --popover: 224 32% 11%;
-    --popover-foreground: 210 30% 95%;
+    --popover: 0 0% 4%;
+    --popover-foreground: 210 20% 96%;
 
-    --primary: 270 92% 71%;
-    --primary-foreground: 224 40% 8%;
+    --primary: 190 100% 55%;
+    --primary-foreground: 0 0% 0%;
 
-    --secondary: 224 24% 16%;
-    --secondary-foreground: 210 30% 95%;
+    --secondary: 260 100% 12%;
+    --secondary-foreground: 210 20% 96%;
 
-    --muted: 224 24% 16%;
-    --muted-foreground: 210 20% 77%;
+    --muted: 210 10% 28%;
+    --muted-foreground: 210 10% 60%;
 
-    --accent: 191 92% 62%;
-    --accent-foreground: 224 40% 8%;
+    --accent: 190 100% 55%;
+    --accent-foreground: 0 0% 0%;
 
     --destructive: 0 72% 56%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 150 62% 48%;
+    --success: 150 62% 46%;
     --success-foreground: 0 0% 100%;
 
     --warning: 34 92% 59%;
     --warning-foreground: 0 0% 100%;
 
-    --info: 206 94% 60%;
+    --info: 200 94% 60%;
     --info-foreground: 0 0% 100%;
 
-    --border: 224 24% 22%;
-    --input: 224 24% 22%;
-    --ring: 270 92% 71%;
+    --border: 210 10% 10%;
+    --input: 210 10% 10%;
+    --ring: 190 100% 55%;
 
-    --sidebar-background: 224 36% 9%;
-    --sidebar-foreground: 210 26% 88%;
-    --sidebar-primary: 270 92% 71%;
-    --sidebar-primary-foreground: 224 40% 8%;
-    --sidebar-accent: 224 24% 15%;
-    --sidebar-accent-foreground: 210 26% 92%;
-    --sidebar-border: 224 24% 22%;
-    --sidebar-ring: 270 92% 71%;
-    --sidebar-muted: 210 16% 70%;
+    --sidebar-background: 0 0% 2%;
+    --sidebar-foreground: 210 22% 90%;
+    --sidebar-primary: 190 100% 55%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 260 100% 8%;
+    --sidebar-accent-foreground: 210 22% 92%;
+    --sidebar-border: 210 10% 10%;
+    --sidebar-ring: 190 100% 55%;
+    --sidebar-muted: 210 10% 60%;
 
-    --shadow-sm: 0 1px 2px hsl(0 0% 0% / 0.35);
-    --shadow-md: 0 1px 2px hsl(0 0% 0% / 0.4), 0 20px 54px hsl(224 40% 4% / 0.56);
-    --shadow-lg: 0 1px 2px hsl(0 0% 0% / 0.46), 0 30px 74px hsl(224 40% 3% / 0.7);
+    --chart-1: 190 100% 55%;
+    --chart-2: 263 88% 68%;
+    --chart-3: 161 82% 51%;
+    --chart-4: 34 92% 59%;
+    --chart-5: 350 89% 70%;
+    --chart-6: 200 94% 60%;
 
-    /* Aurora Glass Design System - Dark */
-    --surface-base: #060914;
-    --surface-aurora-1: #22104b;
-    --surface-aurora-2: #0f2c58;
-    --surface-aurora-3: #103c31;
-    --surface-aurora-4: #3d1240;
-    --surface-aurora-5: #14215d;
-    --glass-bg: rgba(8, 12, 24, 0.74);
-    --glass-bg-strong: rgba(8, 12, 24, 0.88);
-    --glass-border: rgba(255, 255, 255, 0.14);
-    --glass-border-subtle: rgba(167, 139, 250, 0.22);
-    --glass-highlight: rgba(255, 255, 255, 0.1);
-    --glass-shadow: 0 10px 42px rgba(0, 0, 0, 0.55), 0 2px 10px rgba(0, 0, 0, 0.3);
-    --glass-shadow-strong: 0 28px 90px rgba(0, 0, 0, 0.72), 0 6px 24px rgba(0, 0, 0, 0.42);
-    --glass-blur: 36px;
-    --glass-blur-strong: 56px;
-    --glass-glow: 0 0 0 1px rgba(255,255,255,0.1), inset 0 1px 0 rgba(255,255,255,0.12);
-    --ink-primary: #f8f5ff;
-    --ink-muted: #b0a8c9;
-    --accent-primary: #ffbf69;
-    --accent-secondary: #7dd3fc;
-    --accent-success: #4ade80;
-    --accent-warn: #fbbf24;
-    --accent-danger: #fb7185;
-    --accent-violet: #c084fc;
-    --accent-sky: #38bdf8;
+    --shadow-sm: 0 1px 2px hsl(0 0% 0% / 0.5);
+    --shadow-md: 0 4px 18px hsl(0 0% 0% / 0.6), 0 20px 60px hsl(0 0% 0% / 0.7);
+    --shadow-lg: 0 8px 36px hsl(0 0% 0% / 0.72), 0 30px 80px hsl(0 0% 0% / 0.82);
+
+    /* AMOLED Glass Design System */
+    --surface-base: #000000;
+    --surface-aurora-1: #050014;
+    --surface-aurora-2: #00101a;
+    --surface-aurora-3: #00131a;
+    --surface-aurora-4: #0a0012;
+    --surface-aurora-5: #08000f;
+    --glass-bg: rgba(0, 0, 0, 0.72);
+    --glass-bg-strong: rgba(0, 0, 0, 0.9);
+    --glass-border: rgba(255, 255, 255, 0.06);
+    --glass-border-subtle: rgba(0, 229, 255, 0.08);
+    --glass-highlight: rgba(255, 255, 255, 0.04);
+    --glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.75), 0 2px 8px rgba(0, 0, 0, 0.5);
+    --glass-shadow-strong: 0 28px 90px rgba(0, 0, 0, 0.86), 0 6px 24px rgba(0, 0, 0, 0.5);
+    --glass-blur: 28px;
+    --glass-blur-strong: 44px;
+    --glass-glow: 0 0 18px rgba(0,229,255,0.10), inset 0 1px 0 rgba(255,255,255,0.02);
+    --ink-primary: #e6f7ff;
+    --ink-muted: #98a0b3;
+    --accent-primary: hsl(var(--primary));
+    --accent-secondary: hsl(var(--info));
+    --accent-success: hsl(var(--success));
+    --accent-warn: hsl(var(--warning));
+    --accent-danger: hsl(var(--destructive));
+    --accent-violet: hsl(var(--chart-2));
+    --accent-sky: hsl(var(--chart-6));
   }
 
   :root[data-ui-style="classic"] {
@@ -314,9 +328,9 @@
 
   .bg-app {
     background-image:
-      radial-gradient(1200px circle at 6% 0%, rgba(192, 132, 252, 0.28), transparent 42%),
-      radial-gradient(1000px circle at 94% 8%, rgba(56, 189, 248, 0.26), transparent 38%),
-      radial-gradient(900px circle at 80% 90%, rgba(255, 191, 105, 0.2), transparent 42%),
+      radial-gradient(1200px circle at 6% 0%, hsl(var(--chart-2) / 0.22), transparent 42%),
+      radial-gradient(1000px circle at 94% 8%, hsl(var(--chart-6) / 0.2), transparent 38%),
+      radial-gradient(900px circle at 80% 90%, hsl(var(--chart-4) / 0.18), transparent 42%),
       linear-gradient(120deg, hsl(var(--background)) 0%, hsl(var(--background)) 38%, hsl(var(--card)) 100%);
   }
 

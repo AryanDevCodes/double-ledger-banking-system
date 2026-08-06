@@ -44,19 +44,19 @@ const TYPE_ICONS = {
 };
 
 const STATUS_COLORS = {
-  success: { bg: "bg-emerald-500/20", text: "text-emerald-400", border: "border-emerald-500/30" },
-  pending: { bg: "bg-amber-500/20", text: "text-amber-400", border: "border-amber-500/30" },
-  failed: { bg: "bg-rose-500/20", text: "text-rose-400", border: "border-rose-500/30" },
-  warning: { bg: "bg-orange-500/20", text: "text-orange-400", border: "border-orange-500/30" },
+  success: { bg: "bg-success/15", text: "text-success", border: "border-success/30" },
+  pending: { bg: "bg-warning/15", text: "text-warning", border: "border-warning/30" },
+  failed: { bg: "bg-destructive/15", text: "text-destructive", border: "border-destructive/30" },
+  warning: { bg: "bg-info/15", text: "text-info", border: "border-info/30" },
 };
 
 const TYPE_COLORS = {
-  transaction: "#22d3ee",
-  security: "#f43f5e",
-  account: "#a78bfa",
-  kyc: "#f59e0b",
-  system: "#10b981",
-  webhook: "#6366f1",
+  transaction: "hsl(var(--chart-1))",
+  security: "hsl(var(--chart-5))",
+  account: "hsl(var(--chart-2))",
+  kyc: "hsl(var(--chart-4))",
+  system: "hsl(var(--chart-3))",
+  webhook: "hsl(var(--chart-6))",
 };
 
 function formatTimestamp(timestamp: string): string {
@@ -97,7 +97,7 @@ function ActivityEventItem({
     >
       <div className="flex items-start gap-3">
         <div 
-          className="relative p-2 rounded-lg bg-white/5"
+          className="relative p-2 rounded-lg bg-muted/30"
           style={{ 
             boxShadow: `0 0 15px ${typeColor}30`,
           }}
@@ -105,7 +105,7 @@ function ActivityEventItem({
           <Icon className="w-4 h-4" style={{ color: typeColor }} />
           <div 
             className="absolute -top-1 -right-1 w-2 h-2 rounded-full pulse-live"
-            style={{ backgroundColor: statusColor.text.replace("text-", "") }}
+            style={{ backgroundColor: `hsl(var(--${event.status === 'success' ? 'success' : event.status === 'pending' ? 'warning' : event.status === 'failed' ? 'destructive' : 'info'}))` }}
           />
         </div>
         
@@ -160,13 +160,13 @@ export default function FuturisticActivityFeed({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <div className="relative">
-            <Activity className="w-4 h-4 text-cyan-400" />
-            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-cyan-400 rounded-full pulse-live" />
+              <Activity className="w-4 h-4 text-primary" />
+              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-primary rounded-full pulse-live" />
           </div>
           <h3 className="text-sm font-semibold">{title}</h3>
         </div>
         <span className="badge-futuristic badge-futuristic--info">
-          <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
+          <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
           Live
         </span>
       </div>
@@ -190,8 +190,8 @@ export default function FuturisticActivityFeed({
       </div>
 
       {events.length > maxEvents && (
-        <div className="mt-4 pt-4 border-t border-white/10">
-          <button className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors">
+        <div className="mt-4 pt-4 border-t border-border">
+          <button className="text-xs text-primary hover:text-primary/80 transition-colors">
             View all {events.length} events →
           </button>
         </div>

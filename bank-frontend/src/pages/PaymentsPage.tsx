@@ -562,7 +562,7 @@ export default function PaymentsPage() {
             <Card className="panel-luxe shadow-md">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5 text-blue-500" />
+                  <CreditCard className="h-5 w-5 text-primary" />
                   Bank Transfer
                 </CardTitle>
                 <CardDescription>Transfer between accounts</CardDescription>

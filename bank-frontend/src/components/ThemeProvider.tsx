@@ -1,10 +1,14 @@
+"use client";
+
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { useEffect } from "react";
 import type { ReactNode } from "react";
 
-interface ThemeProviderProps {
-  children: ReactNode;
-}
+/* ───────────────────────────────────────────
+   Theme Provider v2.0
+   Initializes UI style + accent from localStorage
+   before first paint to prevent flash.
+   ─────────────────────────────────────────── */
 
 type UiStyle = "modern" | "classic" | "solid";
 type Accent = "emerald" | "ocean" | "royal" | "ember" | "jade";
@@ -14,25 +18,33 @@ const UI_ACCENT_KEY = "ui-accent";
 
 function ThemeInitializer() {
   useEffect(() => {
+    const root = document.documentElement;
     try {
-      const style = (localStorage.getItem(UI_STYLE_KEY) as UiStyle | null) || "modern";
-      const accent = (localStorage.getItem(UI_ACCENT_KEY) as Accent | null) || "emerald";
-      const root = document.documentElement;
+      const style = (localStorage.getItem(UI_STYLE_KEY) as UiStyle | null) ?? "modern";
+      const accent = (localStorage.getItem(UI_ACCENT_KEY) as Accent | null) ?? "royal";
       root.setAttribute("data-ui-style", style);
       root.setAttribute("data-accent", accent);
     } catch {
-      const root = document.documentElement;
       root.setAttribute("data-ui-style", "modern");
-      root.setAttribute("data-accent", "emerald");
+      root.setAttribute("data-accent", "royal");
     }
   }, []);
 
   return null;
 }
 
+interface ThemeProviderProps {
+  children: ReactNode;
+}
+
 export function ThemeProvider({ children }: ThemeProviderProps) {
   return (
-    <NextThemesProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+    <NextThemesProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange={false}
+    >
       <ThemeInitializer />
       {children}
     </NextThemesProvider>

@@ -252,9 +252,9 @@ export default function Dashboard() {
                 {lastUpdated.toLocaleTimeString()}
               </div>
             )}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/30">
-              <Shield className="w-3 h-3 text-emerald-400" />
-              <span className="text-xs text-emerald-400 font-medium">Secure Session</span>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-success/20 border border-success/30">
+              <Shield className="w-3 h-3 text-success" />
+              <span className="text-xs text-success font-medium">Secure Session</span>
             </div>
             <Button variant="outline" size="sm" onClick={reload} disabled={loading}>
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
@@ -273,7 +273,7 @@ export default function Dashboard() {
             title="Spending Overview (6 Months)" 
             type="area" 
             height={320}
-            colors={["#10b981", "#22d3ee"]}
+            
           />
         </div>
         <FuturisticChart 
@@ -281,7 +281,7 @@ export default function Dashboard() {
           title="Spending by Category" 
           type="pie" 
           height={320}
-          colors={["#f43f5e", "#f59e0b", "#22d3ee", "#10b981", "#a78bfa"]}
+          
         />
       </div>
 
@@ -311,22 +311,22 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className="glass-card-futuristic p-5">
           <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-            <Activity className="w-4 h-4 text-emerald-400" />
+            <Activity className="w-4 h-4 text-success" />
             Account Summary
           </h3>
           <div className="space-y-4">
             {accounts.slice(0, 3).map((acc, i) => (
               <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-violet-500/20">
-                    <CreditCard className="w-4 h-4 text-violet-400" />
+                  <div className="p-2 rounded-lg bg-primary/20">
+                    <CreditCard className="w-4 h-4 text-primary" />
                   </div>
                   <div>
                     <p className="text-sm font-medium">{acc.bankName}</p>
                     <p className="text-xs text-muted-foreground font-mono">{acc.accountNumber?.slice(-4)}</p>
                   </div>
                 </div>
-                <span className="text-sm font-bold text-emerald-400">{formatCurrency(acc.balance)}</span>
+                <span className="text-sm font-bold text-success">{formatCurrency(acc.balance)}</span>
               </div>
             ))}
             {accounts.length === 0 && (
@@ -342,7 +342,7 @@ export default function Dashboard() {
         
         <div className="glass-card-futuristic p-5">
           <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-            <Smartphone className="w-4 h-4 text-cyan-400" />
+            <Smartphone className="w-4 h-4 text-primary" />
             UPI Profiles
           </h3>
           <div className="space-y-3">
@@ -350,7 +350,7 @@ export default function Dashboard() {
               <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-cyan-500/20">
-                    <Smartphone className="w-4 h-4 text-cyan-400" />
+                    <Smartphone className="w-4 h-4 text-primary" />
                   </div>
                   <div>
                     <p className="text-sm font-medium">{upi.upiId}</p>

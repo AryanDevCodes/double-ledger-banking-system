@@ -18,7 +18,6 @@
 [![Swagger UI](https://img.shields.io/badge/Swagger%20UI-Local-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)](http://localhost:8080/swagger-ui.html)
 
 </div>
-<img width="1536" height="885" alt="templte (1)" src="https://github.com/user-attachments/assets/b0b6733f-1715-4d90-a58d-f571e7f2d75b" />
 
 ---
 
@@ -79,14 +78,7 @@ This system avoids that by:
 - Persisting idempotency state before execution to prevent duplicate debits
 
 ---
-
-## 🎬 Demo
-
-- ▶️ **Live Demo:** https://aryandevcodes.github.io/Bank-Ledger-Payment-Engine/
-- 📄 **Local demo HTML:** [demo/index.html](demo/index.html)
-
-[![Watch the demo](https://img.youtube.com/vi/qOHr7ZWKY7E/0.jpg)](https://www.youtube.com/watch?v=qOHr7ZWKY7E)
-
+- ▶️ **Live at:** https://ledgerlypay.vercel.app
 ---
 
 ## 🗺️ Architecture Diagrams

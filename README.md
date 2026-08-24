@@ -14,7 +14,7 @@
 ![React](https://img.shields.io/badge/React-Frontend-61DAFB?logo=react&logoColor=black)
 ![Vite](https://img.shields.io/badge/Vite-Dev%20Server-646CFF?logo=vite&logoColor=white)
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Open-0ea5e9?style=for-the-badge)](https://aryandevcodes.github.io/Bank-Ledger-Payment-Engine/)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Open-0ea5e9?style=for-the-badge)](https://ledgerlypay.vercel.app)
 [![Swagger UI](https://img.shields.io/badge/Swagger%20UI-Local-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)](http://localhost:8080/swagger-ui.html)
 
 </div>
@@ -83,96 +83,13 @@ This system avoids that by:
 
 ## 🗺️ Architecture Diagrams
 
-> Diagram assets live in [demo/docs/](demo/docs).
-
 ### System Architecture
-
-```
-Client (Browser / Postman)
-        │
-        ▼
-  JWT Auth Filter  ←──  Spring Security (stateless)
-        │
-        ▼
-  REST Controllers  (20 controllers, 125+ endpoints)
-        │
-        ▼
-  Service Layer  (business logic, ownership checks)
-        │
-   ┌────┴────────────────────┐
-   ▼                         ▼
-Ledger Writer           UPI Resolver
-(double-entry)         (ownership validation)
-   │                         │
-   └────────────┬────────────┘
-                ▼
-        PostgreSQL (ACID)
-  ┌─────────────────────────────┐
-  │ accounts · transactions     │
-  │ ledger (append-only)        │
-  │ upi_profiles · upi_payment  │
-  │ audit_logs · access_logs    │
-  │ user_sessions · refresh_tokens │
-  │ notifications · cards · loans  │
-  └─────────────────────────────┘
-```
-
-![System Architecture](demo/docs/system-architecture-diagram.png)
-
+<img width="1390" height="1196" alt="image" src="https://github.com/user-attachments/assets/e85d81dc-0f18-4f35-b874-3ed55c17fa8f" />
 ### Database Relations (ERD)
-
-```
-Bank ──1:N──> Account ──M:1──> Customer ──M:1──> User
-                │
-                ├──1:N──> Transaction ──1:N──> Ledger
-                │
-                └──1:N──> UpiProfile ──1:N──> UpiPaymentOBJ
-                                                    │
-                                              Transaction (ref)
-```
-
-![Database Relation Diagram](demo/docs/database-relation-diagram.png)
-
-### Ledger Engine (double-entry)
-
-Every money movement creates exactly two ledger records:
-
-| Step | Entry | Account | Amount |
-|------|-------|---------|--------|
-| 1 | DEBIT | Sender | +X |
-| 2 | CREDIT | Receiver | +X |
-
-Balance = `SUM(CREDIT) - SUM(DEBIT)` from the ledger — never from a stored column.
-
-![Ledger Engine Diagram](demo/docs/ledger-engine-diagram.png)
+<img width="3218" height="5912" alt="Banking System ERD" src="https://github.com/user-attachments/assets/289088f7-4ee9-42fe-a5b2-7862c1e84e06" />
 
 ### Complete Payment Flow
-
-```
-Client → POST /upi/pay
-  ↓
-Validate input (amount > 0, fromUpi ≠ toUpi)
-  ↓
-Idempotency check (upi_payment_obj)
-  ├─ COMPLETED  →  return stored result (no double-debit)
-  ├─ FAILED     →  throw exception with stored failure reason
-  └─ INITIATED  →  persist PROCESSING state (iron-clad lock)
-                      ↓
-               Ownership validation (UpiResolver)
-                      ↓
-               Double-entry ledger write
-                      ↓
-               Update status → COMPLETED / FAILED
-                      ↓
-               Return TransactionResponseDTO
-```
-
-![Complete Payment Flow](demo/docs/complete-payment-flow.png)
-
-### Idempotency Flow
-
-![Idempotency Flow](demo/docs/idempotency-flow.png)
-
+<img width="5396" height="5148" alt="Complete Payment Flow" src="https://github.com/user-attachments/assets/055c41df-3811-41a2-83d1-1e7ebb15573a" />
 ---
 
 ## 🧰 Tech Stack

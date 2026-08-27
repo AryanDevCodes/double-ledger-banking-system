@@ -10,3 +10,4 @@ node_modules/
 bank-backend/src/main/resources/application.yml
 bank-backend/src/main/resources/application.yml
 bank-frontend/dist bank-frontend/node_modules
+.idea

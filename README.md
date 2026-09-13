@@ -1,21 +1,18 @@
-<div align="center">
-
 # 🏦 Double Ledger & Banking System
 
-**Full-stack banking system — double-entry ledger · UPI payments · refresh token rotation · audit logging · notifications · cards · loans · React dashboard**
+**Full-stack banking platform built with Spring Boot and React, focused on transaction correctness, double-entry accounting, concurrency safety, idempotent payments, security, and auditability.**
 
 ![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.10-6DB33F?logo=springboot&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-DB-4169E1?logo=postgresql&logoColor=white)
 ![Spring Security](https://img.shields.io/badge/Spring%20Security-Enabled-6DB33F?logo=springsecurity&logoColor=white)
 ![JWT](https://img.shields.io/badge/JWT-Auth-000000?logo=jsonwebtokens&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-Frontend-3178C6?logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React-Frontend-61DAFB?logo=react&logoColor=black)
 ![OpenAPI](https://img.shields.io/badge/Swagger%20%2F%20OpenAPI-Docs-85EA2D?logo=swagger&logoColor=black)
 ![Maven](https://img.shields.io/badge/Maven-Build-C71A36?logo=apachemaven&logoColor=white)
-![React](https://img.shields.io/badge/React-Frontend-61DAFB?logo=react&logoColor=black)
-![Vite](https://img.shields.io/badge/Vite-Dev%20Server-646CFF?logo=vite&logoColor=white)
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Open-0ea5e9?style=for-the-badge)](https://ledgerlypay.vercel.app)
-[![Swagger UI](https://img.shields.io/badge/Swagger%20UI-Local-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)](http://localhost:8080/swagger-ui.html)
 
 </div>
 
@@ -25,140 +22,359 @@
 
 - [What this project is](#-what-this-project-is)
 - [Why this system matters](#-why-this-system-matters)
-- [Demo](#-demo)
-- [Architecture Diagrams](#-architecture-diagrams)
+- [Core Engineering Problems](#-core-engineering-problems)
+- [Engineering Architecture & Design](#-engineering-architecture--design)
+  - [System Architecture](#1-system-architecture)
+  - [Authentication & RBAC](#2-authentication--rbac)
+  - [Transaction Processing](#3-transaction-processing)
+  - [Concurrency Control](#4-concurrency-control)
+  - [Idempotent Payments](#5-idempotent-payments)
+  - [Double-Entry Ledger](#6-double-entry-ledger)
+  - [Database Design](#7-database-design)
+  - [Deployment Architecture](#8-deployment-architecture)
 - [Tech Stack](#-tech-stack)
 - [Quick Start](#-quick-start)
 - [Roles & Access Control](#-roles--access-control)
 - [API Reference](#-api-reference)
-- [Authentication Module](#1-authentication-module--apiauthbase)
-- [Bank Management](#2-bank-management--bank)
-- [Customer Management](#3-customer-management--customer)
-- [Account Management](#4-account-management--account)
-- [Transaction Processing](#5-transaction-processing--transaction)
-- [UPI Payment System](#6-upi-payment-system--upi)
-- [QR Code Generation](#7-qr-code-generation--qr)
-- [Audit Logging](#8-audit-logging--audit)
-- [Security & Session Management](#9-security--session-management--security)
-- [Notifications](#10-notifications--apinotifications)
-- [Debit Cards](#11-debit-cards--apidebit-cards)
-- [Debit Card Requests](#12-debit-card-requests--apidebit-card-requests)
-- [Credit Cards & Plans](#13-credit-cards--plans--apicredit-cards--apicredit-plans)
-- [Loans & EMI](#14-loans--emi--apiloans--apiemis)
-- [Account Statements](#15-account-statements--apiaccountsaccountnumberstatement)
-- [Webhooks](#16-webhooks--apiwebhooks)
-- [Composite & Card Events](#17-composite--card-events--apicomposite--streamevents)
+  - [Authentication](#1-authentication-module--apiauth)
+  - [Bank Management](#2-bank-management--bank)
+  - [Customer Management](#3-customer-management--customer)
+  - [Account Management](#4-account-management--account)
+  - [Transaction Processing](#5-transaction-processing--transaction)
+  - [UPI Payment System](#6-upi-payment-system--upi)
+  - [QR Code Generation](#7-qr-code-generation--qr)
+  - [Audit Logging](#8-audit-logging--audit)
+  - [Security & Session Management](#9-security--session-management--security)
+  - [Notifications](#10-notifications--apinotifications)
+  - [Debit Cards](#11-debit-cards--apidebit-cards)
+  - [Debit Card Requests](#12-debit-card-requests--apidebit-card-requests)
+  - [Credit Cards & Plans](#13-credit-cards--plans--apicredit-cards--apicredit-plans)
+  - [Loans & EMI](#14-loans--emi--apiloans--apiemis)
+  - [Account Statements](#15-account-statements--apiaccountsaccountnumberstatement)
+  - [Webhooks](#16-webhooks--apiwebhooks)
+  - [Composite APIs & Card Events](#17-composite--card-events--apicomposite--streamevents)
 - [Ledger Architecture](#-ledger-architecture-double-entry)
 - [Security Design](#-security-design)
 - [Database Schema](#-database-schema)
 - [Frontend](#-frontend-react-dashboard)
+- [Engineering Highlights](#-engineering-highlights)
 - [Troubleshooting](#-troubleshooting)
-- [Extra Docs](#-extra-docs)
+- [Extra Documentation](#-extra-documentation)
 - [License](#-license)
 
 ---
 
 ## ✨ What this project is
 
-A production-grade **Spring Boot 3.5.10** banking backend paired with a **React + Vite** dashboard.  
-It models money movement using an **immutable double-entry ledger**, provides **idempotent UPI payments**, and wraps everything in a full **JWT-based auth system** with audit trails, session tracking, and role-based access for five distinct user roles.
+**Double Ledger** is a full-stack banking system built with **Java 21, Spring Boot, Spring Security, PostgreSQL, React, and TypeScript**.
 
-The security centrepiece is **full sender ownership validation**: even if someone knows an account number or UPI ID, they *cannot* initiate payments unless the authenticated JWT user truly owns the sender account.
+The system models financial operations using an **immutable double-entry ledger** rather than treating an account balance as the primary source of truth.
+
+It includes:
+
+- Double-entry financial ledger
+- Transaction processing
+- Idempotent UPI payments
+- JWT authentication
+- Refresh-token rotation
+- Role-based access control
+- Sender ownership validation
+- Pessimistic database locking
+- Deterministic account lock ordering
+- KYC and compliance checks
+- Audit logging
+- Session management
+- Security access logs
+- Notifications
+- Debit cards
+- Credit cards and credit plans
+- Loans and EMI schedules
+- QR code generation
+- Webhook subscriptions
+- Server-Sent Events for card events
+- CSV/PDF account statements
+- React role-based dashboards
+
+The project is intentionally designed around backend concerns such as **correctness, consistency, concurrency, security, and traceability**.
 
 ---
 
-## Why this system matters
+# 🎯 Why this system matters
 
-Storing balances directly can produce inconsistencies under concurrent updates, retries, and partial failures.  
-This system avoids that by:
+Financial systems cannot rely on simple balance updates such as:
 
-- Deriving balances exclusively from ledger entries (DEBIT / CREDIT)
-- Enforcing double-entry accounting on every money movement
-- Maintaining append-only ledger records for complete auditability
-- Persisting idempotency state before execution to prevent duplicate debits
+```text
+balance = balance - amount
+```
+
+because concurrent requests, retries, partial failures, and duplicate requests can produce inconsistent results.
+
+This system instead separates the concepts of:
+
+```text
+Transaction
+    ↓
+Ledger Entries
+    ↓
+Derived Account Balance
+```
+
+For every successful transfer:
+
+```text
+Alice → Bob ₹5,000
+
+Alice account
+    DEBIT   ₹5,000
+
+Bob account
+    CREDIT  ₹5,000
+```
+
+The implementation also protects money movement using:
+
+- Database transactions
+- Pessimistic locking
+- Deterministic lock ordering
+- Idempotency keys
+- Sender ownership validation
+- KYC validation
+- Append-oriented ledger entries
+- Unique database constraints
+- Audit trails
 
 ---
-- ▶️ **Live at:** https://ledgerlypay.vercel.app
+
+# 🧠 Core Engineering Problems
+
+The project focuses on solving several problems commonly found in transactional backend systems.
+
+### 1. Financial consistency
+
+Every transfer produces balanced debit and credit ledger entries.
+
+### 2. Duplicate requests
+
+UPI payments use persisted idempotency state so retrying the same request does not create another payment.
+
+### 3. Concurrent transfers
+
+Account rows are protected using pessimistic locking.
+
+### 4. Deadlock prevention
+
+When two accounts need to be locked, they are locked in deterministic ascending ID order.
+
+### 5. Authorization beyond authentication
+
+Knowing an account number or UPI ID is not enough.
+
+The authenticated user must actually own the sender account.
+
+### 6. Auditability
+
+Financial and security-related operations are recorded through audit and access logs.
+
+### 7. Token security
+
+Access tokens are short-lived and refresh tokens are rotated and stored in hashed form.
+
 ---
 
-## 🗺️ Architecture Diagrams
+# 🗺️ Engineering Architecture & Design
 
-### System Architecture
-<img width="1390" height="1196" alt="image" src="https://github.com/user-attachments/assets/e85d81dc-0f18-4f35-b874-3ed55c17fa8f" />
-### Database Relations (ERD)
-<img width="3218" height="5912" alt="Banking System ERD" src="https://github.com/user-attachments/assets/289088f7-4ee9-42fe-a5b2-7862c1e84e06" />
+The following diagrams explain the main architectural and backend design decisions of the system.
 
-### Complete Payment Flow
-<img width="5396" height="5148" alt="Complete Payment Flow" src="https://github.com/user-attachments/assets/055c41df-3811-41a2-83d1-1e7ebb15573a" />
 ---
 
-## 🧰 Tech Stack
+## 1. System Architecture
+<img width="1390" height="1196" alt="double-ledger-architecture" src="https://github.com/user-attachments/assets/c317a9fa-7241-4485-9040-eda1371a4533" />
 
-### Backend
+The backend separates API handling, business logic, persistence, security, and financial transaction processing.
+
+---
+
+## 2. Authentication & RBAC
+<img width="1647" height="1332" alt="double-ledger-authentication-jwt-rbac" src="https://github.com/user-attachments/assets/e50a7d58-027a-488c-a09a-8c1e5dce4073" />
+
+Authentication is implemented using **Spring Security and JWT**.
+Authorization is enforced at the endpoint/service boundary using method-level security.
+
+---
+
+## 3. Transaction Processing
+<img width="2197" height="2015" alt="double-ledger-transaction-flow" src="https://github.com/user-attachments/assets/8fc646f1-12b2-4e77-af54-bd2ff051001a" />
+
+The financial operation is executed inside a transactional boundary so the transaction state and ledger entries remain consistent.
+
+---
+
+## 4. Concurrency Control
+<img width="1008" height="901" alt="double-ledger-concurrency-locking" src="https://github.com/user-attachments/assets/d7496283-3dbb-41ae-8569-6dedbc59905e" />
+
+Concurrent transfers can attempt to update the same accounts at the same time.
+Both transactions therefore acquire locks in the same order.
+
+---
+
+## 5. Idempotent Payments
+<img width="1108" height="1134" alt="double-ledger-idempotency-flow" src="https://github.com/user-attachments/assets/6e19c877-461e-4a1e-85bf-cb73c8c12fbf" />
+
+If the same idempotency key is submitted again, the existing payment state is checked instead of blindly creating another financial operation.
+
+This protects against duplicate submissions and retry scenarios.
+
+---
+
+## 6. Double-Entry Ledger
+<img width="1973" height="1658" alt="double-ledger-ledger" src="https://github.com/user-attachments/assets/ee199225-8e6a-4c5a-884f-0c31f28bfe94" />
+
+
+Every successful money movement creates exactly two ledger entries.
+
+Both entries share the same transaction reference.
+
+This allows the system to maintain a complete financial trail and derive account balances from ledger activity.
+
+---
+
+## 7. Database Design
+
+<img width="3218" height="5912" alt="double-ledger-database-erd" src="https://github.com/user-attachments/assets/b2883957-e0bf-4eac-95c3-627c5b59f29f" />
+
+The PostgreSQL schema models the banking domain across users, customers, accounts, transactions, payments, cards, loans, security, and auditing.
+
+## 8. Deployment Architecture
+
+<img width="1827" height="1023" alt="double-ledger-deployment" src="https://github.com/user-attachments/assets/7e0fc7c6-643d-473a-aef1-a69d5caffa36" />
+
+The application is structured so the major components can be deployed independently:
+
+
+The frontend communicates with the backend through REST APIs, while the backend manages persistence and financial business logic.
+
+---
+
+# 🧰 Tech Stack
+
+## Backend
+
 | Technology | Version | Purpose |
 |---|---|---|
-| Java | 21 | Language |
-| Spring Boot | 3.5.10 | Framework |
-| Spring Security 6 | bundled | Auth & method security |
-| Spring Data JPA | bundled | ORM / repository layer |
+| Java | 21 | Backend language |
+| Spring Boot | 3.5.10 | Application framework |
+| Spring Security | 6.x | Authentication & authorization |
+| Spring Data JPA | Bundled | Persistence layer |
 | Hibernate | 6.6.x | JPA provider |
 | PostgreSQL | 15+ | Primary database |
 | JJWT | 0.12.6 | JWT generation & validation |
-| MapStruct | 1.6.3 | Type-safe DTO mapping |
-| SpringDoc OpenAPI | 2.7.0 | Swagger UI |
-| Spring Actuator | bundled | Health and metrics endpoints |
-| Spring Mail | bundled | Password reset email delivery |
-| Spring Cache + Redis | bundled | Optional caching layer |
-| OpenPDF | 1.3.30 | PDF statement export |
+| MapStruct | 1.6.3 | DTO mapping |
+| SpringDoc OpenAPI | 2.7.0 | API documentation |
+| Spring Actuator | Bundled | Health & metrics |
+| Spring Mail | Bundled | Password reset emails |
+| Spring Cache / Redis | Optional | Caching |
+| OpenPDF | 1.3.30 | PDF statement generation |
 | ZXing | 3.5.3 | QR code generation |
-| Lombok | bundled | Boilerplate reduction |
-| Jakarta Validation | bundled | Request validation |
+| Lombok | Bundled | Boilerplate reduction |
+| Jakarta Validation | Bundled | Request validation |
 
-### Frontend
+## Frontend
+
 | Technology | Purpose |
 |---|---|
-| React 18 + TypeScript | UI framework |
-| Vite | Dev server & bundler |
-| Tailwind CSS | Utility-first styling |
-| shadcn/ui + Radix UI | Component library |
-| Recharts | Charts & graphs |
+| React 18 | UI framework |
+| TypeScript | Type-safe frontend development |
+| Vite | Build tool and development server |
+| Tailwind CSS | Styling |
+| shadcn/ui | UI components |
+| Radix UI | Accessible primitives |
+| Recharts | Charts and analytics |
 | React Router v6 | Client-side routing |
-| Lucide React | Icon set |
+| Lucide React | Icons |
 
 ---
 
-## 🚀 Quick Start
+# 🚀 Quick Start
 
-### Prerequisites
+## Prerequisites
+
+Install:
 
 - Java 21
-- PostgreSQL 15+ running locally
+- PostgreSQL 15+
 - Node.js 18+
+- npm
+- Git
 
-### 1 — Configure the backend
+---
 
-Edit `src/main/resources/application.yml` with your PostgreSQL credentials.
+## 1. Clone the repository
 
-### 2 — Start Spring Boot (port 8080)
+```bash
+git clone <your-repository-url>
+cd <your-repository>
+```
+
+---
+
+## 2. Configure PostgreSQL
+
+Create a PostgreSQL database and configure the credentials in:
+
+```text
+src/main/resources/application.yml
+```
+
+Example:
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/double_ledger
+    username: postgres
+    password: your_password
+```
+
+Use your actual database configuration.
+
+---
+
+## 3. Start the Spring Boot backend
+
+### Windows
 
 ```powershell
-# Windows
 .\mvnw.cmd spring-boot:run
 ```
 
+### macOS / Linux
+
 ```bash
-# macOS / Linux
 ./mvnw spring-boot:run
 ```
 
-### 3 — Start the React frontend
+Backend:
+
+```text
+http://localhost:8080
+```
+
+---
+
+## 4. Start the React frontend
 
 ```bash
 cd bank-frontend
 npm install
 ```
 
-Create `bank-frontend/.env.local`:
+Create:
+
+```text
+bank-frontend/.env.local
+```
+
+Add:
 
 ```env
 VITE_API_BASE_URL=http://localhost:8080
@@ -166,76 +382,92 @@ VITE_ENABLE_AUDIT=true
 VITE_ENABLE_SECURITY=true
 ```
 
-> Set `VITE_ENABLE_AUDIT` / `VITE_ENABLE_SECURITY` to `false` if those backend modules are disabled.
+Then:
 
 ```bash
 npm run dev
 ```
 
-Frontend: `http://localhost:8081` (or `http://localhost:5173`)
+Frontend:
 
-### 4 — Swagger UI
+```text
+http://localhost:5173
+```
 
-- `http://localhost:8080/swagger-ui.html`
-- `http://localhost:8080/v3/api-docs`
-
----
-
-## 🔔 Recent Changes (2026-08-04)
-
-- Backend:
-  - Hardened production configuration and JPA transactional boundaries to avoid LazyInitialization issues in production.
-  - Enforced KYC checks: transactions now require KYC-verified sender and receiver; card request flows accept ACTIVE KYC states where appropriate.
-  - Adjusted controller authorization for card and credit-plan endpoints to align manager/admin roles.
-  - Added unit tests for KYC, authorization, and transaction rules (ran `./mvnw test`).
-
-- Frontend:
-  - Added a new public `HomePage` at `/` with an operational overview and primary actions.
-  - Centralized API error parsing in `src/lib/api-client.ts` (`getApiErrorMessage`, `getResponseErrorMessage`) so backend messages surface consistently in toasts.
-  - Replaced many ad-hoc error toasts across pages/hooks to use the shared error helpers.
-  - Built a production bundle and validated preview locally (`npm run build` then `npm run preview`).
-
-If you need the exact file/line changes or want me to open a PR with these commits, tell me and I'll push a branch and create the PR.
+Depending on the Vite configuration, the application may also use port `8081`.
 
 ---
 
-## 👥 Roles & Access Control
+## 5. Swagger / OpenAPI
 
-The system implements five roles enforced via `@PreAuthorize` on every endpoint:
+Swagger UI:
+
+```text
+http://localhost:8080/swagger-ui.html
+```
+
+OpenAPI JSON:
+
+```text
+http://localhost:8080/v3/api-docs
+```
+
+OpenAPI YAML:
+
+```text
+swagger-documentation/openapi.yaml
+```
+
+---
+
+# 👥 Roles & Access Control
+
+The system supports five roles.
 
 | Role | Description |
-|------|-------------|
-| `ROLE_ADMIN` | Full access — all endpoints including delete, sessions, actuator |
-| `ROLE_MANAGER` | Bank, customer, account, transaction, UPI management |
-| `ROLE_CUSTOMER_MANAGER` | Customer and account read/update; compliance updates |
-| `ROLE_AUDITOR` | Read-only access to all financial data + audit logs |
-| `ROLE_USER` | Own accounts, own transactions, UPI payments only |
+|---|---|
+| `ROLE_ADMIN` | Full system access |
+| `ROLE_MANAGER` | Banking, customer, account, transaction and UPI management |
+| `ROLE_CUSTOMER_MANAGER` | Customer/account management and compliance operations |
+| `ROLE_AUDITOR` | Read-only financial and audit access |
+| `ROLE_USER` | Own accounts, transactions and UPI payments |
 
-**Public endpoints** (no token required):
-- `POST /api/auth/login`
-- `POST /api/auth/forgot-password`
-- `POST /api/auth/reset-password`
-- `POST /api/auth/refresh`
-- `GET /swagger-ui/**`
-- `GET /v3/api-docs/**`
+Authorization is enforced using Spring Security method-level security.
+
+Example:
+
+```java
+@PreAuthorize("hasRole('ADMIN')")
+```
+
+or:
+
+```java
+@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+```
 
 ---
 
-## 📚 API Reference
+# 📚 API Reference
 
-### 1. Authentication Module — `/api/auth` (base)
+The application exposes REST APIs for authentication, banking, accounts, transactions, payments, cards, loans, auditing, security, and dashboard operations.
+
+---
+
+## 1. Authentication Module — `/api/auth`
 
 | Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| `POST` | `/api/auth/login` | Public | Authenticate and receive JWT access + refresh tokens. Sets `passwordChangeRequired` flag on first login. |
-| `POST` | `/api/auth/forgot-password` | Public | Request a password reset token (15-minute TTL). Response is generic; token delivered via email. |
-| `POST` | `/api/auth/reset-password` | Public | Consume reset token and set a new password (min 8 chars). Clears token on success. |
-| `GET` | `/api/auth/me` | Any authenticated | Returns enriched user profile: roles, KYC status, account count, total balance, UPI count, transaction count, and compliance counters (role-aware). |
-| `POST` | `/api/auth/change-password` | Any authenticated | Change password with current password verification. Bypassed on first login. |
-| `POST` | `/api/auth/refresh` | Public | Rotate refresh token and return new access + refresh tokens. |
-| `POST` | `/api/auth/logout` | Any authenticated | Records logout event in `access_logs` and terminates the active session record. |
+|---|---|---|---|
+| POST | `/api/auth/login` | Public | Authenticate and receive access + refresh tokens |
+| POST | `/api/auth/forgot-password` | Public | Request password reset |
+| POST | `/api/auth/reset-password` | Public | Reset password using reset token |
+| GET | `/api/auth/me` | Authenticated | Return current user profile and banking metrics |
+| POST | `/api/auth/change-password` | Authenticated | Change current password |
+| POST | `/api/auth/refresh` | Public | Rotate refresh token |
+| POST | `/api/auth/logout` | Authenticated | Logout and terminate active session |
 
-**`POST /api/auth/login` response fields:**
+### Login response
+
 ```json
 {
   "accessToken": "eyJ...",
@@ -251,92 +483,143 @@ The system implements five roles enforced via `@PreAuthorize` on every endpoint:
 }
 ```
 
-**`GET /api/auth/me` enriched response** (fields vary by role):
+### Enriched `/api/auth/me`
+
 ```json
 {
-  "id": 1, "username": "alice", "email": "alice@bank.com",
+  "id": 1,
+  "username": "alice",
+  "email": "alice@bank.com",
   "primaryRole": "ROLE_USER",
-  "customerId": "SBI_abc123", "kycStatus": "ACTIVE", "customerStatus": "ACTIVE",
-  "accountCount": 2, "totalBalance": 45000.00, "upiProfileCount": 1,
-  "transactionCount": 12,
-  "managedBankCount": 3,        // ADMIN/MANAGER/AUDITOR only
-  "pendingKycCount": 5,         // ADMIN/MANAGER/CUSTOMER_MANAGER only
-  "auditSuccessCount": 340,     // ADMIN/AUDITOR only
-  "failedLoginCount": 2         // ADMIN only
+  "customerId": "SBI_abc123",
+  "kycStatus": "ACTIVE",
+  "customerStatus": "ACTIVE",
+  "accountCount": 2,
+  "totalBalance": 45000.00,
+  "upiProfileCount": 1,
+  "transactionCount": 12
 }
+```
+
+Additional fields are returned based on the authenticated user's role.
+
+---
+
+## 2. Bank Management — `/bank`
+
+| Method | Endpoint | Roles | Description |
+|---|---|---|---|
+| GET | `/bank` | ADMIN, MANAGER, AUDITOR | List banks |
+| GET | `/bank/{id}` | ADMIN, MANAGER, AUDITOR | Get bank |
+| GET | `/bank/upi/{upiId}` | ADMIN, MANAGER, AUDITOR, USER | Find bank by UPI ID |
+| POST | `/bank/create` | ADMIN | Create bank |
+| PATCH | `/bank/{id}` | ADMIN | Update bank |
+| DELETE | `/bank/{id}` | ADMIN | Delete bank |
+
+Bank fields include:
+
+```text
+bankName
+branch
+ifscCode
+city
+state
+branchAddress
 ```
 
 ---
 
-### 2. Bank Management — `/bank`
+## 3. Customer Management — `/customer`
 
 | Method | Endpoint | Roles | Description |
-|--------|----------|-------|-------------|
-| `GET` | `/bank` | ADMIN, MANAGER, AUDITOR | List all banks |
-| `GET` | `/bank/{id}` | ADMIN, MANAGER, AUDITOR | Get bank by ID |
-| `GET` | `/bank/upi/{upiId}` | ADMIN, MANAGER, AUDITOR, USER | Find bank by UPI ID |
-| `POST` | `/bank/create` | ADMIN only | Create bank (auto-generates ID: `BANKNAME_xxxxx`) |
-| `PATCH` | `/bank/{id}` | ADMIN only | Update bank details |
-| `DELETE` | `/bank/{id}` | ADMIN only | Delete bank |
+|---|---|---|---|
+| GET | `/customer` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | List customers |
+| GET | `/customer/paginated` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | Paginated customers |
+| GET | `/customer/me` | Authenticated | Current customer |
+| GET | `/customer/email/{email}` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | Find customer |
+| GET | `/customer/search` | ADMIN, MANAGER, CUSTOMER_MANAGER | Search customers |
+| GET | `/customer/bank` | ADMIN, MANAGER, CUSTOMER_MANAGER | Customers by bank |
+| PATCH | `/customer/update` | ADMIN, CUSTOMER_MANAGER | Update customer |
+| DELETE | `/customer/delete` | ADMIN | Delete customer |
 
-**Bank fields:** `bankName`, `branch`, `ifscCode` (unique), `city`, `state`, `branchAddress`
+Customer data includes:
+
+```text
+fullName
+email
+phoneNumber
+address
+age
+kycStatus
+customerStatus
+```
 
 ---
 
-### 3. Customer Management — `/customer`
+## 4. Account Management — `/account`
 
 | Method | Endpoint | Roles | Description |
-|--------|----------|-------|-------------|
-| `GET` | `/customer` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | List all customers |
-| `GET` | `/customer/paginated` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | Paginated customer list |
-| `GET` | `/customer/me` | All authenticated | Get own customer profile (by JWT user ID) |
-| `GET` | `/customer/email/{email}` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | Get customer by email |
-| `GET` | `/customer/search?name=&bankName=` | ADMIN, MANAGER, CUSTOMER_MANAGER | Search by name and bank |
-| `GET` | `/customer/bank?bankName=` | ADMIN, MANAGER, CUSTOMER_MANAGER | List customers by bank |
-| `PATCH` | `/customer/update?name=&email=&phoneNumber=` | ADMIN, CUSTOMER_MANAGER | Update customer details |
-| `DELETE` | `/customer/delete?id=` | ADMIN only | Delete customer |
+|---|---|---|---|
+| GET | `/account` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | List accounts |
+| GET | `/account/paginated` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | Paginated accounts |
+| GET | `/account/my` | Authenticated | Own accounts |
+| GET | `/account/{id}` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | Account details |
+| GET | `/account/name/{bankName}` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | Accounts by bank |
+| GET | `/account/email/{email}` | ADMIN, MANAGER, CUSTOMER_MANAGER | Accounts by email |
+| GET | `/account/validate-receiver` | ADMIN, MANAGER, USER | Validate receiver |
+| GET | `/account/lookup-by-number` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | Lookup account |
+| GET | `/account/{accountNumber}/balance` | ADMIN, MANAGER, AUDITOR, USER | Ledger-derived balance |
+| POST | `/account/{bankName}` | ADMIN, MANAGER | Create account |
+| PATCH | `/account/{accNumber}` | ADMIN, MANAGER | Update account |
+| PATCH | `/account/{accNumber}/compliance` | ADMIN, MANAGER, CUSTOMER_MANAGER | Update compliance |
+| DELETE | `/account/{accNumber}` | ADMIN | Delete account |
 
-**Customer fields:** `fullName`, `email` (unique), `phoneNumber` (unique), `address`, `age`, `kycStatus`, `customerStatus`
+Account numbers are generated automatically.
+
+Example:
+
+```text
+ACC_SBI_xxxxx
+```
 
 ---
 
-### 4. Account Management — `/account`
+## 5. Transaction Processing — `/transaction`
 
 | Method | Endpoint | Roles | Description |
-|--------|----------|-------|-------------|
-| `GET` | `/account` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | List all accounts |
-| `GET` | `/account/paginated` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | Paginated account list |
-| `GET` | `/account/my` | All authenticated | Get own accounts (by JWT user ID) |
-| `GET` | `/account/{id}` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | Get account by ID |
-| `GET` | `/account/name/{bankName}` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | List accounts by bank |
-| `GET` | `/account/email/{email}` | ADMIN, MANAGER, CUSTOMER_MANAGER | List accounts by customer email |
-| `GET` | `/account/validate-receiver?accountNumber=&bankName=` | ADMIN, MANAGER, USER | Validate receiver account |
-| `GET` | `/account/lookup-by-number?accountNumber=` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | Lookup account by number |
-| `GET` | `/account/{accountNumber}/balance` | ADMIN, MANAGER, AUDITOR, USER | Ledger-derived balance |
-| `POST` | `/account/{bankName}` | ADMIN, MANAGER | Create account (auto-generates number: `ACC_BANKNAME_xxxxx`) |
-| `PATCH` | `/account/{accNumber}` | ADMIN, MANAGER | Update account details |
-| `PATCH` | `/account/{accNumber}/compliance` | ADMIN, MANAGER, CUSTOMER_MANAGER | Update `accountStatus`, `kycStatus`, `customerStatus` |
-| `DELETE` | `/account/{accNumber}` | ADMIN only | Delete account |
+|---|---|---|---|
+| GET | `/transaction/all` | ADMIN, MANAGER, AUDITOR | All transactions |
+| GET | `/transaction/all/paginated` | ADMIN, MANAGER, AUDITOR | Paginated transactions |
+| GET | `/transaction` | ADMIN, MANAGER, AUDITOR, USER | Filter transactions |
+| GET | `/transaction/my` | Authenticated | Own transactions |
+| GET | `/transaction/customer/{customerId}` | ADMIN, MANAGER, AUDITOR, CUSTOMER_MANAGER | Customer transactions |
+| GET | `/transaction/accounts/{id}/balance` | ADMIN, MANAGER, AUDITOR, USER | Ledger-derived balance |
+| POST | `/transaction` | USER | Transfer money |
+| POST | `/transaction/{transactionId}/reverse` | ADMIN, MANAGER | Reverse transaction |
+| GET | `/transaction/{transactionId}/receipt` | ADMIN, MANAGER, AUDITOR, USER | Transaction receipt |
 
----
+### Transaction states
 
-### 5. Transaction Processing — `/transaction`
+```text
+INITIATED
+    ↓
+PROCESSING
+    ↓
+COMPLETED
+```
 
-| Method | Endpoint | Roles | Description |
-|--------|----------|-------|-------------|
-| `GET` | `/transaction/all` | ADMIN, MANAGER, AUDITOR | Get all transactions (no filter) |
-| `GET` | `/transaction/all/paginated` | ADMIN, MANAGER, AUDITOR | Paginated transaction list |
-| `GET` | `/transaction?accountNumber=&email=` | ADMIN, MANAGER, AUDITOR, USER | Get transactions by account + email |
-| `GET` | `/transaction/my` | All authenticated | Get own transactions (by JWT user ID) |
-| `GET` | `/transaction/customer/{customerId}` | ADMIN, MANAGER, AUDITOR, CUSTOMER_MANAGER | Get all transactions for a customer |
-| `GET` | `/transaction/accounts/{id}/balance` | ADMIN, MANAGER, AUDITOR, USER | Get ledger-derived balance for an account |
-| `POST` | `/transaction` | **ROLE_USER only** | Initiate a money transfer (sender ownership enforced) |
-| `POST` | `/transaction/{transactionId}/reverse` | ADMIN, MANAGER | Reverse a completed transaction |
-| `GET` | `/transaction/{transactionId}/receipt` | ADMIN, MANAGER, AUDITOR, USER | Get transaction receipt details |
+or:
 
-**Transaction states:** `INITIATED → PROCESSING → COMPLETED / FAILED`
+```text
+INITIATED
+    ↓
+PROCESSING
+    ↓
+FAILED
+```
 
-**Transfer request:**
+### Transfer request
+
 ```json
 {
   "senderAccount": "ACC_SBI_xxxxx",
@@ -345,24 +628,27 @@ The system implements five roles enforced via `@PreAuthorize` on every endpoint:
 }
 ```
 
+The sender must own the source account.
+
 ---
 
-### 6. UPI Payment System — `/upi`
+## 6. UPI Payment System — `/upi`
 
 | Method | Endpoint | Roles | Description |
-|--------|----------|-------|-------------|
-| `POST` | `/upi/register` | ADMIN, MANAGER, USER | Register a UPI profile linked to an account |
-| `GET` | `/upi` | ADMIN, MANAGER, AUDITOR, USER | List all UPI profiles |
-| `GET` | `/upi/paginated` | ADMIN, MANAGER, AUDITOR, USER | Paginated UPI profiles |
-| `GET` | `/upi/my` | All authenticated | Get own UPI profiles (by JWT user ID) |
-| `GET` | `/upi/{upiId}` | ADMIN, MANAGER, AUDITOR, USER | Get UPI profile by UPI ID |
-| `GET` | `/upi/account/{accountNumber}` | ADMIN, MANAGER, USER | List UPI profiles for an account |
-| `PATCH` | `/upi/{upiId}/status?status=` | ADMIN, MANAGER, USER | Update UPI profile status (ACTIVE/INACTIVE) |
-| `PUT` | `/upi/{upiId}/toggle?enabled=` | ADMIN, MANAGER, USER | Toggle UPI profile enablement |
-| `DELETE` | `/upi/{upiId}` | **ADMIN only** | Soft-delete UPI profile |
-| `POST` | `/upi/pay` | **ROLE_USER only** | Execute idempotent UPI payment |
+|---|---|---|---|
+| POST | `/upi/register` | ADMIN, MANAGER, USER | Register UPI profile |
+| GET | `/upi` | ADMIN, MANAGER, AUDITOR, USER | List UPI profiles |
+| GET | `/upi/paginated` | ADMIN, MANAGER, AUDITOR, USER | Paginated profiles |
+| GET | `/upi/my` | Authenticated | Own UPI profiles |
+| GET | `/upi/{upiId}` | ADMIN, MANAGER, AUDITOR, USER | Get UPI profile |
+| GET | `/upi/account/{accountNumber}` | ADMIN, MANAGER, USER | Account UPI profiles |
+| PATCH | `/upi/{upiId}/status` | ADMIN, MANAGER, USER | Update status |
+| PUT | `/upi/{upiId}/toggle` | ADMIN, MANAGER, USER | Enable/disable |
+| DELETE | `/upi/{upiId}` | ADMIN | Soft delete |
+| POST | `/upi/pay` | USER | Execute UPI payment |
 
-**Idempotent payment request:**
+### UPI payment request
+
 ```json
 {
   "fromUpi": "alice@sbi",
@@ -372,390 +658,1027 @@ The system implements five roles enforced via `@PreAuthorize` on every endpoint:
 }
 ```
 
-**Payment execution states:** `INITIATED → PROCESSING → COMPLETED / FAILED`  
-Failure reason stored in `upi_payment_obj.failure_reason` for debugging and audit.
-
 ---
 
-### 7. QR Code Generation — `/qr`
+## 7. QR Code Generation — `/qr`
 
 | Method | Endpoint | Roles | Description |
-|--------|----------|-------|-------------|
-| `GET` | `/qr/generate?upiId=&name=&amount=&width=&height=` | ADMIN, MANAGER, USER | Generate UPI payment QR code (PNG). Format: `upi://pay?pa=...&pn=...&am=...&cu=INR` |
-| `GET` | `/qr/account?accountNumber=&bankName=&ifscCode=&width=&height=` | ADMIN, MANAGER, USER | Generate account details QR code (PNG) |
+|---|---|---|---|
+| GET | `/qr/generate` | ADMIN, MANAGER, USER | Generate UPI payment QR |
+| GET | `/qr/account` | ADMIN, MANAGER, USER | Generate account QR |
 
-Returns `image/png` bytes. Width/height default to 300×300.
+QR codes are generated using ZXing.
 
----
+UPI QR format:
 
-### 8. Audit Logging — `/audit`
-
-> Access restricted to `ROLE_ADMIN` and `ROLE_AUDITOR`.
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/audit/logs` | Paginated audit log query with filters |
-| `GET` | `/audit/logs/{id}` | Get single audit log entry by UUID |
-
-**Query parameters for `/audit/logs`:**
-
-| Param | Format | Description |
-|-------|--------|-------------|
-| `startDate` | `yyyy-MM-dd` or ISO datetime | Filter from date |
-| `endDate` | `yyyy-MM-dd` or ISO datetime | Filter to date |
-| `action` | `VIEW`, `CREATE`, `UPDATE`, `DELETE` | Filter by action type |
-| `userId` | string | Filter by user ID |
-| `resource` | string | Filter by resource type (e.g. `TRANSACTION`) |
-| `page` | integer (default 1) | Page number |
-| `size` | integer (default 25) | Page size |
-
-**Audit log entry fields:** `id` (UUID), `timestamp`, `userId`, `userName`, `action`, `resource`, `resourceId`, `details`, `ipAddress`, `userAgent`, `status` (SUCCESS / FAILED)
-
-**Automatic audit capture** — `AuditLoggingInterceptor` runs after every non-excluded HTTP request and automatically logs `VIEW/CREATE/UPDATE/DELETE` events. Excluded paths: `/audit`, `/security`, `/api/auth`, `/swagger-ui`, `/v3/api-docs`, `/actuator`.
-
-**Explicit audit events** captured in code: `LOGIN`, `LOGOUT`, `PASSWORD_RESET_REQUEST`, `PASSWORD_RESET`, `UPDATE` (password change).
-
----
-
-### 9. Security & Session Management — `/security`
-
-> All endpoints restricted to `ROLE_ADMIN`.
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/security/sessions` | List all active user sessions |
-| `DELETE` | `/security/sessions/{sessionId}` | Terminate a specific session by UUID |
-| `POST` | `/security/sessions/terminate-all` | Terminate all sessions (optionally exclude caller's own) |
-| `GET` | `/security/access-logs?startDate=&endDate=&eventType=` | Query access logs |
-
-**Session fields:** `id`, `tokenId`, `userId`, `userName`, `ipAddress`, `userAgent`, `createdAt`, `lastActivity`, `expiresAt`, `active`
-
-**Access log event types** (`AccessEventType`): `LOGIN_SUCCESS`, `FAILED_LOGIN`, `LOGOUT`, `PASSWORD_CHANGE`
-
-**Access log fields:** `id`, `timestamp`, `userId`, `userName`, `eventType`, `ipAddress`, `userAgent`, `location`, `success`
-
----
-
-### 10. Notifications — `/api/notifications`
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/notifications?page=&size=` | Paginated notifications for current user |
-| `GET` | `/api/notifications/unread` | List unread notifications |
-| `GET` | `/api/notifications/unread/count` | Count unread notifications |
-| `PUT` | `/api/notifications/{notificationId}/read` | Mark a notification as read |
-| `PUT` | `/api/notifications/read-all` | Mark all notifications as read |
-
-User ID is derived from the bearer token; users can only access their own notifications.
-
----
-
-### 11. Debit Cards — `/api/debit-cards`
-
-| Method | Endpoint | Roles | Description |
-|--------|----------|-------|-------------|
-| `GET` | `/api/debit-cards/account/{accountId}` | ADMIN, MANAGER, USER | Get cards by account ID |
-| `GET` | `/api/debit-cards/account-number/{accountNumber}` | ADMIN, MANAGER, USER | Get cards by account number |
-| `GET` | `/api/debit-cards/{cardId}` | ADMIN, MANAGER, USER | Get card by ID |
-| `PUT` | `/api/debit-cards/{cardId}/toggle-contactless?enabled=` | ADMIN, USER | Toggle contactless |
-| `PUT` | `/api/debit-cards/{cardId}/toggle-international?enabled=` | ADMIN, USER | Toggle international |
-| `PUT` | `/api/debit-cards/{cardId}/toggle-otp?enabled=` | ADMIN, USER | Toggle OTP verification |
-| `PUT` | `/api/debit-cards/{cardId}/limits` | ADMIN, USER | Update daily/monthly limits |
-| `PUT` | `/api/debit-cards/{cardId}/merchant-blocks` | ADMIN, USER | Update blocked merchant categories |
-| `POST` | `/api/debit-cards/{cardId}/freeze?reason=` | ADMIN, USER | Freeze card |
-| `POST` | `/api/debit-cards/{cardId}/unfreeze` | ADMIN, USER | Unfreeze card |
-| `POST` | `/api/debit-cards/{cardId}/replace` | ADMIN, USER | Request replacement |
-| `PUT` | `/api/debit-cards/{cardId}/block?reason=` | ADMIN, USER | Permanently block card |
-
----
-
-### 12. Debit Card Requests — `/api/debit-card-requests`
-
-| Method | Endpoint | Roles | Description |
-|--------|----------|-------|-------------|
-| `POST` | `/api/debit-card-requests` | USER | Create a debit card request |
-| `GET` | `/api/debit-card-requests/my` | USER | Current user's requests |
-| `GET` | `/api/debit-card-requests/pending` | ADMIN, MANAGER | Pending requests |
-| `GET` | `/api/debit-card-requests/approved` | ADMIN, MANAGER | Approved requests |
-| `GET` | `/api/debit-card-requests/issued` | ADMIN, MANAGER | Issued requests |
-| `POST` | `/api/debit-card-requests/{requestId}/approve` | ADMIN, MANAGER | Approve request |
-| `POST` | `/api/debit-card-requests/{requestId}/reject` | ADMIN, MANAGER | Reject request |
-| `POST` | `/api/debit-card-requests/{requestId}/issue` | ADMIN, MANAGER | Mark as issued |
-| `POST` | `/api/debit-card-requests/{requestId}/dispatch` | ADMIN, MANAGER | Mark as dispatched |
-| `POST` | `/api/debit-card-requests/{requestId}/deliver` | ADMIN, MANAGER | Mark as delivered |
-
----
-
-### 13. Credit Cards & Plans — `/api/credit-cards`, `/api/credit-plans`
-
-**Credit Cards**
-
-| Method | Endpoint | Roles | Description |
-|--------|----------|-------|-------------|
-| `GET` | `/api/credit-cards/account/{accountId}` | ADMIN, MANAGER, USER | Cards for account |
-| `GET` | `/api/credit-cards/account-number/{accountNumber}` | ADMIN, MANAGER, USER | Cards for account number |
-| `GET` | `/api/credit-cards/{cardId}` | ADMIN, MANAGER, USER | Get card by ID |
-| `PUT` | `/api/credit-cards/{cardId}/toggle-contactless?enabled=` | ADMIN, USER | Toggle contactless |
-| `PUT` | `/api/credit-cards/{cardId}/toggle-international?enabled=` | ADMIN, USER | Toggle international |
-| `PUT` | `/api/credit-cards/{cardId}/toggle-otp?enabled=` | ADMIN, USER | Toggle OTP verification |
-| `PUT` | `/api/credit-cards/{cardId}/limits` | ADMIN, USER | Update limits |
-| `PUT` | `/api/credit-cards/{cardId}/merchant-blocks` | ADMIN, USER | Update blocked merchant categories |
-| `POST` | `/api/credit-cards/{cardId}/freeze` | ADMIN, USER | Freeze card |
-| `POST` | `/api/credit-cards/{cardId}/unfreeze` | ADMIN, USER | Unfreeze card |
-| `POST` | `/api/credit-cards/{cardId}/replace` | ADMIN, USER | Request replacement |
-| `PUT` | `/api/credit-cards/{cardId}/block?reason=` | ADMIN, USER | Permanently block card |
-
-**Credit Plans**
-
-| Method | Endpoint | Roles | Description |
-|--------|----------|-------|-------------|
-| `GET` | `/api/credit-plans` | ADMIN, MANAGER, USER | List plans |
-| `GET` | `/api/credit-plans/all` | ADMIN, MANAGER | List all plans (admin/manager view) |
-| `POST` | `/api/credit-plans` | ADMIN, MANAGER | Create plan |
-| `PATCH` | `/api/credit-plans/{planId}` | ADMIN, MANAGER | Update plan |
-| `POST` | `/api/credit-plans/{planId}/assign/{cardId}` | ADMIN, MANAGER | Assign plan to card |
-
----
-
-### 14. Loans & EMI — `/api/loans`, `/api/emis`
-
-**Loans**
-
-| Method | Endpoint | Roles | Description |
-|--------|----------|-------|-------------|
-| `GET` | `/api/loans/customer/{customerId}` | ADMIN, MANAGER, USER | Loans for customer |
-| `GET` | `/api/loans/account/{accountId}` | ADMIN, MANAGER, USER | Loans for account |
-| `GET` | `/api/loans/{loanId}` | ADMIN, MANAGER, USER | Loan by ID |
-| `POST` | `/api/loans` | ADMIN, MANAGER | Create loan |
-
-**EMI**
-
-| Method | Endpoint | Roles | Description |
-|--------|----------|-------|-------------|
-| `GET` | `/api/emis/loan/{loanId}` | ADMIN, MANAGER, USER | EMI schedule for loan |
-| `GET` | `/api/emis/{emiId}` | ADMIN, MANAGER, USER | EMI details by ID |
-
----
-
-### 15. Account Statements — `/api/accounts/{accountNumber}/statement`
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| `GET` | `/api/accounts/{accountNumber}/statement?format=csv&from=&to=` | Any authenticated | Export statement as CSV or PDF |
-
----
-
-### 16. Webhooks — `/api/webhooks`
-
-| Method | Endpoint | Roles | Description |
-|--------|----------|-------|-------------|
-| `POST` | `/api/webhooks` | ADMIN, MANAGER | Register new webhook subscription |
-| `GET` | `/api/webhooks` | ADMIN, MANAGER, AUDITOR | List all subscriptions |
-| `DELETE` | `/api/webhooks/{id}` | ADMIN, MANAGER | Delete subscription |
-| `PATCH` | `/api/webhooks/{id}/active?active=` | ADMIN, MANAGER | Enable or disable subscription |
-
----
-
-### 17. Composite & Card Events — `/api/composite`, `/stream/events`
-
-**Composite**
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/composite/my/overview` | Aggregated dashboard overview |
-| `POST` | `/api/composite/transfer` | Composite transfer workflow |
-| `GET` | `/api/composite/customers/{customerId}/banking-profile` | Customer banking profile |
-| `GET` | `/api/composite/banks/{bankId}/operations-summary` | Bank operations summary |
-| `POST` | `/api/composite/accounts/balance-check` | Multi-account balance check |
-| `GET` | `/api/composite/transactions/advanced` | Advanced transaction search |
-| `GET` | `/api/composite/search/global` | Global search across entities |
-| `POST` | `/api/composite/accounts/{accountNumber}/freeze` | Freeze account |
-| `POST` | `/api/composite/customers/{customerId}/kyc-verify` | KYC verification action |
-
-**Card Events (SSE)**
-
-- `GET /stream/events` — Server-sent events stream; access token provided via query param `token`.
-
----
-
-## 🧾 Ledger Architecture (double-entry)
-
-Every transaction creates **exactly two** immutable ledger entries:
-
-```
-Transaction: Alice → Bob  ₹5,000
-
-Ledger entries:
-  account_id=Alice  DEBIT   ₹5,000  reference_id=TXN_001
-  account_id=Bob    CREDIT  ₹5,000  reference_id=TXN_001
+```text
+upi://pay?pa=...&pn=...&am=...&cu=INR
 ```
 
-**Balance derivation:**
+The API returns:
+
+```text
+image/png
+```
+
+---
+
+## 8. Audit Logging — `/audit`
+
+Access is restricted to:
+
+```text
+ROLE_ADMIN
+ROLE_AUDITOR
+```
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/audit/logs` | Paginated audit log query |
+| GET | `/audit/logs/{id}` | Get individual audit entry |
+
+Supported filters include:
+
+```text
+startDate
+endDate
+action
+userId
+resource
+page
+size
+```
+
+Audit actions:
+
+```text
+VIEW
+CREATE
+UPDATE
+DELETE
+```
+
+Additional explicit security events include:
+
+```text
+LOGIN
+LOGOUT
+PASSWORD_RESET_REQUEST
+PASSWORD_RESET
+PASSWORD_CHANGE
+```
+
+The `AuditLoggingInterceptor` automatically captures eligible HTTP activity.
+
+Excluded paths include:
+
+```text
+/audit
+/security
+/api/auth
+/swagger-ui
+/v3/api-docs
+/actuator
+```
+
+---
+
+## 9. Security & Session Management — `/security`
+
+All endpoints are restricted to:
+
+```text
+ROLE_ADMIN
+```
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/security/sessions` | List active sessions |
+| DELETE | `/security/sessions/{sessionId}` | Terminate session |
+| POST | `/security/sessions/terminate-all` | Terminate sessions |
+| GET | `/security/access-logs` | Query access logs |
+
+Session tracking includes:
+
+```text
+sessionId
+tokenId
+userId
+userName
+ipAddress
+userAgent
+createdAt
+lastActivity
+expiresAt
+active
+```
+
+Access events include:
+
+```text
+LOGIN_SUCCESS
+FAILED_LOGIN
+LOGOUT
+PASSWORD_CHANGE
+```
+
+---
+
+## 10. Notifications — `/api/notifications`
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/notifications` | Paginated notifications |
+| GET | `/api/notifications/unread` | Unread notifications |
+| GET | `/api/notifications/unread/count` | Unread count |
+| PUT | `/api/notifications/{notificationId}/read` | Mark as read |
+| PUT | `/api/notifications/read-all` | Mark all as read |
+
+Users can only access their own notifications.
+
+The user ID is derived from the authenticated JWT.
+
+---
+
+## 11. Debit Cards — `/api/debit-cards`
+
+| Method | Endpoint | Roles | Description |
+|---|---|---|---|
+| GET | `/api/debit-cards/account/{accountId}` | ADMIN, MANAGER, USER | Cards by account |
+| GET | `/api/debit-cards/account-number/{accountNumber}` | ADMIN, MANAGER, USER | Cards by account number |
+| GET | `/api/debit-cards/{cardId}` | ADMIN, MANAGER, USER | Card details |
+| PUT | `/api/debit-cards/{cardId}/toggle-contactless` | ADMIN, USER | Toggle contactless |
+| PUT | `/api/debit-cards/{cardId}/toggle-international` | ADMIN, USER | Toggle international |
+| PUT | `/api/debit-cards/{cardId}/toggle-otp` | ADMIN, USER | Toggle OTP |
+| PUT | `/api/debit-cards/{cardId}/limits` | ADMIN, USER | Update limits |
+| PUT | `/api/debit-cards/{cardId}/merchant-blocks` | ADMIN, USER | Merchant category controls |
+| POST | `/api/debit-cards/{cardId}/freeze` | ADMIN, USER | Freeze card |
+| POST | `/api/debit-cards/{cardId}/unfreeze` | ADMIN, USER | Unfreeze card |
+| POST | `/api/debit-cards/{cardId}/replace` | ADMIN, USER | Request replacement |
+| PUT | `/api/debit-cards/{cardId}/block` | ADMIN, USER | Permanently block |
+
+---
+
+## 12. Debit Card Requests — `/api/debit-card-requests`
+
+| Method | Endpoint | Roles | Description |
+|---|---|---|---|
+| POST | `/api/debit-card-requests` | USER | Create card request |
+| GET | `/api/debit-card-requests/my` | USER | Own requests |
+| GET | `/api/debit-card-requests/pending` | ADMIN, MANAGER | Pending requests |
+| GET | `/api/debit-card-requests/approved` | ADMIN, MANAGER | Approved requests |
+| GET | `/api/debit-card-requests/issued` | ADMIN, MANAGER | Issued requests |
+| POST | `/api/debit-card-requests/{requestId}/approve` | ADMIN, MANAGER | Approve |
+| POST | `/api/debit-card-requests/{requestId}/reject` | ADMIN, MANAGER | Reject |
+| POST | `/api/debit-card-requests/{requestId}/issue` | ADMIN, MANAGER | Issue |
+| POST | `/api/debit-card-requests/{requestId}/dispatch` | ADMIN, MANAGER | Dispatch |
+| POST | `/api/debit-card-requests/{requestId}/deliver` | ADMIN, MANAGER | Deliver |
+
+---
+
+## 13. Credit Cards & Plans
+
+### Credit Cards — `/api/credit-cards`
+
+| Method | Endpoint | Roles | Description |
+|---|---|---|---|
+| GET | `/api/credit-cards/account/{accountId}` | ADMIN, MANAGER, USER | Cards by account |
+| GET | `/api/credit-cards/account-number/{accountNumber}` | ADMIN, MANAGER, USER | Cards by account number |
+| GET | `/api/credit-cards/{cardId}` | ADMIN, MANAGER, USER | Card details |
+| PUT | `/api/credit-cards/{cardId}/toggle-contactless` | ADMIN, USER | Toggle contactless |
+| PUT | `/api/credit-cards/{cardId}/toggle-international` | ADMIN, USER | Toggle international |
+| PUT | `/api/credit-cards/{cardId}/toggle-otp` | ADMIN, USER | Toggle OTP |
+| PUT | `/api/credit-cards/{cardId}/limits` | ADMIN, USER | Update limits |
+| PUT | `/api/credit-cards/{cardId}/merchant-blocks` | ADMIN, USER | Merchant controls |
+| POST | `/api/credit-cards/{cardId}/freeze` | ADMIN, USER | Freeze |
+| POST | `/api/credit-cards/{cardId}/unfreeze` | ADMIN, USER | Unfreeze |
+| POST | `/api/credit-cards/{cardId}/replace` | ADMIN, USER | Replacement |
+| PUT | `/api/credit-cards/{cardId}/block` | ADMIN, USER | Permanent block |
+
+### Credit Plans — `/api/credit-plans`
+
+| Method | Endpoint | Roles | Description |
+|---|---|---|---|
+| GET | `/api/credit-plans` | ADMIN, MANAGER, USER | List plans |
+| GET | `/api/credit-plans/all` | ADMIN, MANAGER | Admin/manager plan view |
+| POST | `/api/credit-plans` | ADMIN, MANAGER | Create plan |
+| PATCH | `/api/credit-plans/{planId}` | ADMIN, MANAGER | Update plan |
+| POST | `/api/credit-plans/{planId}/assign/{cardId}` | ADMIN, MANAGER | Assign plan |
+
+---
+
+## 14. Loans & EMI
+
+### Loans — `/api/loans`
+
+| Method | Endpoint | Roles | Description |
+|---|---|---|---|
+| GET | `/api/loans/customer/{customerId}` | ADMIN, MANAGER, USER | Customer loans |
+| GET | `/api/loans/account/{accountId}` | ADMIN, MANAGER, USER | Account loans |
+| GET | `/api/loans/{loanId}` | ADMIN, MANAGER, USER | Loan details |
+| POST | `/api/loans` | ADMIN, MANAGER | Create loan |
+
+### EMI — `/api/emis`
+
+| Method | Endpoint | Roles | Description |
+|---|---|---|---|
+| GET | `/api/emis/loan/{loanId}` | ADMIN, MANAGER, USER | EMI schedule |
+| GET | `/api/emis/{emiId}` | ADMIN, MANAGER, USER | EMI details |
+
+---
+
+## 15. Account Statements
+
+Endpoint:
+
+```text
+GET /api/accounts/{accountNumber}/statement
+```
+
+Supports:
+
+```text
+format=csv
+format=pdf
+from=
+to=
+```
+
+Example:
+
+```text
+GET /api/accounts/ACC_SBI_xxxxx/statement?format=pdf
+```
+
+Statements are generated from account transaction / ledger information.
+
+---
+
+## 16. Webhooks — `/api/webhooks`
+
+| Method | Endpoint | Roles | Description |
+|---|---|---|---|
+| POST | `/api/webhooks` | ADMIN, MANAGER | Register webhook |
+| GET | `/api/webhooks` | ADMIN, MANAGER, AUDITOR | List subscriptions |
+| DELETE | `/api/webhooks/{id}` | ADMIN, MANAGER | Delete subscription |
+| PATCH | `/api/webhooks/{id}/active` | ADMIN, MANAGER | Enable/disable |
+
+Webhook subscriptions contain configuration such as:
+
+```text
+url
+secret
+eventTypes
+active
+```
+
+---
+
+## 17. Composite APIs & Card Events
+
+### Composite APIs — `/api/composite`
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/composite/my/overview` | Aggregated dashboard overview |
+| POST | `/api/composite/transfer` | Composite transfer workflow |
+| GET | `/api/composite/customers/{customerId}/banking-profile` | Banking profile |
+| GET | `/api/composite/banks/{bankId}/operations-summary` | Bank operations summary |
+| POST | `/api/composite/accounts/balance-check` | Multi-account balance check |
+| GET | `/api/composite/transactions/advanced` | Advanced transaction search |
+| GET | `/api/composite/search/global` | Global entity search |
+| POST | `/api/composite/accounts/{accountNumber}/freeze` | Freeze account |
+| POST | `/api/composite/customers/{customerId}/kyc-verify` | KYC verification |
+
+### Server-Sent Events
+
+```text
+GET /stream/events
+```
+
+The endpoint provides real-time card-related events using **Server-Sent Events (SSE)**.
+
+---
+
+# 🧾 Ledger Architecture — Double Entry
+
+The ledger is the core financial component of the system.
+
+Every successful transaction produces two entries:
+
+```text
+Transaction
+     │
+     ├───────────────┐
+     ▼               ▼
+  DEBIT            CREDIT
+     │               │
+  Sender           Receiver
+```
+
+Example:
+
+```text
+Transaction: TXN_001
+
+Alice Account
+    DEBIT    ₹5,000
+
+Bob Account
+    CREDIT   ₹5,000
+```
+
+Both entries reference the same transaction.
+
+---
+
+## Balance derivation
+
+Balances are derived from ledger entries:
+
 ```sql
-SELECT COALESCE(SUM(
-  CASE
-    WHEN entry_type = 'CREDIT' THEN amount
-    WHEN entry_type = 'DEBIT'  THEN -amount
-  END
-), 0) FROM ledger WHERE account_id = :accountId;
+SELECT COALESCE(
+    SUM(
+        CASE
+            WHEN entry_type = 'CREDIT' THEN amount
+            WHEN entry_type = 'DEBIT' THEN -amount
+        END
+    ),
+    0
+)
+FROM ledger
+WHERE account_id = :accountId;
 ```
 
-**Unique constraint** `uk_ledger_entry (reference_id, account_id, entry_type)` prevents duplicate entries.
+Conceptually:
+
+```text
+Balance = Total Credits - Total Debits
+```
 
 ---
 
-## 🛡️ Security Design
+## Duplicate ledger protection
 
-### JWT Authentication
-- Stateless JWT (Spring Security 6 + JJWT 0.12.6)
-- Every protected request must include `Authorization: Bearer <token>`
-- Token TTL: 24 hours; refresh token also issued at login
-- Refresh tokens are hashed in `refresh_tokens`; rotation revokes reuse and the token family
-- `@EnableMethodSecurity(prePostEnabled = true)` — fine-grained `@PreAuthorize` on every endpoint
+A unique constraint is used to prevent duplicate entries:
 
-### Sender Ownership Enforcement (IDOR prevention)
-- `POST /transaction` — `TransactionServiceIMPL` verifies the authenticated principal owns the sender account
-- `POST /upi/pay` — `UpiResolver.resolveAndVerifyOwnership()` checks `JWT username → Customer → User.username` chain
-- Throws HTTP 403 on mismatch
+```text
+uk_ledger_entry
+(reference_id, account_id, entry_type)
+```
 
-### Password Security
-- BCrypt password hashing
-- First-login flow: password change required flag set, skips current-password check
-- Forgot-password: cryptographically random 32-byte token (Base64Url encoded), 15-minute TTL
-- Reset token cleared from DB on use or expiry
-
-### CORS
-Allowed origins (configurable): `http://localhost:8081`, `http://localhost:5173`, `http://localhost:3000`
-
-### Concurrency Safety
-- Pessimistic write lock (`PESSIMISTIC_WRITE`) on accounts during transactions
-- Deterministic lock ordering (ascending account ID) to prevent deadlocks
-- `@Transactional` boundaries ensure atomic ledger + status updates
+This provides an additional database-level consistency guarantee.
 
 ---
 
-## 🗄️ Database Schema
+# 🛡️ Security Design
 
-### Tables (22+)
+## JWT Authentication
+
+The application uses:
+
+```text
+Spring Security
+        +
+JWT
+        +
+Refresh Token Rotation
+```
+
+Protected requests use:
+
+```http
+Authorization: Bearer <access-token>
+```
+
+---
+
+## Refresh Token Security
+
+Refresh tokens are:
+
+- Stored as hashes
+- Rotated after use
+- Associated with token metadata
+- Revoked when reused
+- Managed as a token family
+
+This prevents a previously used refresh token from being continuously reused.
+
+---
+
+## Sender Ownership Validation
+
+Authentication alone is not considered sufficient for financial operations.
+
+For:
+
+```text
+POST /transaction
+```
+
+the service verifies:
+
+```text
+JWT User
+    ↓
+Customer
+    ↓
+Owned Account
+    ↓
+Sender Account
+```
+
+If the sender account does not belong to the authenticated user:
+
+```text
+HTTP 403 Forbidden
+```
+
+The UPI payment flow applies the same ownership concept through UPI-to-account resolution.
+
+---
+
+## Password Security
+
+Passwords are protected using BCrypt.
+
+Password reset flow:
+
+```text
+Forgot Password
+       ↓
+Generate random reset token
+       ↓
+Store token + expiry
+       ↓
+Send reset link
+       ↓
+Validate token
+       ↓
+Update password
+       ↓
+Clear token
+```
+
+Reset tokens have a limited lifetime.
+
+---
+
+## CORS
+
+Configurable development origins include:
+
+```text
+http://localhost:8081
+http://localhost:5173
+http://localhost:3000
+```
+
+---
+
+# 🔐 Concurrency Safety
+
+The transaction layer uses database-level locking.
+
+### Pessimistic locking
+
+Accounts involved in a transfer are locked before balance-sensitive operations.
+
+Conceptually:
+
+```text
+Transfer A → B
+
+Lock A
+Lock B
+   ↓
+Validate balance
+   ↓
+Create transaction
+   ↓
+Create ledger entries
+   ↓
+Commit
+```
+
+### Deterministic locking
+
+When two accounts are involved:
+
+```text
+accountId 10
+accountId 25
+```
+
+the system locks:
+
+```text
+10 → 25
+```
+
+regardless of transfer direction.
+
+Therefore:
+
+```text
+A → B
+B → A
+```
+
+both follow the same lock acquisition order.
+
+---
+
+# 🗄️ Database Schema
+
+The database contains the core banking and supporting infrastructure tables.
+
+## Main tables
 
 | Table | Description |
-|-------|-------------|
-| `users` | Auth users with roles, avatar URL, reset token fields |
-| `roles` | Five roles: ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR, USER |
-| `user_roles` | Join table for user-role many-to-many |
+|---|---|
+| `users` | Authentication users |
+| `roles` | Application roles |
+| `user_roles` | User-role relationship |
 | `banks` | Bank master data |
-| `customers` | Customer profiles linked to users |
-| `accounts` | Bank accounts linked to customers and banks |
-| `transactions` | Transaction records with denormalised snapshot fields |
-| `ledger` | Append-only double-entry financial ledger |
-| `upi_profiles` | UPI ID registrations linked to accounts |
-| `upi_payment_obj` | UPI payment intents with idempotency key + failure reason |
-| `audit_logs` | Auto-captured API activity log |
-| `access_logs` | Security access events (login, logout, password change) |
-| `user_sessions` | Active JWT session tracking |
-| `refresh_tokens` | Hashed refresh token records with rotation metadata |
-| `notifications` | Per-user notification records |
-| `debit_cards` | Debit cards with limits and controls |
-| `debit_card_requests` | Physical debit card requests |
-| `credit_cards` | Credit cards linked to accounts and plans |
+| `customers` | Customer profiles |
+| `accounts` | Customer bank accounts |
+| `transactions` | Financial transactions |
+| `ledger` | Double-entry financial ledger |
+| `upi_profiles` | UPI identifiers |
+| `upi_payment_obj` | UPI payment intents and idempotency |
+| `audit_logs` | Application audit events |
+| `access_logs` | Security access events |
+| `user_sessions` | Active session tracking |
+| `refresh_tokens` | Refresh token metadata |
+| `notifications` | User notifications |
+| `debit_cards` | Debit cards |
+| `debit_card_requests` | Card issuance requests |
+| `credit_cards` | Credit cards |
 | `credit_plans` | Credit plan definitions |
 | `loans` | Loan records |
-| `emis` | EMI schedule rows |
+| `emis` | EMI schedule |
 | `webhook_subscriptions` | Outbound webhook registrations |
 
-### Key Indexes
+---
 
-```sql
-idx_ledger_account_id          -- ledger(account_id)
-idx_ledger_reference_id        -- ledger(reference_id)
-idx_upi_payment_key            -- upi_payment_obj(idempotency_key)
-idx_upi_payment_status         -- upi_payment_obj(status)
-idx_transactions_date          -- transactions(transaction_date DESC)
-idx_audit_logs_timestamp       -- audit_logs(timestamp)
-idx_audit_logs_action          -- audit_logs(action)
-idx_audit_logs_user_id         -- audit_logs(user_id)
-idx_audit_logs_resource        -- audit_logs(resource)
-idx_access_logs_timestamp      -- access_logs(timestamp)
-idx_access_logs_event_type     -- access_logs(event_type)
-idx_access_logs_user_id        -- access_logs(user_id)
-idx_user_sessions_token_id     -- user_sessions(token_id) UNIQUE
-idx_user_sessions_active       -- user_sessions(is_active)
-idx_user_sessions_user_id      -- user_sessions(user_id)
+## Key database relationships
+
+```text
+users
+  │
+  ├── user_roles ── roles
+  │
+  └── customers
+          │
+          └── accounts
+                 │
+                 ├── transactions
+                 │
+                 ├── ledger
+                 │
+                 ├── upi_profiles
+                 │
+                 ├── debit_cards
+                 │
+                 ├── credit_cards
+                 │      │
+                 │      └── credit_plans
+                 │
+                 └── loans
+                        │
+                        └── emis
+```
+
+Security-related data is maintained separately:
+
+```text
+users
+  │
+  ├── refresh_tokens
+  ├── user_sessions
+  ├── access_logs
+  ├── audit_logs
+  └── notifications
 ```
 
 ---
 
-## 🖥️ Frontend (React Dashboard)
+## Important indexes
 
-Frontend lives in `bank-frontend/` (React 18 + TypeScript + Vite).
+```text
+idx_ledger_account_id
+idx_ledger_reference_id
 
-### Pages
+idx_upi_payment_key
+idx_upi_payment_status
+
+idx_transactions_date
+
+idx_audit_logs_timestamp
+idx_audit_logs_action
+idx_audit_logs_user_id
+idx_audit_logs_resource
+
+idx_access_logs_timestamp
+idx_access_logs_event_type
+idx_access_logs_user_id
+
+idx_user_sessions_token_id
+idx_user_sessions_active
+idx_user_sessions_user_id
+```
+
+These indexes support common lookup, transaction, auditing, and session-management operations.
+
+---
+
+# 🖥️ Frontend — React Dashboard
+
+The frontend is located in:
+
+```text
+bank-frontend/
+```
+
+Technology:
+
+```text
+React 18
+TypeScript
+Vite
+Tailwind CSS
+shadcn/ui
+Radix UI
+Recharts
+React Router
+Lucide React
+```
+
+---
+
+## Pages
 
 | Route | Component | Access |
-|-------|-----------|--------|
-| `/` | `Index.tsx` | Redirect to login/dashboard |
+|---|---|---|
+| `/` | `Index.tsx` | Public / redirect |
 | `/login` | `LoginPage.tsx` | Public |
 | `/register` | `RegisterPage.tsx` | Public |
 | `/forgot-password` | `ForgotPasswordPage.tsx` | Public |
-| `/set-password` | `SetPasswordPage.tsx` | Public (token flow) |
-| `/dashboard` | `Dashboard.tsx` | All authenticated |
+| `/set-password` | `SetPasswordPage.tsx` | Public |
+| `/dashboard` | `Dashboard.tsx` | Authenticated |
 | `/banks` | `BanksPage.tsx` | ADMIN, MANAGER, AUDITOR |
 | `/customers` | `CustomersPage.tsx` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR |
-| `/accounts` | `AccountsPage.tsx` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR, USER |
-| `/transactions` | `TransactionsPage.tsx` | All authenticated |
-| `/payments` | `PaymentsPage.tsx` | All authenticated |
-| `/upi` | `UpiPage.tsx` | All authenticated |
+| `/accounts` | `AccountsPage.tsx` | Authenticated |
+| `/transactions` | `TransactionsPage.tsx` | Authenticated |
+| `/payments` | `PaymentsPage.tsx` | Authenticated |
+| `/upi` | `UpiPage.tsx` | Authenticated |
 | `/audit-logs` | `AuditLogsPage.tsx` | ADMIN, AUDITOR |
 | `/security` | `SecurityPage.tsx` | ADMIN |
-| `/profile` | `ProfilePage.tsx` | All authenticated |
+| `/profile` | `ProfilePage.tsx` | Authenticated |
 
-### Key Frontend Features
+---
 
-- **Role-based routing** — `ProtectedRoute` + `PermissionGate` components gate pages and UI sections by role
-- **Role-based dashboards** — separate views for Admin, Manager, Customer Manager, Auditor, User
-- **Global Command Palette** (`Ctrl+K`) — `GlobalCommandPalette.tsx` for quick navigation
-- **Dashboard charts** — area chart (transaction volume trend), pie chart (status distribution), bar chart (bank distribution) via Recharts
-- **`/api/auth/me` enriched profile** — single request drives the entire profile page (identity, banking metrics, compliance counters)
-- **QR code viewer** — `QRCodeGenerator.tsx` renders UPI and account QR codes inline
-- **Password flow** — forgot-password and set-password pages with token-based reset
-- **Audit log table** — filterable, paginated log viewer
-- **Security screen** — session list with terminate controls + access log viewer
-- **Feature flags** — `VITE_ENABLE_AUDIT` and `VITE_ENABLE_SECURITY` toggle audit/security modules without code changes
-- **Theme toggle** — light/dark mode via `ThemeProvider`
-- **Responsive sidebar** — collapsible `AppSidebar` with role-filtered navigation items
-- **Compliance card** — `ComplianceCard.tsx` shows KYC and compliance summary
+## Frontend features
 
-### Frontend Scripts
+### Role-based routing
 
-```bash
-cd bank-frontend
-npm run dev       # dev server (localhost:5173)
-npm run build     # production build
-npm run preview   # preview production build
-npm run test      # run tests
+```text
+ProtectedRoute
+      ↓
+PermissionGate
+      ↓
+Role-specific UI
+```
+
+Pages and UI sections are conditionally displayed based on the authenticated user's role.
+
+---
+
+### Role-based dashboards
+
+Different roles receive different dashboard views:
+
+```text
+ADMIN
+MANAGER
+CUSTOMER_MANAGER
+AUDITOR
+USER
 ```
 
 ---
 
-## 🧯 Troubleshooting
+### Global Command Palette
 
-- **Frontend shows empty data** → confirm backend is running and `VITE_API_BASE_URL` is set correctly
-- **Port conflicts** → frontend defaults to `:5173` (Vite) or `:8081`; backend uses `:8080`
-- **Database connection fails** → verify PostgreSQL is up and `application.yml` credentials are correct
-- **JWT 401 errors** → token expired (24h TTL) — log in again
-- **Idempotency key conflicts** → use a fresh unique key per new payment attempt
-- **Deadlocks (should not occur)** → deterministic account locking is implemented; check that `lockAccountsInOrder()` is not bypassed
+The dashboard includes:
 
----
+```text
+Ctrl + K
+```
 
-## 📎 Extra Docs
-
-- Full project report: [PROJECT_REPORT.md](PROJECT_REPORT.md)
-- Swagger spec (YAML): [swagger-documentation/openapi.yaml](swagger-documentation/openapi.yaml)
-- Swagger spec (JSON): [swagger-documentation/openapi.json](swagger-documentation/openapi.json)
+for quick navigation through the application.
 
 ---
 
-## 📄 License
+### Dashboard analytics
 
-[MIT](LICENSE)
+The dashboard uses Recharts for:
+
+- Transaction volume
+- Status distribution
+- Bank distribution
+- Other operational metrics
+
+---
+
+### QR Code viewer
+
+UPI and account QR codes can be generated by the backend and displayed directly inside the React dashboard.
+
+---
+
+### Security screens
+
+Administrators can view:
+
+- Active sessions
+- Session metadata
+- Access logs
+- Login failures
+- Password-change events
+
+and terminate sessions when required.
+
+---
+
+### Feature flags
+
+Audit and security modules can be toggled using:
+
+```env
+VITE_ENABLE_AUDIT=true
+VITE_ENABLE_SECURITY=true
+```
+
+---
+
+### Theme support
+
+The dashboard supports:
+
+```text
+Light Mode
+Dark Mode
+```
+
+---
+
+# ⭐ Engineering Highlights
+
+The most important engineering decisions in this project are:
+
+### Double-entry accounting
+
+```text
+One transaction
+      ↓
+Debit + Credit
+      ↓
+Balanced ledger
+```
+
+### Idempotency
+
+```text
+Same request
+     ↓
+Same idempotency key
+     ↓
+Existing payment state
+     ↓
+No duplicate financial operation
+```
+
+### Concurrency control
+
+```text
+Concurrent requests
+       ↓
+Pessimistic locks
+       ↓
+Deterministic lock ordering
+       ↓
+Safer account updates
+```
+
+### Ownership enforcement
+
+```text
+JWT identity
+     ↓
+Customer
+     ↓
+Account ownership
+     ↓
+Financial operation
+```
+
+### Auditability
+
+```text
+API operation
+     ↓
+Audit interceptor
+     ↓
+Audit log
+     ↓
+Traceable activity
+```
+
+### Token rotation
+
+```text
+Access Token
+      +
+Refresh Token
+      ↓
+Refresh
+      ↓
+New Access Token
+      +
+New Refresh Token
+      ↓
+Previous Refresh Token revoked
+```
+
+---
+
+# 🧪 Testing
+
+The backend includes unit tests covering important business and security rules, including:
+
+- KYC validation
+- Authorization
+- Transaction rules
+- Ownership validation
+- Security-related behavior
+
+Run tests using:
+
+```bash
+./mvnw test
+```
+
+Windows:
+
+```powershell
+.\mvnw.cmd test
+```
+
+---
+
+# 🧯 Troubleshooting
+
+## Frontend shows empty data
+
+Verify:
+
+```env
+VITE_API_BASE_URL=http://localhost:8080
+```
+
+and make sure the Spring Boot backend is running.
+
+---
+
+## Port conflict
+
+Default ports:
+
+```text
+Backend  → 8080
+Frontend → 5173
+```
+
+Depending on configuration, the frontend may use:
+
+```text
+8081
+```
+
+---
+
+## Database connection failure
+
+Check:
+
+```text
+PostgreSQL is running
+Database exists
+Username is correct
+Password is correct
+application.yml is configured correctly
+```
+
+---
+
+## JWT 401 error
+
+The access token may have expired.
+
+Log in again or use the refresh-token flow.
+
+---
+
+## Idempotency key conflict
+
+Use a new unique idempotency key for a new payment attempt.
+
+Do not reuse an existing key for a completely different payment.
+
+---
+
+## Deadlock troubleshooting
+
+The transaction layer uses deterministic account locking.
+
+If investigating a locking problem, verify that account locking continues to use the intended ordered locking path.
+
+---
+
+# 📎 Extra Documentation
+
+Additional project documentation is available in the repository:
+
+- [`PROJECT_REPORT.md`](PROJECT_REPORT.md)
+- [`swagger-documentation/openapi.yaml`](swagger-documentation/openapi.yaml)
+- [`swagger-documentation/openapi.json`](swagger-documentation/openapi.json)
+
+---
+
+# 🌐 Live Demo
+
+The frontend is deployed at:
+
+```text
+https://ledgerlypay.vercel.app
+```
+
+> **Note:** The live deployment demonstrates the frontend experience. Local development is recommended when exploring the complete backend, database, Swagger API, and transaction-processing workflow.
+
+---
+
+# 📁 Important Project Structure
+
+A simplified project structure:
+
+```text
+.
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   └── resources/
+│   │
+│   └── test/
+│
+├── bank-frontend/
+│
+├── public/
+│   └── diagrams/
+│       ├── double-ledger-architecture.png
+│       ├── double-ledger-authentication-jwt-rbac.png
+│       ├── double-ledger-concurrency-locking.png
+│       ├── double-ledger-database-erd.png
+│       ├── double-ledger-deployment.png
+│       ├── double-ledger-idempotency-flow.png
+│       ├── double-ledger-ledger.png
+│       └── double-ledger-transaction-flow.png
+│
+├── swagger-documentation/
+│   ├── openapi.yaml
+│   └── openapi.json
+│
+├── PROJECT_REPORT.md
+├── pom.xml
+└── README.md
+```
+
+---
+
+# 📄 License
+
+This project is licensed under the MIT License.
+
+See [`LICENSE`](LICENSE) for details.
+
+---
+
+<div align="center">
+
+### Built with Java · Spring Boot · PostgreSQL · React
+
+**Designed around correctness, concurrency, security, and reliability.**
+
+</div>

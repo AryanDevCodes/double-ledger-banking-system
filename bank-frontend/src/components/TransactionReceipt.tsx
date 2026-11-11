@@ -170,7 +170,7 @@ body{font-family:system-ui,-apple-system,sans-serif;max-width:700px;margin:40px 
 
         <div className="px-6 pb-6 space-y-6">
           {/* Amount Banner */}
-          <div className={cn("bg-gradient-to-br rounded-2xl p-6 space-y-3 border-2 text-center", statusConfig.bg, statusConfig.border)}>
+          <div className={cn("rounded-md border-2 p-6 space-y-3 text-center", statusConfig.bg, statusConfig.border)}>
             <p className="text-sm text-muted-foreground font-medium">Transaction Amount</p>
             <p className="text-4xl font-bold tracking-tight">{formatCurrency(transaction.amount)}</p>
             <Badge variant="outline" className={cn("mt-1 font-semibold text-xs px-2.5 py-0.5 rounded-full", statusConfig.badge)}>

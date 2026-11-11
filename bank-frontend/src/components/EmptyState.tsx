@@ -90,15 +90,13 @@ export default function EmptyState({
     <div
       className={cn(
         "flex flex-col items-center justify-center py-14 px-6 text-center",
-        "glass-panel rounded-2xl",
+        "glass-panel",
         className,
       )}
     >
-      {/* Illustrated backdrop circle */}
       <div
         className={cn(
-          "mb-5 flex h-20 w-20 items-center justify-center rounded-2xl",
-          "bg-gradient-to-br border border-border shadow-glass",
+          "mb-5 flex h-16 w-16 items-center justify-center rounded-md border border-border bg-muted/50",
           content.tint,
         )}
       >

@@ -1,10 +1,28 @@
 package com.bank.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.List;
-import lombok.*;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "account", uniqueConstraints = @UniqueConstraint(columnNames = "account_number"))
@@ -33,14 +51,6 @@ public class Account {
   @Builder.Default
   private String currencyCode = "INR";
 
-  /**
-   * @deprecated Bootstrap placeholder kept only to satisfy the legacy DB NOT NULL
-   *             constraint.
-   *             This field is set to ZERO on account creation and never updated
-   *             again.
-   *             For the live balance always use
-   *             {@code LedgerRepository.calculateBalance(account.getId())}.
-   */
   @Deprecated
   @Column(name = "balance", nullable = false, updatable = false)
   private BigDecimal balance;

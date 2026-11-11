@@ -98,7 +98,7 @@ function FuturisticAreaChart({ data, dataKey = "value", colors = DEFAULT_COLORS,
           fontSize={11}
           tickLine={false}
           axisLine={false}
-          tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+          tickFormatter={(value) => value.toLocaleString("en-IN")}
         />
         <Tooltip content={<CustomTooltip />} />
         <Area
@@ -136,7 +136,7 @@ function FuturisticBarChart({ data, dataKey = "value", colors = DEFAULT_COLORS, 
           fontSize={11}
           tickLine={false}
           axisLine={false}
-          tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+          tickFormatter={(value) => value.toLocaleString("en-IN")}
         />
         <Tooltip content={<CustomTooltip />} />
         <Bar 
@@ -201,7 +201,7 @@ function FuturisticLineChart({ data, dataKey = "value", colors = DEFAULT_COLORS,
           fontSize={11}
           tickLine={false}
           axisLine={false}
-          tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+          tickFormatter={(value) => value.toLocaleString("en-IN")}
         />
         <Tooltip content={<CustomTooltip />} />
         <Line

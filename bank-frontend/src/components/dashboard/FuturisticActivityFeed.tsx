@@ -1,13 +1,9 @@
-import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { 
   ArrowUpRight, 
-  ArrowDownLeft, 
   CreditCard, 
   Shield, 
   Users, 
-  Building2,
   AlertTriangle,
   CheckCircle2,
   XCircle,
@@ -17,7 +13,7 @@ import {
 
 export interface ActivityEvent {
   id: string;
-  type: "transaction" | "security" | "account" | "kyc" | "system" | "webhook";
+  type: "transaction" | "security" | "account" | "kyc" | "system";
   title: string;
   description: string;
   timestamp: string;
@@ -40,23 +36,6 @@ const TYPE_ICONS = {
   account: CreditCard,
   kyc: Users,
   system: Activity,
-  webhook: Building2,
-};
-
-const STATUS_COLORS = {
-  success: { bg: "bg-success/15", text: "text-success", border: "border-success/30" },
-  pending: { bg: "bg-warning/15", text: "text-warning", border: "border-warning/30" },
-  failed: { bg: "bg-destructive/15", text: "text-destructive", border: "border-destructive/30" },
-  warning: { bg: "bg-info/15", text: "text-info", border: "border-info/30" },
-};
-
-const TYPE_COLORS = {
-  transaction: "hsl(var(--chart-1))",
-  security: "hsl(var(--chart-5))",
-  account: "hsl(var(--chart-2))",
-  kyc: "hsl(var(--chart-4))",
-  system: "hsl(var(--chart-3))",
-  webhook: "hsl(var(--chart-6))",
 };
 
 function formatTimestamp(timestamp: string): string {
@@ -76,37 +55,32 @@ function formatTimestamp(timestamp: string): string {
 
 function ActivityEventItem({ 
   event, 
-  index,
   onClick 
 }: { 
   event: ActivityEvent; 
-  index: number;
   onClick?: () => void;
 }) {
   const Icon = TYPE_ICONS[event.type];
-  const statusColor = STATUS_COLORS[event.status];
-  const typeColor = TYPE_COLORS[event.type];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.05 }}
-      className="activity-item group cursor-pointer"
+    <div
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      className={cn(
+        "activity-item group w-full text-left",
+        onClick && "cursor-pointer hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      )}
       onClick={onClick}
+      onKeyDown={(keyboardEvent) => {
+        if (onClick && (keyboardEvent.key === "Enter" || keyboardEvent.key === " ")) {
+          keyboardEvent.preventDefault();
+          onClick();
+        }
+      }}
     >
       <div className="flex items-start gap-3">
-        <div 
-          className="relative p-2 rounded-lg bg-muted/30"
-          style={{ 
-            boxShadow: `0 0 15px ${typeColor}30`,
-          }}
-        >
-          <Icon className="w-4 h-4" style={{ color: typeColor }} />
-          <div 
-            className="absolute -top-1 -right-1 w-2 h-2 rounded-full pulse-live"
-            style={{ backgroundColor: `hsl(var(--${event.status === 'success' ? 'success' : event.status === 'pending' ? 'warning' : event.status === 'failed' ? 'destructive' : 'info'}))` }}
-          />
+        <div className="rounded-md border border-border bg-muted/40 p-2 text-primary">
+          <Icon className="h-4 w-4" aria-hidden="true" />
         </div>
         
         <div className="flex-1 min-w-0">
@@ -123,7 +97,7 @@ function ActivityEventItem({
           </p>
           <div className="flex items-center gap-2 mt-1.5">
             {event.amount && (
-              <span className="text-xs font-mono" style={{ color: typeColor }}>
+              <span className="text-xs font-medium text-foreground">
                 {event.amount}
               </span>
             )}
@@ -142,14 +116,14 @@ function ActivityEventItem({
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
 export default function FuturisticActivityFeed({
   events,
   maxEvents = 8,
-  title = "Live Activity",
+  title = "Recent activity",
   className,
   onEventClick,
 }: FuturisticActivityFeedProps) {
@@ -159,16 +133,9 @@ export default function FuturisticActivityFeed({
     <div className={cn("glass-card-futuristic p-5", className)}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <div className="relative">
-              <Activity className="w-4 h-4 text-primary" />
-              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-primary rounded-full pulse-live" />
-          </div>
+          <Activity className="h-4 w-4 text-primary" aria-hidden="true" />
           <h3 className="text-sm font-semibold">{title}</h3>
         </div>
-        <span className="badge-futuristic badge-futuristic--info">
-          <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
-          Live
-        </span>
       </div>
 
       <div className="space-y-0">
@@ -178,12 +145,11 @@ export default function FuturisticActivityFeed({
             <p className="text-sm">No recent activity</p>
           </div>
         ) : (
-          displayedEvents.map((event, index) => (
+          displayedEvents.map((event) => (
             <ActivityEventItem
               key={event.id}
               event={event}
-              index={index}
-              onClick={() => onEventClick?.(event)}
+              onClick={onEventClick ? () => onEventClick(event) : undefined}
             />
           ))
         )}

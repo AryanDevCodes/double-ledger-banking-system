@@ -9,10 +9,12 @@ import com.bank.exception.ResourceNotFoundException;
 import com.bank.repository.AccountRepository;
 import com.bank.repository.CustomerRepository;
 import com.bank.repository.LoanRepository;
+import com.bank.service.access.OwnershipAuthorizationService;
 import com.bank.service.mapper.LoanMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -28,10 +30,13 @@ public class LoanController {
         private final LoanMapper loanMapper;
         private final CustomerRepository customerRepository;
         private final AccountRepository accountRepository;
+        private final OwnershipAuthorizationService ownershipAuthorizationService;
 
         @GetMapping("/customer/{customerId}")
         @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_USER')")
+        @Transactional(readOnly = true)
         public ResponseEntity<List<LoanDTO>> getLoansByCustomer(@PathVariable String customerId) {
+                ownershipAuthorizationService.assertCustomerAccessById(customerId);
                 List<Loan> loans = loanRepository.findByCustomerId(customerId);
                 List<LoanDTO> dtos = loans.stream()
                                 .map(loanMapper::toDTO)
@@ -41,7 +46,9 @@ public class LoanController {
 
         @GetMapping("/account/{accountId}")
         @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_USER')")
+        @Transactional(readOnly = true)
         public ResponseEntity<List<LoanDTO>> getLoansByAccount(@PathVariable Long accountId) {
+                ownershipAuthorizationService.assertAccountAccessById(accountId);
                 List<Loan> loans = loanRepository.findByAccountId(accountId);
                 List<LoanDTO> dtos = loans.stream()
                                 .map(loanMapper::toDTO)
@@ -51,9 +58,13 @@ public class LoanController {
 
         @GetMapping("/{loanId}")
         @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_USER')")
+        @Transactional(readOnly = true)
         public ResponseEntity<LoanDTO> getLoan(@PathVariable Long loanId) {
                 return loanRepository.findById(loanId)
-                                .map(loan -> ResponseEntity.ok(loanMapper.toDTO(loan)))
+                                .map(loan -> {
+                                        ownershipAuthorizationService.assertCustomerAccess(loan.getCustomer());
+                                        return ResponseEntity.ok(loanMapper.toDTO(loan));
+                                })
                                 .orElseGet(() -> ResponseEntity.notFound().build());
         }
 

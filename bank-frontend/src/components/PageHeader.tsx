@@ -29,11 +29,7 @@ export default function PageHeader({
         <div className="flex items-center gap-3">
           {icon ? (
             <div className={cn(
-              "flex shrink-0 items-center justify-center rounded-2xl text-primary-foreground",
-              "bg-primary",
-              "shadow-[var(--shadow-md)]",
-              "ring-1 ring-primary/30",
-              "h-11 w-11",
+            "flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-muted/60 text-primary",
             )}>
               {icon}
             </div>
@@ -47,7 +43,7 @@ export default function PageHeader({
       </div>
 
       {actions ? (
-        <div className="flex items-center gap-2 flex-wrap sm:justify-end shrink-0">
+        <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
           {actions}
         </div>
       ) : null}

@@ -24,6 +24,7 @@ import com.bank.repository.TransactionRepository;
 import com.bank.service.account.AccountsService;
 import com.bank.service.account.mapper.AccountMapper;
 import com.bank.service.bank.BankService;
+import com.bank.service.access.OwnershipAuthorizationService;
 import com.bank.service.customer.CustomerService;
 import com.bank.service.customer.mapper.CustomerMapper;
 import com.bank.service.transaction.TransactionService;
@@ -58,6 +59,7 @@ public class CompositeBankingService {
     private final TransactionMapper transactionMapper;
     private final AccountMapper accountMapper;
     private final CustomerMapper customerMapper;
+    private final OwnershipAuthorizationService ownershipAuthorizationService;
 
     /**
      * Returns accounts + live balances + recent transactions + UPI profiles for
@@ -186,6 +188,7 @@ public class CompositeBankingService {
                             .errorMessage("Account not found")
                             .build());
                 } else {
+                    ownershipAuthorizationService.assertAccountAccess(account);
                     BigDecimal balance = ledgerRepository.calculateBalance(account.getId());
                     results.add(AccountBalanceDTO.builder()
                             .accountNumber(accNum)
@@ -194,6 +197,8 @@ public class CompositeBankingService {
                             .status(account.getStatus() != null ? account.getStatus().name() : null)
                             .build());
                 }
+            } catch (org.springframework.security.access.AccessDeniedException ex) {
+                throw ex;
             } catch (Exception e) {
                 results.add(AccountBalanceDTO.builder()
                         .accountNumber(accNum)

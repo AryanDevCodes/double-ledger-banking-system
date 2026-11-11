@@ -91,6 +91,7 @@ export function useDashboardData(
         setTransactions(txnsData);
         setBanks([]);
         setCustomers([]);
+        setLastUpdated(new Date());
         
         if (onDataUpdate) {
           onDataUpdate({ accounts: accountsData, upiProfiles: upiData, transactions: txnsData });

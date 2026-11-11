@@ -6,12 +6,12 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ className, interactive = true, ...props }, ref) => (
+  ({ className, interactive = false, ...props }, ref) => (
     <div
       ref={ref}
       className={cn(
-        "rounded-2xl border border-border/40 bg-card/60 backdrop-blur-xl transition-all duration-300",
-        interactive && "hover:bg-card/80 hover:border-border/60 hover:-translate-y-0.5 hover:shadow-lg",
+        "rounded-lg border border-border bg-card transition-colors duration-150",
+        interactive && "hover:border-primary/35",
         "text-card-foreground",
         className
       )}

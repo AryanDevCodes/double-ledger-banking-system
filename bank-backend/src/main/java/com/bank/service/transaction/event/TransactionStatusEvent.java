@@ -1,4 +1,4 @@
-package com.bank.service.webhook;
+package com.bank.service.transaction.event;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -9,8 +9,7 @@ import lombok.Data;
 @Data
 @Builder
 @AllArgsConstructor
-public class PaymentStatusEvent {
-  /** e.g. "transaction.completed", "transaction.failed", "transaction.reversed". */
+public class TransactionStatusEvent {
   private final String eventType;
   private final Long transactionId;
   private final String senderAccountNumber;

@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
@@ -46,40 +45,34 @@ export default function FuturisticQuickActions({
       </h3>
       
       <div className={cn("grid gap-3", gridClass)}>
-        {actions.map((action, index) => {
+        {actions.map((action) => {
           const Icon = action.icon;
           
           return (
-            <motion.div
+            <Link
               key={action.to}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
+              to={action.to}
+              className="group flex items-start gap-3 rounded-md border border-border p-3 transition-colors hover:border-primary/30 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <Link
-                to={action.to}
-                className="group flex items-start gap-3 p-3 rounded-xl bg-muted/25 border border-border hover:bg-muted/40 hover:border-primary/30 transition-all duration-200"
-              >
-                <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/15 group-hover:scale-110 transition-all">
-                  <Icon className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{action.label}</span>
-                    {action.badge && (
-                      <span className={cn("badge-futuristic", BADGE_STYLES[action.badgeType || "info"])}>
-                        {action.badge}
-                      </span>
-                    )}
-                  </div>
-                  {action.description && (
-                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                      {action.description}
-                    </p>
+              <div className="rounded-md border border-border bg-primary/10 p-2 text-primary transition-colors group-hover:bg-primary/15">
+                <Icon className="h-4 w-4" aria-hidden="true" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">{action.label}</span>
+                  {action.badge && (
+                    <span className={cn("badge-futuristic", BADGE_STYLES[action.badgeType || "info"])}>
+                      {action.badge}
+                    </span>
                   )}
                 </div>
-              </Link>
-            </motion.div>
+                {action.description && (
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                    {action.description}
+                  </p>
+                )}
+              </div>
+            </Link>
           );
         })}
       </div>

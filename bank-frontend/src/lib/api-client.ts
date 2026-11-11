@@ -670,42 +670,6 @@ export const securityApi = {
   },
 };
 
-// ============= Webhook API =============
-export interface WebhookSubscription {
-  id: number;
-  targetUrl: string;
-  eventTypes: string;
-  secret: string;
-  description?: string;
-  active: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface WebhookCreateRequest {
-  targetUrl: string;
-  eventTypes: string;
-  secret: string;
-  description?: string;
-}
-
-export const webhookApi = {
-  list: () => apiRequest<WebhookSubscription[]>("/webhooks"),
-  create: (data: WebhookCreateRequest) =>
-    apiRequest<WebhookSubscription>("/webhooks", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-  setActive: (id: number, active: boolean) =>
-    apiRequest<WebhookSubscription>(`/webhooks/${id}/active?active=${active}`, {
-      method: "PATCH",
-    }),
-  delete: (id: number) =>
-    apiRequest<void>(`/webhooks/${id}`, {
-      method: "DELETE",
-    }),
-};
-
 // ============= Debit Card API =============
 export interface DebitCardDTO {
   id?: number;

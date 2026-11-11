@@ -2,22 +2,32 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
 import { accountApi, bankApi } from '@/lib/api-client';
+import { useAuth } from '@/contexts/AuthContext';
 import type { AccountResponseDTO, BankResponseDTO } from '@/types/api';
 
 export function useAccounts() {
   const location = useLocation();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const hasStaffRole = user?.roles?.some((role) =>
+    ['ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_CUSTOMER_MANAGER', 'ROLE_AUDITOR'].includes(role),
+  ) ?? false;
+  const isPersonalView = Boolean(user?.roles?.includes('ROLE_USER') && !hasStaffRole);
+  const canLoadBankOptions = user?.roles?.some((role) =>
+    ['ROLE_ADMIN', 'ROLE_MANAGER'].includes(role),
+  ) ?? false;
 
   const accountsQuery = useQuery<AccountResponseDTO[]>({
-    queryKey: ['accounts', location.key],
-    queryFn: accountApi.getAll,
+    queryKey: ['accounts', isPersonalView ? 'mine' : 'all', user?.userId, location.key],
+    queryFn: isPersonalView ? accountApi.getMy : accountApi.getAll,
     staleTime: 0,
     refetchOnMount: 'always',
   });
 
   const banksQuery = useQuery<BankResponseDTO[]>({
-    queryKey: ['banks', location.key],
+    queryKey: ['banks', user?.userId, location.key],
     queryFn: bankApi.getAll,
+    enabled: canLoadBankOptions,
     staleTime: 0,
     refetchOnMount: 'always',
   });
@@ -46,11 +56,11 @@ export function useAccounts() {
   return {
     accounts: accountsQuery.data ?? [],
     banks: banksQuery.data ?? [],
-    isLoading: accountsQuery.isLoading || banksQuery.isLoading,
-    isRefreshing: accountsQuery.isFetching || banksQuery.isFetching,
+    isLoading: accountsQuery.isLoading || (canLoadBankOptions && banksQuery.isLoading),
+    isRefreshing: accountsQuery.isFetching || (canLoadBankOptions && banksQuery.isFetching),
     refetch: () => {
-      accountsQuery.refetch();
-      banksQuery.refetch();
+      void accountsQuery.refetch();
+      if (canLoadBankOptions) void banksQuery.refetch();
     },
     createAccount: createAccount.mutateAsync,
     updateCompliance: updateCompliance.mutateAsync,

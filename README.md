@@ -35,24 +35,7 @@
 - [Tech Stack](#-tech-stack)
 - [Quick Start](#-quick-start)
 - [Roles & Access Control](#-roles--access-control)
-- [API Reference](#-api-reference)
-  - [Authentication](#1-authentication-module--apiauth)
-  - [Bank Management](#2-bank-management--bank)
-  - [Customer Management](#3-customer-management--customer)
-  - [Account Management](#4-account-management--account)
-  - [Transaction Processing](#5-transaction-processing--transaction)
-  - [UPI Payment System](#6-upi-payment-system--upi)
-  - [QR Code Generation](#7-qr-code-generation--qr)
-  - [Audit Logging](#8-audit-logging--audit)
-  - [Security & Session Management](#9-security--session-management--security)
-  - [Notifications](#10-notifications--apinotifications)
-  - [Debit Cards](#11-debit-cards--apidebit-cards)
-  - [Debit Card Requests](#12-debit-card-requests--apidebit-card-requests)
-  - [Credit Cards & Plans](#13-credit-cards--plans--apicredit-cards--apicredit-plans)
-  - [Loans & EMI](#14-loans--emi--apiloans--apiemis)
-  - [Account Statements](#15-account-statements--apiaccountsaccountnumberstatement)
-  - [Webhooks](#16-webhooks--apiwebhooks)
-  - [Composite APIs & Card Events](#17-composite--card-events--apicomposite--streamevents)
+- [API Documentation](#-api-documentation)
 - [Ledger Architecture](#-ledger-architecture-double-entry)
 - [Security Design](#-security-design)
 - [Database Schema](#-database-schema)
@@ -60,6 +43,7 @@
 - [Engineering Highlights](#-engineering-highlights)
 - [Troubleshooting](#-troubleshooting)
 - [Extra Documentation](#-extra-documentation)
+- [Recent Implementation Updates](#-recent-implementation-updates)
 - [License](#-license)
 
 ---
@@ -78,7 +62,7 @@ It includes:
 - JWT authentication
 - Refresh-token rotation
 - Role-based access control
-- Sender ownership validation
+- Centralized ownership authorization for user-scoped banking data
 - Pessimistic database locking
 - Deterministic account lock ordering
 - KYC and compliance checks
@@ -86,11 +70,12 @@ It includes:
 - Session management
 - Security access logs
 - Notifications
+- Role-specific dashboards and real-data analytics
+- Masked account identifiers and recipient names in customer-facing banking views
 - Debit cards
 - Credit cards and credit plans
 - Loans and EMI schedules
 - QR code generation
-- Webhook subscriptions
 - Server-Sent Events for card events
 - CSV/PDF account statements
 - React role-based dashboards
@@ -322,7 +307,7 @@ cd <your-repository>
 Create a PostgreSQL database and configure the credentials in:
 
 ```text
-src/main/resources/application.yml
+bank-backend/src/main/resources/application.yml
 ```
 
 Example:
@@ -341,6 +326,12 @@ Use your actual database configuration.
 
 ## 3. Start the Spring Boot backend
 
+From the repository root:
+
+```powershell
+cd bank-backend
+```
+
 ### Windows
 
 ```powershell
@@ -356,12 +347,14 @@ Use your actual database configuration.
 Backend:
 
 ```text
-http://localhost:8080
+http://localhost:8080/api
 ```
 
 ---
 
 ## 4. Start the React frontend
+
+In a second terminal from the repository root:
 
 ```bash
 cd bank-frontend
@@ -377,7 +370,7 @@ bank-frontend/.env.local
 Add:
 
 ```env
-VITE_API_BASE_URL=http://localhost:8080
+VITE_API_BASE_URL=http://localhost:8080/api
 VITE_ENABLE_AUDIT=true
 VITE_ENABLE_SECURITY=true
 ```
@@ -391,10 +384,8 @@ npm run dev
 Frontend:
 
 ```text
-http://localhost:5173
+http://localhost:8081
 ```
-
-Depending on the Vite configuration, the application may also use port `8081`.
 
 ---
 
@@ -403,19 +394,20 @@ Depending on the Vite configuration, the application may also use port `8081`.
 Swagger UI:
 
 ```text
-http://localhost:8080/swagger-ui.html
+http://localhost:8080/api/swagger-ui/index.html
 ```
 
 OpenAPI JSON:
 
 ```text
-http://localhost:8080/v3/api-docs
+http://localhost:8080/api/v3/api-docs
 ```
 
-OpenAPI YAML:
+Saved OpenAPI snapshots:
 
 ```text
-swagger-documentation/openapi.yaml
+bank-backend/swagger-documentation/openapi.json
+bank-backend/swagger-documentation/openapi.yaml
 ```
 
 ---
@@ -448,517 +440,16 @@ or:
 
 ---
 
-# 📚 API Reference
+# 📚 API Documentation
 
-The application exposes REST APIs for authentication, banking, accounts, transactions, payments, cards, loans, auditing, security, and dashboard operations.
+The complete REST API contract is generated from the backend and available in OpenAPI format.
 
----
+- **Interactive Swagger UI (local backend):** http://localhost:8080/api/swagger-ui/index.html
+- **Live OpenAPI JSON:** http://localhost:8080/api/v3/api-docs
+- **Saved OpenAPI JSON:** [bank-backend/swagger-documentation/openapi.json](bank-backend/swagger-documentation/openapi.json)
+- **Saved OpenAPI YAML:** [bank-backend/swagger-documentation/openapi.yaml](bank-backend/swagger-documentation/openapi.yaml)
 
-## 1. Authentication Module — `/api/auth`
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| POST | `/api/auth/login` | Public | Authenticate and receive access + refresh tokens |
-| POST | `/api/auth/forgot-password` | Public | Request password reset |
-| POST | `/api/auth/reset-password` | Public | Reset password using reset token |
-| GET | `/api/auth/me` | Authenticated | Return current user profile and banking metrics |
-| POST | `/api/auth/change-password` | Authenticated | Change current password |
-| POST | `/api/auth/refresh` | Public | Rotate refresh token |
-| POST | `/api/auth/logout` | Authenticated | Logout and terminate active session |
-
-### Login response
-
-```json
-{
-  "accessToken": "eyJ...",
-  "refreshToken": "eyJ...",
-  "tokenType": "Bearer",
-  "userId": 1,
-  "username": "admin",
-  "email": "admin@bank.com",
-  "fullName": "Admin User",
-  "roles": ["ROLE_ADMIN"],
-  "expiresAt": "2026-05-11T19:38:00",
-  "passwordChangeRequired": false
-}
-```
-
-### Enriched `/api/auth/me`
-
-```json
-{
-  "id": 1,
-  "username": "alice",
-  "email": "alice@bank.com",
-  "primaryRole": "ROLE_USER",
-  "customerId": "SBI_abc123",
-  "kycStatus": "ACTIVE",
-  "customerStatus": "ACTIVE",
-  "accountCount": 2,
-  "totalBalance": 45000.00,
-  "upiProfileCount": 1,
-  "transactionCount": 12
-}
-```
-
-Additional fields are returned based on the authenticated user's role.
-
----
-
-## 2. Bank Management — `/bank`
-
-| Method | Endpoint | Roles | Description |
-|---|---|---|---|
-| GET | `/bank` | ADMIN, MANAGER, AUDITOR | List banks |
-| GET | `/bank/{id}` | ADMIN, MANAGER, AUDITOR | Get bank |
-| GET | `/bank/upi/{upiId}` | ADMIN, MANAGER, AUDITOR, USER | Find bank by UPI ID |
-| POST | `/bank/create` | ADMIN | Create bank |
-| PATCH | `/bank/{id}` | ADMIN | Update bank |
-| DELETE | `/bank/{id}` | ADMIN | Delete bank |
-
-Bank fields include:
-
-```text
-bankName
-branch
-ifscCode
-city
-state
-branchAddress
-```
-
----
-
-## 3. Customer Management — `/customer`
-
-| Method | Endpoint | Roles | Description |
-|---|---|---|---|
-| GET | `/customer` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | List customers |
-| GET | `/customer/paginated` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | Paginated customers |
-| GET | `/customer/me` | Authenticated | Current customer |
-| GET | `/customer/email/{email}` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | Find customer |
-| GET | `/customer/search` | ADMIN, MANAGER, CUSTOMER_MANAGER | Search customers |
-| GET | `/customer/bank` | ADMIN, MANAGER, CUSTOMER_MANAGER | Customers by bank |
-| PATCH | `/customer/update` | ADMIN, CUSTOMER_MANAGER | Update customer |
-| DELETE | `/customer/delete` | ADMIN | Delete customer |
-
-Customer data includes:
-
-```text
-fullName
-email
-phoneNumber
-address
-age
-kycStatus
-customerStatus
-```
-
----
-
-## 4. Account Management — `/account`
-
-| Method | Endpoint | Roles | Description |
-|---|---|---|---|
-| GET | `/account` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | List accounts |
-| GET | `/account/paginated` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | Paginated accounts |
-| GET | `/account/my` | Authenticated | Own accounts |
-| GET | `/account/{id}` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | Account details |
-| GET | `/account/name/{bankName}` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | Accounts by bank |
-| GET | `/account/email/{email}` | ADMIN, MANAGER, CUSTOMER_MANAGER | Accounts by email |
-| GET | `/account/validate-receiver` | ADMIN, MANAGER, USER | Validate receiver |
-| GET | `/account/lookup-by-number` | ADMIN, MANAGER, CUSTOMER_MANAGER, AUDITOR | Lookup account |
-| GET | `/account/{accountNumber}/balance` | ADMIN, MANAGER, AUDITOR, USER | Ledger-derived balance |
-| POST | `/account/{bankName}` | ADMIN, MANAGER | Create account |
-| PATCH | `/account/{accNumber}` | ADMIN, MANAGER | Update account |
-| PATCH | `/account/{accNumber}/compliance` | ADMIN, MANAGER, CUSTOMER_MANAGER | Update compliance |
-| DELETE | `/account/{accNumber}` | ADMIN | Delete account |
-
-Account numbers are generated automatically.
-
-Example:
-
-```text
-ACC_SBI_xxxxx
-```
-
----
-
-## 5. Transaction Processing — `/transaction`
-
-| Method | Endpoint | Roles | Description |
-|---|---|---|---|
-| GET | `/transaction/all` | ADMIN, MANAGER, AUDITOR | All transactions |
-| GET | `/transaction/all/paginated` | ADMIN, MANAGER, AUDITOR | Paginated transactions |
-| GET | `/transaction` | ADMIN, MANAGER, AUDITOR, USER | Filter transactions |
-| GET | `/transaction/my` | Authenticated | Own transactions |
-| GET | `/transaction/customer/{customerId}` | ADMIN, MANAGER, AUDITOR, CUSTOMER_MANAGER | Customer transactions |
-| GET | `/transaction/accounts/{id}/balance` | ADMIN, MANAGER, AUDITOR, USER | Ledger-derived balance |
-| POST | `/transaction` | USER | Transfer money |
-| POST | `/transaction/{transactionId}/reverse` | ADMIN, MANAGER | Reverse transaction |
-| GET | `/transaction/{transactionId}/receipt` | ADMIN, MANAGER, AUDITOR, USER | Transaction receipt |
-
-### Transaction states
-
-```text
-INITIATED
-    ↓
-PROCESSING
-    ↓
-COMPLETED
-```
-
-or:
-
-```text
-INITIATED
-    ↓
-PROCESSING
-    ↓
-FAILED
-```
-
-### Transfer request
-
-```json
-{
-  "senderAccount": "ACC_SBI_xxxxx",
-  "receiverAccount": "ACC_HDFC_xxxxx",
-  "amount": 5000.00
-}
-```
-
-The sender must own the source account.
-
----
-
-## 6. UPI Payment System — `/upi`
-
-| Method | Endpoint | Roles | Description |
-|---|---|---|---|
-| POST | `/upi/register` | ADMIN, MANAGER, USER | Register UPI profile |
-| GET | `/upi` | ADMIN, MANAGER, AUDITOR, USER | List UPI profiles |
-| GET | `/upi/paginated` | ADMIN, MANAGER, AUDITOR, USER | Paginated profiles |
-| GET | `/upi/my` | Authenticated | Own UPI profiles |
-| GET | `/upi/{upiId}` | ADMIN, MANAGER, AUDITOR, USER | Get UPI profile |
-| GET | `/upi/account/{accountNumber}` | ADMIN, MANAGER, USER | Account UPI profiles |
-| PATCH | `/upi/{upiId}/status` | ADMIN, MANAGER, USER | Update status |
-| PUT | `/upi/{upiId}/toggle` | ADMIN, MANAGER, USER | Enable/disable |
-| DELETE | `/upi/{upiId}` | ADMIN | Soft delete |
-| POST | `/upi/pay` | USER | Execute UPI payment |
-
-### UPI payment request
-
-```json
-{
-  "fromUpi": "alice@sbi",
-  "toUpi": "bob@hdfc",
-  "amount": 1000.00,
-  "idempotencyKey": "unique-client-key-123"
-}
-```
-
----
-
-## 7. QR Code Generation — `/qr`
-
-| Method | Endpoint | Roles | Description |
-|---|---|---|---|
-| GET | `/qr/generate` | ADMIN, MANAGER, USER | Generate UPI payment QR |
-| GET | `/qr/account` | ADMIN, MANAGER, USER | Generate account QR |
-
-QR codes are generated using ZXing.
-
-UPI QR format:
-
-```text
-upi://pay?pa=...&pn=...&am=...&cu=INR
-```
-
-The API returns:
-
-```text
-image/png
-```
-
----
-
-## 8. Audit Logging — `/audit`
-
-Access is restricted to:
-
-```text
-ROLE_ADMIN
-ROLE_AUDITOR
-```
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/audit/logs` | Paginated audit log query |
-| GET | `/audit/logs/{id}` | Get individual audit entry |
-
-Supported filters include:
-
-```text
-startDate
-endDate
-action
-userId
-resource
-page
-size
-```
-
-Audit actions:
-
-```text
-VIEW
-CREATE
-UPDATE
-DELETE
-```
-
-Additional explicit security events include:
-
-```text
-LOGIN
-LOGOUT
-PASSWORD_RESET_REQUEST
-PASSWORD_RESET
-PASSWORD_CHANGE
-```
-
-The `AuditLoggingInterceptor` automatically captures eligible HTTP activity.
-
-Excluded paths include:
-
-```text
-/audit
-/security
-/api/auth
-/swagger-ui
-/v3/api-docs
-/actuator
-```
-
----
-
-## 9. Security & Session Management — `/security`
-
-All endpoints are restricted to:
-
-```text
-ROLE_ADMIN
-```
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/security/sessions` | List active sessions |
-| DELETE | `/security/sessions/{sessionId}` | Terminate session |
-| POST | `/security/sessions/terminate-all` | Terminate sessions |
-| GET | `/security/access-logs` | Query access logs |
-
-Session tracking includes:
-
-```text
-sessionId
-tokenId
-userId
-userName
-ipAddress
-userAgent
-createdAt
-lastActivity
-expiresAt
-active
-```
-
-Access events include:
-
-```text
-LOGIN_SUCCESS
-FAILED_LOGIN
-LOGOUT
-PASSWORD_CHANGE
-```
-
----
-
-## 10. Notifications — `/api/notifications`
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/notifications` | Paginated notifications |
-| GET | `/api/notifications/unread` | Unread notifications |
-| GET | `/api/notifications/unread/count` | Unread count |
-| PUT | `/api/notifications/{notificationId}/read` | Mark as read |
-| PUT | `/api/notifications/read-all` | Mark all as read |
-
-Users can only access their own notifications.
-
-The user ID is derived from the authenticated JWT.
-
----
-
-## 11. Debit Cards — `/api/debit-cards`
-
-| Method | Endpoint | Roles | Description |
-|---|---|---|---|
-| GET | `/api/debit-cards/account/{accountId}` | ADMIN, MANAGER, USER | Cards by account |
-| GET | `/api/debit-cards/account-number/{accountNumber}` | ADMIN, MANAGER, USER | Cards by account number |
-| GET | `/api/debit-cards/{cardId}` | ADMIN, MANAGER, USER | Card details |
-| PUT | `/api/debit-cards/{cardId}/toggle-contactless` | ADMIN, USER | Toggle contactless |
-| PUT | `/api/debit-cards/{cardId}/toggle-international` | ADMIN, USER | Toggle international |
-| PUT | `/api/debit-cards/{cardId}/toggle-otp` | ADMIN, USER | Toggle OTP |
-| PUT | `/api/debit-cards/{cardId}/limits` | ADMIN, USER | Update limits |
-| PUT | `/api/debit-cards/{cardId}/merchant-blocks` | ADMIN, USER | Merchant category controls |
-| POST | `/api/debit-cards/{cardId}/freeze` | ADMIN, USER | Freeze card |
-| POST | `/api/debit-cards/{cardId}/unfreeze` | ADMIN, USER | Unfreeze card |
-| POST | `/api/debit-cards/{cardId}/replace` | ADMIN, USER | Request replacement |
-| PUT | `/api/debit-cards/{cardId}/block` | ADMIN, USER | Permanently block |
-
----
-
-## 12. Debit Card Requests — `/api/debit-card-requests`
-
-| Method | Endpoint | Roles | Description |
-|---|---|---|---|
-| POST | `/api/debit-card-requests` | USER | Create card request |
-| GET | `/api/debit-card-requests/my` | USER | Own requests |
-| GET | `/api/debit-card-requests/pending` | ADMIN, MANAGER | Pending requests |
-| GET | `/api/debit-card-requests/approved` | ADMIN, MANAGER | Approved requests |
-| GET | `/api/debit-card-requests/issued` | ADMIN, MANAGER | Issued requests |
-| POST | `/api/debit-card-requests/{requestId}/approve` | ADMIN, MANAGER | Approve |
-| POST | `/api/debit-card-requests/{requestId}/reject` | ADMIN, MANAGER | Reject |
-| POST | `/api/debit-card-requests/{requestId}/issue` | ADMIN, MANAGER | Issue |
-| POST | `/api/debit-card-requests/{requestId}/dispatch` | ADMIN, MANAGER | Dispatch |
-| POST | `/api/debit-card-requests/{requestId}/deliver` | ADMIN, MANAGER | Deliver |
-
----
-
-## 13. Credit Cards & Plans
-
-### Credit Cards — `/api/credit-cards`
-
-| Method | Endpoint | Roles | Description |
-|---|---|---|---|
-| GET | `/api/credit-cards/account/{accountId}` | ADMIN, MANAGER, USER | Cards by account |
-| GET | `/api/credit-cards/account-number/{accountNumber}` | ADMIN, MANAGER, USER | Cards by account number |
-| GET | `/api/credit-cards/{cardId}` | ADMIN, MANAGER, USER | Card details |
-| PUT | `/api/credit-cards/{cardId}/toggle-contactless` | ADMIN, USER | Toggle contactless |
-| PUT | `/api/credit-cards/{cardId}/toggle-international` | ADMIN, USER | Toggle international |
-| PUT | `/api/credit-cards/{cardId}/toggle-otp` | ADMIN, USER | Toggle OTP |
-| PUT | `/api/credit-cards/{cardId}/limits` | ADMIN, USER | Update limits |
-| PUT | `/api/credit-cards/{cardId}/merchant-blocks` | ADMIN, USER | Merchant controls |
-| POST | `/api/credit-cards/{cardId}/freeze` | ADMIN, USER | Freeze |
-| POST | `/api/credit-cards/{cardId}/unfreeze` | ADMIN, USER | Unfreeze |
-| POST | `/api/credit-cards/{cardId}/replace` | ADMIN, USER | Replacement |
-| PUT | `/api/credit-cards/{cardId}/block` | ADMIN, USER | Permanent block |
-
-### Credit Plans — `/api/credit-plans`
-
-| Method | Endpoint | Roles | Description |
-|---|---|---|---|
-| GET | `/api/credit-plans` | ADMIN, MANAGER, USER | List plans |
-| GET | `/api/credit-plans/all` | ADMIN, MANAGER | Admin/manager plan view |
-| POST | `/api/credit-plans` | ADMIN, MANAGER | Create plan |
-| PATCH | `/api/credit-plans/{planId}` | ADMIN, MANAGER | Update plan |
-| POST | `/api/credit-plans/{planId}/assign/{cardId}` | ADMIN, MANAGER | Assign plan |
-
----
-
-## 14. Loans & EMI
-
-### Loans — `/api/loans`
-
-| Method | Endpoint | Roles | Description |
-|---|---|---|---|
-| GET | `/api/loans/customer/{customerId}` | ADMIN, MANAGER, USER | Customer loans |
-| GET | `/api/loans/account/{accountId}` | ADMIN, MANAGER, USER | Account loans |
-| GET | `/api/loans/{loanId}` | ADMIN, MANAGER, USER | Loan details |
-| POST | `/api/loans` | ADMIN, MANAGER | Create loan |
-
-### EMI — `/api/emis`
-
-| Method | Endpoint | Roles | Description |
-|---|---|---|---|
-| GET | `/api/emis/loan/{loanId}` | ADMIN, MANAGER, USER | EMI schedule |
-| GET | `/api/emis/{emiId}` | ADMIN, MANAGER, USER | EMI details |
-
----
-
-## 15. Account Statements
-
-Endpoint:
-
-```text
-GET /api/accounts/{accountNumber}/statement
-```
-
-Supports:
-
-```text
-format=csv
-format=pdf
-from=
-to=
-```
-
-Example:
-
-```text
-GET /api/accounts/ACC_SBI_xxxxx/statement?format=pdf
-```
-
-Statements are generated from account transaction / ledger information.
-
----
-
-## 16. Webhooks — `/api/webhooks`
-
-| Method | Endpoint | Roles | Description |
-|---|---|---|---|
-| POST | `/api/webhooks` | ADMIN, MANAGER | Register webhook |
-| GET | `/api/webhooks` | ADMIN, MANAGER, AUDITOR | List subscriptions |
-| DELETE | `/api/webhooks/{id}` | ADMIN, MANAGER | Delete subscription |
-| PATCH | `/api/webhooks/{id}/active` | ADMIN, MANAGER | Enable/disable |
-
-Webhook subscriptions contain configuration such as:
-
-```text
-url
-secret
-eventTypes
-active
-```
-
----
-
-## 17. Composite APIs & Card Events
-
-### Composite APIs — `/api/composite`
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/composite/my/overview` | Aggregated dashboard overview |
-| POST | `/api/composite/transfer` | Composite transfer workflow |
-| GET | `/api/composite/customers/{customerId}/banking-profile` | Banking profile |
-| GET | `/api/composite/banks/{bankId}/operations-summary` | Bank operations summary |
-| POST | `/api/composite/accounts/balance-check` | Multi-account balance check |
-| GET | `/api/composite/transactions/advanced` | Advanced transaction search |
-| GET | `/api/composite/search/global` | Global entity search |
-| POST | `/api/composite/accounts/{accountNumber}/freeze` | Freeze account |
-| POST | `/api/composite/customers/{customerId}/kyc-verify` | KYC verification |
-
-### Server-Sent Events
-
-```text
-GET /stream/events
-```
-
-The endpoint provides real-time card-related events using **Server-Sent Events (SSE)**.
-
----
+The saved snapshots are refreshed from the running backend OpenAPI JSON document.
 
 # 🧾 Ledger Architecture — Double Entry
 
@@ -1095,7 +586,7 @@ If the sender account does not belong to the authenticated user:
 HTTP 403 Forbidden
 ```
 
-The UPI payment flow applies the same ownership concept through UPI-to-account resolution.
+The same ownership policy is reused for scoped account, transaction, loan/EMI, and UPI operations. UPI profile lookups by UPI ID or account number also verify ownership; the per-profile shared cache was removed so a cache hit cannot bypass that check. Staff access remains governed by the backend role policy.
 
 ---
 
@@ -1219,8 +710,6 @@ The database contains the core banking and supporting infrastructure tables.
 | `credit_plans` | Credit plan definitions |
 | `loans` | Loan records |
 | `emis` | EMI schedule |
-| `webhook_subscriptions` | Outbound webhook registrations |
-
 ---
 
 ## Key database relationships
@@ -1478,11 +967,11 @@ Safer account updates
 ```text
 JWT identity
      ↓
-Customer
+OwnershipAuthorizationService
      ↓
-Account ownership
+Owned account or banking resource
      ↓
-Financial operation
+Authorized read or financial operation
 ```
 
 ### Auditability
@@ -1515,6 +1004,17 @@ Previous Refresh Token revoked
 
 ---
 
+# 🛠️ Recent Implementation Updates
+
+The latest work in this conversation focused on security alignment, role-aware banking UX, and maintainable API documentation:
+
+- Added centralized ownership checks to reviewed account-scoped transaction, balance, loan/EMI, and UPI paths; UPI profile lookups now enforce ownership, and managers/auditors retain their permitted system-wide view.
+- Improved security exception handling and the asynchronous transaction-notification path so authorization failures are not reported as generic errors and notifications do not depend on lazy entity access after the originating transaction.
+- Refined role-specific dashboards and banking pages to use role-appropriate APIs, backend metrics, safer account masking, clearer recipient names, and data-backed charts and error states.
+- Saved the generated OpenAPI 3.0.1 contract as JSON and YAML under `bank-backend/swagger-documentation/`. The snapshot contains 117 path templates and 123 operations.
+
+The project report records the validation performed and the remaining operational caveats.
+
 # 🧪 Testing
 
 The backend includes unit tests covering important business and security rules, including:
@@ -1528,12 +1028,14 @@ The backend includes unit tests covering important business and security rules, 
 Run tests using:
 
 ```bash
+cd bank-backend
 ./mvnw test
 ```
 
 Windows:
 
 ```powershell
+cd bank-backend
 .\mvnw.cmd test
 ```
 
@@ -1546,7 +1048,7 @@ Windows:
 Verify:
 
 ```env
-VITE_API_BASE_URL=http://localhost:8080
+VITE_API_BASE_URL=http://localhost:8080/api
 ```
 
 and make sure the Spring Boot backend is running.
@@ -1559,13 +1061,7 @@ Default ports:
 
 ```text
 Backend  → 8080
-Frontend → 5173
-```
-
-Depending on configuration, the frontend may use:
-
-```text
-8081
+Frontend → 8081
 ```
 
 ---
@@ -1613,8 +1109,8 @@ If investigating a locking problem, verify that account locking continues to use
 Additional project documentation is available in the repository:
 
 - [`PROJECT_REPORT.md`](PROJECT_REPORT.md)
-- [`swagger-documentation/openapi.yaml`](swagger-documentation/openapi.yaml)
-- [`swagger-documentation/openapi.json`](swagger-documentation/openapi.json)
+- [`bank-backend/swagger-documentation/openapi.yaml`](bank-backend/swagger-documentation/openapi.yaml)
+- [`bank-backend/swagger-documentation/openapi.json`](bank-backend/swagger-documentation/openapi.json)
 
 ---
 
@@ -1636,32 +1132,16 @@ A simplified project structure:
 
 ```text
 .
-├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   └── resources/
-│   │
-│   └── test/
-│
+├── bank-backend/
+│   ├── src/
+│   ├── swagger-documentation/
+│   ├── mvnw.cmd
+│   └── pom.xml
 ├── bank-frontend/
-│
-├── public/
-│   └── diagrams/
-│       ├── double-ledger-architecture.png
-│       ├── double-ledger-authentication-jwt-rbac.png
-│       ├── double-ledger-concurrency-locking.png
-│       ├── double-ledger-database-erd.png
-│       ├── double-ledger-deployment.png
-│       ├── double-ledger-idempotency-flow.png
-│       ├── double-ledger-ledger.png
-│       └── double-ledger-transaction-flow.png
-│
-├── swagger-documentation/
-│   ├── openapi.yaml
-│   └── openapi.json
-│
+│   ├── src/
+│   └── package.json
+├── demo/
 ├── PROJECT_REPORT.md
-├── pom.xml
 └── README.md
 ```
 

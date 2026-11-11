@@ -47,7 +47,7 @@ const BankDistributionChart = ({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-border/40 bg-card/60 backdrop-blur-xl p-4 mb-6",
+        "rounded-lg border border-border bg-card p-4 mb-6",
         "transition-all duration-300 hover:bg-card/80 hover:border-border/60",
         className
       )}

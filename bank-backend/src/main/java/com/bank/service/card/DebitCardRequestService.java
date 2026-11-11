@@ -8,6 +8,7 @@ import com.bank.exception.InvalidDataException;
 import com.bank.exception.ResourceNotFoundException;
 import com.bank.repository.AccountRepository;
 import com.bank.repository.DebitCardRequestRepository;
+import com.bank.service.access.OwnershipAuthorizationService;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,7 +23,7 @@ public class DebitCardRequestService {
   private final DebitCardRequestRepository debitCardRequestRepository;
   private final AccountRepository accountRepository;
   private final DebitCardService debitCardService;
-  private final CardAccessService cardAccessService;
+  private final OwnershipAuthorizationService ownershipAuthorizationService;
 
   @Transactional
   public DebitCardRequestDTO createRequest(DebitCardRequestCreateRequest request) {
@@ -33,8 +34,8 @@ public class DebitCardRequestService {
     if (account == null) {
       throw new ResourceNotFoundException("Account", "accountNumber", request.getAccountNumber());
     }
-    cardAccessService.assertAccountAccess(account);
-    User currentUser = cardAccessService.requireCurrentUser();
+    ownershipAuthorizationService.assertAccountAccess(account);
+    User currentUser = ownershipAuthorizationService.requireCurrentUser();
     if (account.getCustomer() == null || account.getCustomer().getKycStatus() == null) {
       throw new InvalidDataException("KYC verification required before requesting a card", "kycStatus", null);
     }
@@ -77,7 +78,7 @@ public class DebitCardRequestService {
 
   @Transactional(readOnly = true)
   public List<DebitCardRequestDTO> getMyRequests() {
-    User currentUser = cardAccessService.requireCurrentUser();
+    User currentUser = ownershipAuthorizationService.requireCurrentUser();
     return debitCardRequestRepository.findByRequestedByIdOrderByRequestedAtDesc(currentUser.getId())
         .stream()
         .map(this::toDto)
@@ -88,14 +89,14 @@ public class DebitCardRequestService {
   public List<DebitCardRequestDTO> getPendingRequests() {
     List<DebitCardRequest> pending = debitCardRequestRepository
         .findByStatusOrderByRequestedAtAsc(CardRequestStatus.PENDING);
-    User currentUser = cardAccessService.requireCurrentUser();
-    boolean isAdmin = cardAccessService.hasRole(currentUser, Role.RoleName.ROLE_ADMIN);
+    User currentUser = ownershipAuthorizationService.requireCurrentUser();
+    boolean isAdmin = ownershipAuthorizationService.hasRole(currentUser, Role.RoleName.ROLE_ADMIN);
     if (!isAdmin) {
       pending = pending.stream()
           .filter(request -> request.getAccount() != null)
           .filter(request -> {
             try {
-              cardAccessService.assertAccountAccess(request.getAccount());
+              ownershipAuthorizationService.assertAccountAccess(request.getAccount());
               return true;
             } catch (Exception ex) {
               return false;
@@ -110,14 +111,14 @@ public class DebitCardRequestService {
   public List<DebitCardRequestDTO> getApprovedRequests() {
     List<DebitCardRequest> approved = debitCardRequestRepository
         .findByStatusOrderByRequestedAtAsc(CardRequestStatus.APPROVED);
-    User currentUser = cardAccessService.requireCurrentUser();
-    boolean isAdmin = cardAccessService.hasRole(currentUser, Role.RoleName.ROLE_ADMIN);
+    User currentUser = ownershipAuthorizationService.requireCurrentUser();
+    boolean isAdmin = ownershipAuthorizationService.hasRole(currentUser, Role.RoleName.ROLE_ADMIN);
     if (!isAdmin) {
       approved = approved.stream()
           .filter(request -> request.getAccount() != null)
           .filter(request -> {
             try {
-              cardAccessService.assertAccountAccess(request.getAccount());
+              ownershipAuthorizationService.assertAccountAccess(request.getAccount());
               return true;
             } catch (Exception ex) {
               return false;
@@ -132,14 +133,14 @@ public class DebitCardRequestService {
   public List<DebitCardRequestDTO> getIssuedRequests() {
     List<DebitCardRequest> issued = debitCardRequestRepository
         .findByStatusOrderByRequestedAtAsc(CardRequestStatus.ISSUED);
-    User currentUser = cardAccessService.requireCurrentUser();
-    boolean isAdmin = cardAccessService.hasRole(currentUser, Role.RoleName.ROLE_ADMIN);
+    User currentUser = ownershipAuthorizationService.requireCurrentUser();
+    boolean isAdmin = ownershipAuthorizationService.hasRole(currentUser, Role.RoleName.ROLE_ADMIN);
     if (!isAdmin) {
       issued = issued.stream()
           .filter(request -> request.getAccount() != null)
           .filter(request -> {
             try {
-              cardAccessService.assertAccountAccess(request.getAccount());
+              ownershipAuthorizationService.assertAccountAccess(request.getAccount());
               return true;
             } catch (Exception ex) {
               return false;
@@ -153,14 +154,14 @@ public class DebitCardRequestService {
   @Transactional
   public DebitCardRequestDTO approveRequest(Long requestId, DebitCardRequestDecisionRequest decisionRequest) {
     DebitCardRequest request = loadRequest(requestId);
-    cardAccessService.assertAccountAccess(request.getAccount());
+    ownershipAuthorizationService.assertAccountAccess(request.getAccount());
     if (request.getStatus() != CardRequestStatus.PENDING) {
       throw new InvalidDataException("Only pending requests can be approved", "status", request.getStatus());
     }
 
-    User approver = cardAccessService.requireCurrentUser();
-    if (!cardAccessService.hasRole(approver, Role.RoleName.ROLE_ADMIN)
-        && !cardAccessService.hasRole(approver, Role.RoleName.ROLE_MANAGER)) {
+    User approver = ownershipAuthorizationService.requireCurrentUser();
+    if (!ownershipAuthorizationService.hasRole(approver, Role.RoleName.ROLE_ADMIN)
+        && !ownershipAuthorizationService.hasRole(approver, Role.RoleName.ROLE_MANAGER)) {
       throw new AccessDeniedException("Only administrators or managers can approve requests");
     }
 
@@ -194,13 +195,13 @@ public class DebitCardRequestService {
   @Transactional
   public DebitCardRequestDTO issueRequest(Long requestId) {
     DebitCardRequest request = loadRequest(requestId);
-    cardAccessService.assertAccountAccess(request.getAccount());
+    ownershipAuthorizationService.assertAccountAccess(request.getAccount());
     if (request.getStatus() != CardRequestStatus.APPROVED) {
       throw new InvalidDataException("Only approved requests can be issued", "status", request.getStatus());
     }
-    User issuer = cardAccessService.requireCurrentUser();
-    if (!cardAccessService.hasRole(issuer, Role.RoleName.ROLE_ADMIN)
-        && !cardAccessService.hasRole(issuer, Role.RoleName.ROLE_MANAGER)) {
+    User issuer = ownershipAuthorizationService.requireCurrentUser();
+    if (!ownershipAuthorizationService.hasRole(issuer, Role.RoleName.ROLE_ADMIN)
+        && !ownershipAuthorizationService.hasRole(issuer, Role.RoleName.ROLE_MANAGER)) {
       throw new AccessDeniedException("Only administrators or managers can issue cards");
     }
 
@@ -228,13 +229,13 @@ public class DebitCardRequestService {
   @Transactional
   public DebitCardRequestDTO dispatchRequest(Long requestId, DebitCardRequestDecisionRequest decisionRequest) {
     DebitCardRequest request = loadRequest(requestId);
-    cardAccessService.assertAccountAccess(request.getAccount());
+    ownershipAuthorizationService.assertAccountAccess(request.getAccount());
     if (request.getStatus() != CardRequestStatus.ISSUED) {
       throw new InvalidDataException("Only issued requests can be dispatched", "status", request.getStatus());
     }
-    User dispatcher = cardAccessService.requireCurrentUser();
-    if (!cardAccessService.hasRole(dispatcher, Role.RoleName.ROLE_ADMIN)
-        && !cardAccessService.hasRole(dispatcher, Role.RoleName.ROLE_MANAGER)) {
+    User dispatcher = ownershipAuthorizationService.requireCurrentUser();
+    if (!ownershipAuthorizationService.hasRole(dispatcher, Role.RoleName.ROLE_ADMIN)
+        && !ownershipAuthorizationService.hasRole(dispatcher, Role.RoleName.ROLE_MANAGER)) {
       throw new AccessDeniedException("Only administrators or managers can dispatch cards");
     }
     if (Boolean.TRUE.equals(request.getIsVirtual())) {
@@ -258,16 +259,16 @@ public class DebitCardRequestService {
   @Transactional
   public DebitCardRequestDTO deliverRequest(Long requestId) {
     DebitCardRequest request = loadRequest(requestId);
-    cardAccessService.assertAccountAccess(request.getAccount());
+    ownershipAuthorizationService.assertAccountAccess(request.getAccount());
     if (request.getStatus() != CardRequestStatus.ISSUED) {
       throw new InvalidDataException("Only issued requests can be delivered", "status", request.getStatus());
     }
     if (request.getDeliveryStatus() != DeliveryStatus.DISPATCHED) {
       throw new InvalidDataException("Only dispatched requests can be delivered", "deliveryStatus", request.getDeliveryStatus());
     }
-    User dispatcher = cardAccessService.requireCurrentUser();
-    if (!cardAccessService.hasRole(dispatcher, Role.RoleName.ROLE_ADMIN)
-        && !cardAccessService.hasRole(dispatcher, Role.RoleName.ROLE_MANAGER)) {
+    User dispatcher = ownershipAuthorizationService.requireCurrentUser();
+    if (!ownershipAuthorizationService.hasRole(dispatcher, Role.RoleName.ROLE_ADMIN)
+        && !ownershipAuthorizationService.hasRole(dispatcher, Role.RoleName.ROLE_MANAGER)) {
       throw new AccessDeniedException("Only administrators or managers can confirm delivery");
     }
     request.setDeliveryStatus(DeliveryStatus.DELIVERED);
@@ -278,14 +279,14 @@ public class DebitCardRequestService {
   @Transactional
   public DebitCardRequestDTO rejectRequest(Long requestId, DebitCardRequestDecisionRequest decisionRequest) {
     DebitCardRequest request = loadRequest(requestId);
-    cardAccessService.assertAccountAccess(request.getAccount());
+    ownershipAuthorizationService.assertAccountAccess(request.getAccount());
     if (request.getStatus() != CardRequestStatus.PENDING) {
       throw new InvalidDataException("Only pending requests can be rejected", "status", request.getStatus());
     }
 
-    User approver = cardAccessService.requireCurrentUser();
-    if (!cardAccessService.hasRole(approver, Role.RoleName.ROLE_ADMIN)
-        && !cardAccessService.hasRole(approver, Role.RoleName.ROLE_MANAGER)) {
+    User approver = ownershipAuthorizationService.requireCurrentUser();
+    if (!ownershipAuthorizationService.hasRole(approver, Role.RoleName.ROLE_ADMIN)
+        && !ownershipAuthorizationService.hasRole(approver, Role.RoleName.ROLE_MANAGER)) {
       throw new AccessDeniedException("Only administrators or managers can reject requests");
     }
 

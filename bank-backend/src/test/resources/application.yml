@@ -1,28 +1,106 @@
 server:
+  port: ${PORT:8080}
   servlet:
     context-path: /api
 
 spring:
+  main:
+    lazy-initialization: true
   sql:
     init:
-      # Don't run schema.sql against a real database during tests.
       mode: never
+
   datasource:
-    driver-class-name: org.h2.Driver
-    url: jdbc:h2:mem:bank_db;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    username: sa
-    password:
+    driver-class-name: org.postgresql.Driver
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 3
+      minimum-idle: 0
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      keepalive-time: 0
+
   jpa:
+    open-in-view: false
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
     show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  cache:
+    type: simple
+
+  # data:
+  #   redis:
+  #     host: ${REDIS_HOST:localhost}
+  #     port: ${REDIS_PORT:6379}
+
   mail:
-    host: localhost
-    port: 25
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:true}
+          starttls:
+            enable: ${MAIL_STARTTLS:true}
 
 jwt:
-  # JwtUtil expects BASE64-encoded bytes.
-  secret: YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=
+  secret: ${JWT_SECRET}
   expiration: 86400000
   refresh:
     expiration: 604800000
+
+app:
+  cors:
+    allowed-origins:
+      - ${FRONTEND_URL}
+
+  mail:
+    enabled: ${MAIL_ENABLED:false}
+    from: ${MAIL_FROM:no-reply@myDomain.com}
+    reset-link-base: ${FRONTEND_URL}/reset-password
+
+  rate-limit:
+    enabled: true
+    login:
+      capacity: 10
+      refill-seconds: 60
+    forgot:
+      capacity: 5
+      refill-seconds: 60
+    upi-pay:
+      capacity: 20
+      refill-seconds: 60
+
+logging:
+  level:
+    root: INFO
+    org.springframework: INFO
+    org.hibernate.SQL: WARN
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+  health:
+    mail:
+      enabled: false
+    redis:
+      enabled: false
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

@@ -9,7 +9,6 @@ import {
   FileText,
   Lock,
   UserCircle2,
-  Link2,
   Send,
   type LucideIcon,
 } from "lucide-react";
@@ -203,7 +202,7 @@ export function getDashboardRoute(userRoles: string[]): string {
     case ROLES.CUSTOMER_MANAGER:
       return '/customer-manager';
     case ROLES.AUDITOR:
-      return '/dashboard';
+      return '/auditor';
     case ROLES.USER:
       return '/user';
     default:
@@ -269,7 +268,7 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     roles: [ROLES.USER],
   },
   {
-    path: '/dashboard',
+    path: '/auditor',
     label: 'Dashboard',
     icon: LayoutDashboard,
     roles: [ROLES.AUDITOR],
@@ -303,12 +302,6 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     label: 'Loans & EMI',
     icon: TrendingUp,
     roles: [ROLES.USER],
-  },
-  {
-    path: '/my-account',
-    label: 'My Account',
-    icon: UserCircle2,
-    roles: 'all',
   },
   {
     path: '/profile',
@@ -358,12 +351,6 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     icon: Lock,
     roles: [ROLES.ADMIN],
   },
-  {
-    path: '/webhooks',
-    label: 'Webhooks',
-    icon: Link2,
-    roles: [ROLES.ADMIN, ROLES.MANAGER],
-  },
 ];
 
 /**
@@ -380,7 +367,7 @@ export function getVisibleNavItems(userRoles: string[]): NavigationItem[] {
 
     const resolvedPath = item.path === '/dashboard' ? dashboardRoute : item.path;
 
-    if (item.path === '/admin' || item.path === '/manager' || item.path === '/customer-manager' || item.path === '/user' || item.path === '/dashboard') {
+    if (item.path === '/admin' || item.path === '/manager' || item.path === '/customer-manager' || item.path === '/user' || item.path === '/auditor' || item.path === '/dashboard') {
       if (item.path !== dashboardRoute) {
         return false;
       }

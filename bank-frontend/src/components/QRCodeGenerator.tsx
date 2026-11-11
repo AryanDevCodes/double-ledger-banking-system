@@ -74,7 +74,7 @@ export default function QRCodeGenerator({
   };
 
   return (
-    <Card className="overflow-hidden rounded-2xl border border-border/50 bg-card/80 backdrop-blur-sm">
+    <Card className="overflow-hidden rounded-lg border border-border bg-card">
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-2.5 text-lg">
           <div className="p-1.5 rounded-lg bg-primary/10 text-primary">

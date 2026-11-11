@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { Moon, Sun, Laptop, Palette, Sparkles, Landmark, PanelsTopLeft, Waves, Gem, Flame, Leaf } from "lucide-react";
+import { Moon, Sun, Laptop, Palette, BookOpen, Landmark, PanelsTopLeft, Waves, Gem, Flame, Leaf } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -45,22 +45,22 @@ const ACCENTS: { key: Accent; label: string; gradient: string; icon: typeof Gem 
   { key: "jade", label: "Jade", gradient: "from-teal-500 to-emerald-400", icon: Palette },
 ];
 
-const STYLES: { key: UiStyle; label: string; icon: typeof Sparkles }[] = [
-  { key: "modern", label: "Modern", icon: Sparkles },
+const STYLES: { key: UiStyle; label: string; icon: typeof BookOpen }[] = [
+  { key: "modern", label: "Editorial", icon: BookOpen },
   { key: "classic", label: "Classic", icon: Landmark },
-  { key: "solid", label: "Solid", icon: PanelsTopLeft },
+  { key: "solid", label: "Compact", icon: PanelsTopLeft },
 ];
 
 export function ThemeToggle({ withLabel = false, className }: ThemeToggleProps) {
   const { setTheme, theme } = useTheme();
-  const [uiStyle, setUiStyle] = useState<UiStyle>("modern");
-  const [accent, setAccent] = useState<Accent>("royal");
+  const [uiStyle, setUiStyle] = useState<UiStyle>("classic");
+  const [accent, setAccent] = useState<Accent>("emerald");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    const savedStyle = (localStorage.getItem(UI_STYLE_KEY) as UiStyle | null) || "modern";
-    const savedAccent = (localStorage.getItem(UI_ACCENT_KEY) as Accent | null) || "royal";
+    const savedStyle = (localStorage.getItem(UI_STYLE_KEY) as UiStyle | null) || "classic";
+    const savedAccent = (localStorage.getItem(UI_ACCENT_KEY) as Accent | null) || "emerald";
     setUiStyle(savedStyle);
     setAccent(savedAccent);
     applyUiTheme(savedStyle, savedAccent);
@@ -79,17 +79,17 @@ export function ThemeToggle({ withLabel = false, className }: ThemeToggleProps) 
   };
 
   const current = theme || "system";
-  if (!mounted) return <Button variant="ghost" size="icon" className={cn("h-8 w-8 rounded-xl", className)}><Sun className="h-4 w-4" /></Button>;
+  if (!mounted) return <Button variant="ghost" size="icon" className={cn("h-8 w-8 rounded-md", className)}><Sun className="h-4 w-4" /></Button>;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant={withLabel ? "outline" : "ghost"} size={withLabel ? "sm" : "icon"} aria-label="Theme settings" className={cn(withLabel ? "gap-2 rounded-xl" : "rounded-xl", className)}>
+        <Button variant={withLabel ? "outline" : "ghost"} size={withLabel ? "sm" : "icon"} aria-label="Theme settings" className={cn(withLabel ? "gap-2 rounded-md" : "rounded-md", className)}>
           {current === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           {withLabel ? <span>Theme</span> : null}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64 rounded-2xl p-0 overflow-hidden">
+      <DropdownMenuContent align="end" className="w-64 rounded-md border-border bg-card p-0 shadow-md">
         {/* Color Mode */}
         <div className="p-3">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold px-1 pb-2">Color Mode</DropdownMenuLabel>
@@ -99,7 +99,7 @@ export function ThemeToggle({ withLabel = false, className }: ThemeToggleProps) 
                 key={m}
                 onClick={() => setTheme(m)}
                 className={cn(
-                  "flex flex-col items-center gap-1.5 py-2 rounded-xl text-xs font-medium transition-all",
+                  "flex flex-col items-center gap-1.5 py-2 rounded-md text-xs font-medium transition-colors",
                   current === m ? "bg-primary/10 text-primary ring-1 ring-primary/20" : "text-muted-foreground hover:bg-muted/50"
                 )}
               >
@@ -123,7 +123,7 @@ export function ThemeToggle({ withLabel = false, className }: ThemeToggleProps) 
                   key={s.key}
                   onClick={() => handleStyleChange(s.key)}
                   className={cn(
-                    "flex flex-col items-center gap-1.5 py-2 rounded-xl text-xs font-medium transition-all",
+                    "flex flex-col items-center gap-1.5 py-2 rounded-md text-xs font-medium transition-colors",
                     uiStyle === s.key ? "bg-primary/10 text-primary ring-1 ring-primary/20" : "text-muted-foreground hover:bg-muted/50"
                   )}
                 >

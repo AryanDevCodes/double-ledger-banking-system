@@ -9,6 +9,11 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
+export function maskAccountNumber(accountNumber?: string | null): string {
+  if (!accountNumber) return "—";
+  return `•••• ${accountNumber.slice(-4)}`;
+}
+
 export function formatDate(dateStr: string, includeTime: boolean = false): string {
   const options: Intl.DateTimeFormatOptions = {
     year: "numeric",

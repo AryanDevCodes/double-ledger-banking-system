@@ -100,7 +100,6 @@ public class BankServiceIMPL implements BankService {
       throw new InvalidDataException("Bank ID cannot be null or empty", "id", id);
     }
     Bank bank = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Bank", "id", id));
-    @SuppressWarnings("null")
     var deleted = bank;
     repository.delete(deleted);
   }

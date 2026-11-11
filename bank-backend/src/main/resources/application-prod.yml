@@ -80,11 +80,6 @@ app:
       capacity: 20
       refill-seconds: 60
 
-  webhook:
-    connect-timeout-ms: 3000
-    read-timeout-ms: 5000
-    max-retries: 3
-
 logging:
   level:
     root: INFO

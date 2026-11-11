@@ -11,7 +11,6 @@ const TINT_STYLES = {
 
 export interface GlassPanelProps {
   variant?: "default" | "elevated" | "subtle" | "interactive";
-  blur?: "sm" | "md" | "lg" | "xl"; // we'll use backdrop-blur-* classes
   tint?: keyof typeof TINT_STYLES;
   className?: string;
   children: ReactNode;
@@ -20,16 +19,8 @@ export interface GlassPanelProps {
   as?: keyof JSX.IntrinsicElements;
 }
 
-const blurMap = {
-  sm: "backdrop-blur-sm",
-  md: "backdrop-blur-md",
-  lg: "backdrop-blur-lg",
-  xl: "backdrop-blur-xl",
-};
-
 export default function GlassPanel({
   variant = "default",
-  blur = "lg",
   tint = "neutral",
   className,
   children,
@@ -38,16 +29,14 @@ export default function GlassPanel({
   as: Tag = "div",
 }: GlassPanelProps) {
   const tintClass = TINT_STYLES[tint] || "";
-  const blurClass = blurMap[blur] || "backdrop-blur-lg";
 
   return (
     <Tag
       className={cn(
-        "rounded-2xl border border-border/40 bg-card/60 transition-all duration-300",
-        blurClass,
-        variant === "elevated" && "shadow-lg shadow-black/5",
-        variant === "subtle" && "bg-card/40 border-border/20",
-        variant === "interactive" && "hover:bg-card/80 hover:border-border/60 hover:-translate-y-0.5 hover:shadow-lg",
+        "rounded-lg border border-border bg-card transition-colors duration-150",
+        variant === "elevated" && "shadow-sm",
+        variant === "subtle" && "bg-muted/40 border-border",
+        variant === "interactive" && "hover:bg-muted/40 hover:border-primary/30",
         tintClass,
         className
       )}

@@ -1,85 +1,23 @@
-import { useMemo } from "react";
+import { Link } from "react-router-dom";
 import {
-  Users,
+  ArrowUpRight,
+  CheckCircle2,
+  Clock3,
   CreditCard,
   RefreshCw,
-  UserPlus,
-  ClipboardCheck,
-  UserCircle2,
-  Mail,
-  UserCheck,
-  Shield,
-  TrendingUp,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
+  Search,
+  ShieldCheck,
+  UserRound,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import PageWrapper from "@/components/PageWrapper";
-import PageHeader from "@/components/PageHeader";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { formatCurrency } from "@/lib/format";
-import FuturisticStatsGrid, { type FuturisticStatWidget } from "@/components/dashboard/FuturisticStatsGrid";
-import FuturisticChart from "@/components/dashboard/FuturisticChart";
-import FuturisticActivityFeed, { type ActivityEvent } from "@/components/dashboard/FuturisticActivityFeed";
-import FuturisticQuickActions from "@/components/dashboard/FuturisticQuickActions";
-
-const generateActivityEvents = (customers: any[], accounts: any[]): ActivityEvent[] => {
-  const events: ActivityEvent[] = [];
-  
-  customers.slice(0, 4).forEach((c, i) => {
-    events.push({
-      id: `cust-${c.customerId || i}`,
-      type: "kyc",
-      title: c.kycStatus === "COMPLETED" ? "KYC Verified" : c.kycStatus === "PENDING" ? "KYC Pending" : "KYC Rejected",
-      description: `${c.fullName || c.email}`,
-      timestamp: new Date(Date.now() - i * 600000).toISOString(),
-      status: c.kycStatus === "COMPLETED" ? "success" as const : c.kycStatus === "PENDING" ? "pending" as const : "failed" as const,
-      user: c.email,
-    });
-  });
-
-  accounts.slice(0, 2).forEach((a, i) => {
-    events.push({
-      id: `acc-${a.accountId || i}`,
-      type: "account",
-      title: a.status === "ACTIVE" ? "Account Activated" : "Account Created",
-      description: `${a.accountNumber} - ${a.bankName}`,
-      timestamp: new Date(Date.now() - (i + 4) * 600000).toISOString(),
-      status: a.status === "ACTIVE" ? "success" as const : "pending" as const,
-      user: a.customerName || "Unknown",
-    });
-  });
-
-  return events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-};
-
-const generateKYCData = (customers: any[]) => {
-  const weeklyData: Record<string, number> = {};
-  const now = new Date();
-  
-  for (let i = 3; i >= 0; i--) {
-    const d = new Date(now.getTime() - i * 7 * 24 * 60 * 60 * 1000);
-    const key = `Week ${4 - i}`;
-    weeklyData[key] = Math.floor(Math.random() * 20) + 30;
-  }
-  
-  return Object.entries(weeklyData).map(([name, value]) => ({ name, value }));
-};
-
-const generateCustomerStatusData = (customers: any[]) => {
-  const active = customers.filter(c => c.customerStatus === "ACTIVE").length;
-  const pending = customers.filter(c => c.customerStatus === "PENDING").length;
-  const suspended = customers.filter(c => c.customerStatus === "SUSPENDED").length;
-  const newCust = customers.length - active - pending - suspended;
-  
-  return [
-    { name: "Active", value: active || 245 },
-    { name: "Pending", value: pending || 28 },
-    { name: "Suspended", value: suspended || 12 },
-    { name: "New", value: newCust || 35 },
-  ];
-};
+import {
+  DashboardEmpty,
+  DashboardHero,
+  DashboardMetric,
+  DashboardPanel,
+} from "@/components/dashboard/RoleDashboardPrimitives";
 
 export default function CustomerManagerDashboard() {
   const { customers, accounts, loading, reload, lastUpdated } = useDashboardData("all", {
@@ -88,159 +26,127 @@ export default function CustomerManagerDashboard() {
     transactions: false,
     realtime: 30000,
   });
-
-  const pendingKyc = customers.filter((c) => c.kycStatus === "PENDING").length;
-  const verifiedKyc = customers.filter((c) => c.kycStatus === "COMPLETED").length;
-  const activeCustomers = customers.filter((c) => c.customerStatus === "ACTIVE").length;
-  const pendingAccounts = accounts.filter((a) => a.status === "PENDING").length;
-
-  const activityEvents = useMemo(() => generateActivityEvents(customers, accounts), [customers, accounts]);
-  const kycData = useMemo(() => generateKYCData(customers), [customers]);
-  const customerStatusData = useMemo(() => generateCustomerStatusData(customers), [customers]);
-
-  const widgets: FuturisticStatWidget[] = [
-    { id: "customers", title: "Total Customers", value: customers.length, icon: <Users className="h-5 w-5" />, subtitle: `${activeCustomers} active`, tint: "cyan" },
-    { id: "verified", title: "Verified KYC", value: verifiedKyc, icon: <UserCheck className="h-5 w-5" />, tint: "emerald" },
-    { id: "pending-kyc", title: "Pending KYC", value: pendingKyc, icon: <UserCircle2 className="h-5 w-5" />, subtitle: "Awaiting review", tint: "amber" },
-    { id: "accounts", title: "Customer Accounts", value: accounts.length, icon: <CreditCard className="h-5 w-5" />, subtitle: `${pendingAccounts} pending`, tint: "sky" },
-  ];
+  const pendingCustomers = customers.filter((customer) => customer.kycStatus === "PENDING");
+  const verifiedCustomers = customers.filter((customer) => customer.kycStatus === "COMPLETED");
+  const activeCustomers = customers.filter((customer) => customer.customerStatus === "ACTIVE");
+  const pendingAccounts = accounts.filter((account) => account.status === "PENDING");
+  const kycCompletion = customers.length
+    ? Math.round((verifiedCustomers.length / customers.length) * 100)
+    : 0;
 
   return (
-    <PageWrapper>
-      <PageHeader
-        title="Customer Service Center"
-        subtitle="Onboarding, KYC verification & customer relationship management"
-        icon={<Users className="h-5 w-5" />}
+    <div className="space-y-5">
+      <DashboardHero
+        eyebrow="Customer services"
+        title="Onboarding & KYC"
+        description="Keep customer records, verification status, and account onboarding moving."
+        icon={Users}
+        updatedAt={lastUpdated}
         actions={
-          <div className="flex items-center gap-3">
-            {lastUpdated && (
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/5 text-xs text-muted-foreground">
-                <Clock className="w-3 h-3" />
-                {lastUpdated.toLocaleTimeString()}
-              </div>
-            )}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-info/20 border border-info/30">
-              <Shield className="w-3 h-3 text-info" />
-              <span className="text-xs text-info font-medium">KYC Active</span>
-            </div>
-            <Button variant="outline" size="sm" onClick={reload} disabled={loading}>
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-              Sync
-            </Button>
-          </div>
+          <Button variant="outline" size="sm" onClick={() => void reload()} disabled={loading}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
         }
       />
 
-      <FuturisticStatsGrid
-        widgets={widgets}
-        loading={loading}
-        columnsClassName="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
-      />
-
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
-        <div className="xl:col-span-2">
-          <FuturisticChart 
-            data={kycData} 
-            title="KYC Verifications (Weekly)" 
-            type="area" 
-            height={300}
-            
-          />
-        </div>
-        <FuturisticChart 
-          data={customerStatusData} 
-          title="Customer Status Distribution" 
-          type="pie" 
-          height={300}
-          
-        />
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <DashboardMetric label="Customer records" value={customers.length} detail={`${activeCustomers.length} active`} icon={Users} tone="blue" />
+        <DashboardMetric label="KYC awaiting review" value={pendingCustomers.length} detail="Based on current KYC status" icon={Clock3} tone="amber" />
+        <DashboardMetric label="KYC verified" value={verifiedCustomers.length} detail={`${kycCompletion}% of customer records`} icon={CheckCircle2} tone="green" />
+        <DashboardMetric label="Pending accounts" value={pendingAccounts.length} detail={`${accounts.length} total accounts`} icon={CreditCard} tone="violet" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <FuturisticActivityFeed 
-          events={activityEvents} 
-          title="Customer Activity"
-          maxEvents={6}
-        />
-        
-        <div className="lg:col-span-2">
-          <div className="glass-card-futuristic p-5">
-            <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-              <ClipboardCheck className="w-4 h-4 text-primary" />
-              KYC Review Queue
-            </h3>
-            <div className="space-y-3">
-              {customers.filter(c => c.kycStatus === "PENDING").slice(0, 3).map((cust, i) => (
-                <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-muted/25 border border-border hover:border-primary/30 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-cyan-500/20">
-                      <UserCircle2 className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{cust.fullName || cust.email}</p>
-                      <p className="text-xs text-muted-foreground">{cust.email}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="badge-futuristic badge-futuristic--warning">
-                      <Clock className="w-3 h-3 mr-1" />
-                      Pending
+      <div className="grid gap-5 xl:grid-cols-[1.3fr_1fr]">
+        <DashboardPanel
+          title="KYC review queue"
+          description="Customers with KYC status marked pending"
+          action={
+            <Button asChild variant="outline" size="sm">
+              <Link to="/customers"><Search className="mr-2 h-3.5 w-3.5" />Open directory</Link>
+            </Button>
+          }
+        >
+          {pendingCustomers.length === 0 ? (
+            <DashboardEmpty title="Queue is clear" description="There are no customer records awaiting KYC review." icon={ShieldCheck} />
+          ) : (
+            <div className="space-y-2">
+              {pendingCustomers.slice(0, 6).map((customer) => (
+                <div key={customer.id} className="flex items-center justify-between gap-3 rounded-xl border border-border/60 px-3 py-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400">
+                      <UserRound className="h-4 w-4" aria-hidden="true" />
                     </span>
-                    <Button size="sm" variant="outline" className="h-8 border-primary/30 text-primary hover:bg-primary/20">
-                      Review
-                    </Button>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{customer.fullName || "Unnamed customer"}</p>
+                      <p className="truncate text-xs text-muted-foreground">{customer.email}</p>
+                    </div>
                   </div>
+                  <span className="shrink-0 rounded-full bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-700 dark:text-amber-400">
+                    Pending
+                  </span>
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-      </div>
+          )}
+        </DashboardPanel>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <FuturisticQuickActions
-          title="Customer Service Tools"
-          actions={[
-            { to: "/customers", label: "New Customer", icon: UserPlus, description: "Onboard a customer", badge: "Start", badgeType: "success" },
-            { to: "/customers", label: "KYC Queue", icon: ClipboardCheck, description: `${pendingKyc} pending`, badge: `${pendingKyc}`, badgeType: "warning" },
-            { to: "/accounts", label: "Open Account", icon: CreditCard, description: "Create a bank account" },
-            { to: "/customers", label: "Lookup by Email", icon: Mail, description: "Find customer records" },
-          ]}
-          columns={2}
-          className="lg:col-span-2"
-        />
-        
-        <div className="glass-card-futuristic p-5">
-          <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-emerald-400" />
-            Today's Metrics
-          </h3>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Customers Onboarded</span>
-              <span className="text-lg font-bold text-primary">{customers.filter(c => c.customerStatus === "ACTIVE").length}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">KYC Verified</span>
-              <span className="text-lg font-bold text-emerald-400">{verifiedKyc}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Accounts Opened</span>
-              <span className="text-lg font-bold text-violet-400">{accounts.filter(a => a.status === "ACTIVE").length}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Pending KYC</span>
-              <span className="text-lg font-bold text-amber-400">{pendingKyc}</span>
-            </div>
-            <div className="pt-4 border-t border-white/10">
-              <div className="progress-futuristic">
-                <div className="progress-futuristic-bar" style={{ width: `${Math.round((verifiedKyc / (customers.length || 1)) * 100)}%` }} />
+        <div className="space-y-5">
+          <DashboardPanel title="KYC progress" description="Current customer verification coverage">
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <p className="text-3xl font-semibold tracking-tight">{kycCompletion}%</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {verifiedCustomers.length} verified of {customers.length} customer records
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">{Math.round((verifiedKyc / (customers.length || 1)) * 100)}% SLA compliance</p>
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+              </span>
             </div>
-          </div>
+            <div
+              className="mt-5 h-2 overflow-hidden rounded-full bg-muted"
+              role="progressbar"
+              aria-label="KYC verification completion"
+              aria-valuenow={kycCompletion}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <div className="h-full rounded-full bg-emerald-500 transition-[width]" style={{ width: `${kycCompletion}%` }} />
+            </div>
+            <div className="mt-3 flex justify-between text-xs text-muted-foreground">
+              <span>{pendingCustomers.length} pending</span>
+              <span>{customers.length - verifiedCustomers.length - pendingCustomers.length} other</span>
+            </div>
+          </DashboardPanel>
+
+          <DashboardPanel
+            title="Account onboarding"
+            description="Accounts currently awaiting activation"
+            action={
+              <Button asChild variant="ghost" size="sm" className="-mr-2">
+                <Link to="/accounts">View accounts</Link>
+              </Button>
+            }
+          >
+            {pendingAccounts.length === 0 ? (
+              <DashboardEmpty title="No pending accounts" description="New account requests will be listed here." icon={CreditCard} />
+            ) : (
+              <div className="space-y-2">
+                {pendingAccounts.slice(0, 3).map((account) => (
+                  <div key={account.accountNumber} className="flex items-center justify-between gap-3 rounded-xl bg-muted/40 px-3 py-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{account.customerName || "Customer"}</p>
+                      <p className="text-xs text-muted-foreground">{account.bankName} · •••• {account.accountNumber.slice(-4)}</p>
+                    </div>
+                    <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  </div>
+                ))}
+              </div>
+            )}
+          </DashboardPanel>
         </div>
       </div>
-    </PageWrapper>
+    </div>
   );
 }

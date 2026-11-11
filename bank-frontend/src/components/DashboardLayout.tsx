@@ -6,11 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import AppSidebar from "@/components/AppSidebar";
+import NotificationCenter from "@/components/NotificationCenter";
 import GlobalCommandPalette from "@/components/GlobalCommandPalette";
-import AuroraBackdrop from "@/components/AuroraBackdrop";
 import KbdHint from "@/components/ui/KbdHint";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,12 +40,8 @@ import {
   LogOut,
   Menu,
   ChevronDown,
-  Bell,
   Search,
   X,
-  CircleCheck,
-  AlertTriangle,
-  Info,
   Command,
   ChevronRight,
 } from "lucide-react";
@@ -141,30 +143,6 @@ export default function DashboardLayout() {
     [visibleNavItems, dashboardPath]
   );
 
-  const notifications = useMemo(
-    () => [
-      {
-        id: "n1",
-        title: "Daily reconciliation completed",
-        tone: "success" as const,
-        time: "2m ago",
-      },
-      {
-        id: "n2",
-        title: "2 failed transfer attempts detected",
-        tone: "warning" as const,
-        time: "18m ago",
-      },
-      {
-        id: "n3",
-        title: "System health check passed",
-        tone: "info" as const,
-        time: "1h ago",
-      },
-    ],
-    []
-  );
-
   useEffect(() => {
     if (brandingOpen) {
       setDraftBrandName(brandName);
@@ -236,13 +214,11 @@ export default function DashboardLayout() {
         Skip to main content
       </a>
 
-      <AuroraBackdrop />
-
       {/* Sidebar spacer */}
       <div
         className={cn(
           "hidden md:block shrink-0 h-full transition-all duration-300",
-          sidebarCollapsed ? "w-[84px]" : "w-[260px]"
+          sidebarCollapsed ? "w-[72px]" : "w-[240px]"
         )}
       >
         <AppSidebar
@@ -254,8 +230,8 @@ export default function DashboardLayout() {
       {/* Main content */}
       <div className="flex-1 h-full overflow-y-auto flex flex-col min-w-0">
         {/* Masthead */}
-        <header className="sticky top-0 z-40 px-3 pt-4 pb-3">
-          <div className="mx-auto max-w-[980px] flex items-center justify-between gap-3">
+        <header className="sticky top-0 z-40 border-b border-border bg-background px-3 py-2">
+          <div className="mx-auto max-w-[1480px] flex items-center justify-between gap-3">
             {/* Left */}
             <div className="flex items-center gap-3 min-w-0">
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -273,8 +249,12 @@ export default function DashboardLayout() {
                   side="left"
                   className="w-[280px] p-0 border-0 bg-transparent shadow-none"
                 >
-                  <div className="h-full rounded-r-2xl flex flex-col border-l-0 bg-card/90 backdrop-blur-xl border border-border/50 shadow-xl">
-                    <div className="h-14 px-4 border-b border-border/50 flex items-center gap-2 shrink-0">
+                  <SheetTitle className="sr-only">Navigation menu</SheetTitle>
+                  <SheetDescription className="sr-only">
+                    Navigate to the sections available for your account.
+                  </SheetDescription>
+                  <div className="h-full flex flex-col border-r border-border bg-card shadow-sm">
+                    <div className="h-14 px-4 border-b border-border flex items-center gap-2 shrink-0">
                       <Building2 className="h-5 w-5 text-primary shrink-0" />
                       <div className="min-w-0">
                         <p className="text-sm font-semibold truncate">{brandName}</p>
@@ -294,7 +274,7 @@ export default function DashboardLayout() {
                             to={to}
                             onClick={() => setMobileMenuOpen(false)}
                             className={cn(
-                              "flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150",
+                              "flex items-center gap-2.5 rounded-md px-3 py-2.5 text-sm font-medium transition-colors duration-150",
                               isActive
                                 ? "bg-primary/10 text-primary"
                                 : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
@@ -327,10 +307,10 @@ export default function DashboardLayout() {
                 ref={searchInputRef}
                 placeholder="Search modules…"
                 className={cn(
-                  "h-9 pl-9 pr-8 rounded-xl bg-card/60 border-border/50 text-sm transition-all duration-200",
+                  "h-9 pl-9 pr-8 rounded-md bg-card border-border text-sm transition-colors duration-150",
                   "placeholder:text-muted-foreground/50",
-                  "focus-visible:ring-primary/30 focus-visible:bg-card/90 focus-visible:border-primary/30",
-                  searchFocused && "bg-card/90 border-primary/30 shadow-sm"
+                  "focus-visible:ring-primary/30 focus-visible:bg-card focus-visible:border-primary/40",
+                  searchFocused && "bg-card border-primary/40"
                 )}
                 value={moduleSearch}
                 onChange={(e) => setModuleSearch(e.target.value)}
@@ -367,7 +347,7 @@ export default function DashboardLayout() {
 
               {/* Search dropdown */}
               {searchFocused && moduleSearch.trim() && (
-                <div className="absolute top-11 left-0 right-0 z-50 rounded-xl overflow-hidden border border-border/50 bg-card/95 backdrop-blur-xl shadow-lg animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute top-11 left-0 right-0 z-50 rounded-md overflow-hidden border border-border bg-card shadow-md animate-in fade-in zoom-in-95 duration-150">
                   {searchMatches.length > 0 ? (
                     searchMatches.map((m) => (
                       <button
@@ -407,7 +387,7 @@ export default function DashboardLayout() {
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="hidden lg:inline-flex h-8 rounded-xl gap-1.5 text-xs text-muted-foreground/70 border border-border/40 bg-card/40 hover:bg-card/70 hover:text-foreground transition-all"
+                className="hidden lg:inline-flex h-8 rounded-md gap-1.5 text-xs text-muted-foreground border border-border bg-card hover:bg-muted hover:text-foreground transition-colors"
                 onClick={() => setCommandOpen(true)}
                 aria-label="Open command palette"
               >
@@ -416,63 +396,16 @@ export default function DashboardLayout() {
                 <KbdHint keys={["Ctrl", "K"]} className="ml-0.5" />
               </Button>
 
-              <ThemeToggle className="h-8 w-8 rounded-xl" />
+              <ThemeToggle className="h-8 w-8 rounded-md" />
 
-              {/* Notifications */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 relative rounded-xl"
-                    aria-label="View notifications"
-                  >
-                    <Bell className="h-4 w-4 text-muted-foreground/70" />
-                    {notifications.length > 0 && (
-                      <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground shadow-sm">
-                        {notifications.length}
-                      </span>
-                    )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="w-80 rounded-2xl border-border/50 bg-card/95 backdrop-blur-xl shadow-xl overflow-hidden p-0"
-                >
-                  <DropdownMenuLabel className="flex items-center justify-between px-4 pt-3 pb-2">
-                    <span className="font-semibold text-sm">Notifications</span>
-                    <span className="text-xs text-muted-foreground">
-                      {notifications.length} new
-                    </span>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-border/50 mx-0" />
-                  {notifications.map((n) => (
-                    <DropdownMenuItem
-                      key={n.id}
-                      className="items-start gap-2.5 px-4 py-3 hover:bg-muted/50 cursor-pointer focus:bg-muted/50"
-                    >
-                      {n.tone === "success" ? (
-                        <CircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                      ) : n.tone === "warning" ? (
-                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
-                      ) : (
-                        <Info className="mt-0.5 h-4 w-4 shrink-0 text-sky-500" />
-                      )}
-                      <div className="min-w-0">
-                        <p className="text-sm leading-snug">{n.title}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{n.time}</p>
-                      </div>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <NotificationCenter />
 
               {/* User */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="h-8 rounded-full pl-1 pr-2 gap-1.5 hover:bg-muted/50"
+                    className="h-8 rounded-md pl-1 pr-2 gap-1.5 hover:bg-muted/50"
                   >
                     <Avatar className="h-6 w-6 border border-primary/30">
                       {user?.avatarUrl ? (
@@ -490,7 +423,7 @@ export default function DashboardLayout() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
-                  className="w-56 rounded-2xl border-border/50 bg-card/95 backdrop-blur-xl shadow-xl overflow-hidden p-0"
+                  className="w-56 rounded-md border-border bg-card shadow-md overflow-hidden p-0"
                 >
                   <DropdownMenuLabel className="px-4 pt-3 pb-2">
                     <p className="font-semibold text-sm">
@@ -500,7 +433,7 @@ export default function DashboardLayout() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-border/50 mx-0" />
                   <DropdownMenuItem
-                    onClick={() => navigate("/my-account")}
+                    onClick={() => navigate("/profile")}
                     className="px-4 py-2.5 hover:bg-muted/50 cursor-pointer focus:bg-muted/50"
                   >
                     <User className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -529,13 +462,13 @@ export default function DashboardLayout() {
 
         {/* Page */}
         <main id="main-content" className="flex-1 page-transition" tabIndex={-1}>
-          <div className="px-4 py-4 md:py-6 max-w-[1200px] mx-auto w-full">
+          <div className="px-4 py-4 md:px-6 md:py-6 max-w-[1480px] mx-auto w-full">
             <Outlet />
           </div>
         </main>
 
         {/* Footer */}
-        <footer className="border-t border-border/40 py-4 px-4 mt-auto">
+        <footer className="border-t border-border py-3 px-4 mt-auto">
           <p className="text-center text-[11px] text-muted-foreground/60">
             © {new Date().getFullYear()} {brandName}. Enterprise Banking Platform.
           </p>
@@ -544,7 +477,7 @@ export default function DashboardLayout() {
 
       {/* Brand Dialog */}
       <Dialog open={brandingOpen} onOpenChange={setBrandingOpen}>
-        <DialogContent className="sm:max-w-md rounded-2xl">
+        <DialogContent className="sm:max-w-md rounded-lg">
           <DialogHeader>
             <DialogTitle>Customize UI Brand</DialogTitle>
             <DialogDescription>
@@ -562,7 +495,7 @@ export default function DashboardLayout() {
                   setBrandName(v);
                 }}
                 placeholder="Enter brand name"
-                className="rounded-xl"
+                className="rounded-md"
               />
             </div>
             <div className="space-y-1.5">
@@ -575,7 +508,7 @@ export default function DashboardLayout() {
                   setConsoleTagline(v);
                 }}
                 placeholder="Enter tagline"
-                className="rounded-xl"
+                className="rounded-md"
               />
             </div>
           </div>
@@ -587,11 +520,11 @@ export default function DashboardLayout() {
                 setDraftBrandName("SecureBank");
                 setDraftConsoleTagline("Enterprise Console");
               }}
-              className="rounded-xl"
+              className="rounded-md"
             >
               Reset defaults
             </Button>
-            <Button onClick={() => setBrandingOpen(false)} className="rounded-xl">
+            <Button onClick={() => setBrandingOpen(false)} className="rounded-md">
               Done
             </Button>
           </DialogFooter>

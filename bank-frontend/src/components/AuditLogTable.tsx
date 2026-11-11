@@ -99,7 +99,7 @@ export default function AuditLogTable({
   return (
     <div
       className={cn(
-        "overflow-x-auto rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm",
+        "overflow-x-auto rounded-lg border border-border bg-card",
         className
       )}
     >

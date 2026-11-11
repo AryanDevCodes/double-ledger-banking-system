@@ -1,5 +1,22 @@
 package com.bank.service.auth;
 
+import java.math.BigDecimal;
+import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.util.Base64;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
 import com.bank.dto.auth.AuthResponseDTO;
 import com.bank.dto.auth.ChangePasswordRequestDTO;
 import com.bank.dto.auth.ForgotPasswordRequestDTO;
@@ -9,15 +26,13 @@ import com.bank.dto.auth.RegisterRequestDTO;
 import com.bank.dto.auth.ResetPasswordRequestDTO;
 import com.bank.dto.auth.UserResponseDTO;
 import com.bank.entity.AccessEventType;
-import com.bank.entity.AuditStatus;
 import com.bank.entity.Account;
+import com.bank.entity.AuditStatus;
 import com.bank.entity.Customer;
 import com.bank.entity.Role;
 import com.bank.entity.Status;
 import com.bank.entity.User;
 import com.bank.exception.InvalidDataException;
-import com.bank.exception.ResourceNotFoundException;
-import com.bank.exception.UnauthorizedException;
 import com.bank.repository.AccessLogRepository;
 import com.bank.repository.AccountRepository;
 import com.bank.repository.AuditLogRepository;
@@ -30,23 +45,8 @@ import com.bank.repository.UserRepository;
 import com.bank.repository.UserSessionRepository;
 import com.bank.security.JwtUtil;
 import com.bank.service.notification.EmailService;
-import java.math.BigDecimal;
-import java.security.SecureRandom;
-import java.time.LocalDateTime;
-import java.util.Base64;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 @Service
 @RequiredArgsConstructor

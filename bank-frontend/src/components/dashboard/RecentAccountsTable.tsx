@@ -32,7 +32,7 @@ export default function RecentAccountsTable({
 
   return (
     <div className="glass-panel rounded-2xl">
-      <div className="flex items-center justify-between border-b border-[var(--glass-border)] bg-gradient-to-r from-[var(--accent-primary)]/8 to-transparent p-4">
+      <div className="flex items-center justify-between border-b border-border bg-muted/35 p-4">
         <h2 className="text-base font-semibold text-[var(--ink-primary)]">{heading}</h2>
         <Button variant="ghost" size="sm" asChild>
           <Link to={linkTo}>{action}</Link>

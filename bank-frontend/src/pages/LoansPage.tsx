@@ -1,25 +1,50 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import PageWrapper from '@/components/PageWrapper';
 import PageHeader from '@/components/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLoans, useEMIs } from '@/hooks/useCards';
+import { accountApi, getApiErrorMessage } from '@/lib/api-client';
+import type { AccountResponseDTO } from '@/types/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CardSkeleton } from '@/components/LoadingStates';
 import { Progress } from '@/components/ui/progress';
-import { AlertCircle, CheckCircle2, Clock } from 'lucide-react';
+import { AlertCircle, CalendarDays, CheckCircle2, Wallet } from 'lucide-react';
 
 export default function LoansPage() {
   const { user } = useAuth();
   const [selectedLoan, setSelectedLoan] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<'loans' | 'emis'>('loans');
 
-  // For now, we'll use demo data. In a real scenario, we'd fetch the user's customer ID
-  const customerId = user?.userId?.toString() ?? '';
-  
-  const { data: loans, isLoading: loansLoading } = useLoans(customerId || undefined);
-  const { data: emis, isLoading: emisLoading } = useEMIs(selectedLoan ?? undefined);
+  const {
+    data: accounts = [],
+    isLoading: accountsLoading,
+    isError: accountsError,
+    error: accountsLoadError,
+    refetch: refetchAccounts,
+  } = useQuery<AccountResponseDTO[], Error>({
+    queryKey: ['accounts', 'mine', user?.userId],
+    queryFn: accountApi.getMy,
+    enabled: Boolean(user?.userId),
+  });
+  const customerId = accounts[0]?.customerId;
+  const {
+    data: loans,
+    isLoading: loansLoading,
+    isError: loansError,
+    error: loansLoadError,
+    refetch: refetchLoans,
+  } = useLoans(customerId);
+  const {
+    data: emis,
+    isLoading: emisLoading,
+    isError: emisError,
+    error: emisLoadError,
+    refetch: refetchEmis,
+  } = useEMIs(selectedLoan ?? undefined);
   const loanList = loans ?? [];
   const emiList = emis ?? [];
 
@@ -50,27 +75,80 @@ export default function LoansPage() {
     <PageWrapper>
       <PageHeader
         title="Loans & EMI"
-        subtitle="Manage your loans and EMI payments"
+        subtitle="Track outstanding balances and your EMI schedule"
       />
 
       <div className="space-y-6">
-        <Tabs defaultValue="loans" className="w-full">
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => {
+            if (value === 'loans' || value === 'emis') setActiveTab(value);
+          }}
+          className="w-full"
+        >
           <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="loans">My Loans</TabsTrigger>
             <TabsTrigger value="emis">EMI Schedule</TabsTrigger>
           </TabsList>
 
           <TabsContent value="loans" className="space-y-4">
-            {loansLoading ? (
+            {accountsLoading || loansLoading ? (
               <div className="space-y-4">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <CardSkeleton key={i} />
                 ))}
               </div>
+            ) : accountsError || loansError ? (
+              <Card role="alert">
+                <CardContent className="flex flex-col items-center gap-3 px-6 py-10 text-center">
+                  <AlertCircle className="h-5 w-5 text-destructive" aria-hidden="true" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Loan details could not be loaded</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {getApiErrorMessage(accountsError ? accountsLoadError : loansLoadError, 'Please try again.')}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void (accountsError ? refetchAccounts() : refetchLoans())}
+                  >
+                    Retry
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : accounts.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center gap-3 px-6 py-10 text-center">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-muted/50 text-primary">
+                    <Wallet className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">No linked bank account</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Link a bank account to view any loans associated with your customer profile.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : !customerId ? (
+              <Card role="alert">
+                <CardContent className="px-6 py-10 text-center text-sm text-muted-foreground">
+                  We could not resolve the customer profile linked to your account. Please contact support.
+                </CardContent>
+              </Card>
             ) : loanList.length === 0 ? (
               <Card>
-                <CardContent className="pt-6 text-center text-muted-foreground">
-                  No active loans found
+                <CardContent className="flex flex-col items-center gap-3 px-6 py-10 text-center">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-muted/50 text-primary">
+                    <Wallet className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">No loans to show</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Loan details will appear here when they are linked to your profile.
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             ) : (
@@ -81,8 +159,7 @@ export default function LoansPage() {
                     : 0;
 
                   return (
-                    <Card key={loan.id} className="cursor-pointer hover:shadow-lg transition-shadow"
-                          onClick={() => setSelectedLoan(loan.id)}>
+                    <Card key={loan.id}>
                       <CardHeader>
                         <div className="flex items-start justify-between">
                           <div>
@@ -144,12 +221,17 @@ export default function LoansPage() {
                           </div>
                         </div>
 
-                        <div className="flex gap-2 pt-2">
-                          <Button size="sm" variant="default" className="flex-1">
-                            Pay EMI
-                          </Button>
-                          <Button size="sm" variant="outline" className="flex-1">
-                            View Details
+                        <div className="pt-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full"
+                            onClick={() => {
+                              setSelectedLoan(loan.id);
+                              setActiveTab('emis');
+                            }}
+                          >
+                            View EMI schedule
                           </Button>
                         </div>
                       </CardContent>
@@ -163,8 +245,16 @@ export default function LoansPage() {
           <TabsContent value="emis" className="space-y-4">
             {selectedLoan === null ? (
               <Card>
-                <CardContent className="pt-6 text-center text-muted-foreground">
-                  Select a loan to view EMI schedule
+                <CardContent className="flex flex-col items-center gap-3 px-6 py-10 text-center">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-muted/50 text-primary">
+                    <CalendarDays className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Choose a loan</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Select “View EMI schedule” on a loan to see its due dates and amounts.
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             ) : emisLoading ? (
@@ -173,10 +263,33 @@ export default function LoansPage() {
                   <CardSkeleton key={i} />
                 ))}
               </div>
+            ) : emisError ? (
+              <Card role="alert">
+                <CardContent className="flex flex-col items-center gap-3 px-6 py-10 text-center">
+                  <AlertCircle className="h-5 w-5 text-destructive" aria-hidden="true" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">EMI schedule could not be loaded</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {getApiErrorMessage(emisLoadError, 'Please try again.')}
+                    </p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => void refetchEmis()}>
+                    Retry
+                  </Button>
+                </CardContent>
+              </Card>
             ) : emiList.length === 0 ? (
               <Card>
-                <CardContent className="pt-6 text-center text-muted-foreground">
-                  No EMIs found for selected loan
+                <CardContent className="flex flex-col items-center gap-3 px-6 py-10 text-center">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-muted/50 text-primary">
+                    <CalendarDays className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">No instalments to show</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      This loan does not have an EMI schedule available yet.
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             ) : (
@@ -220,23 +333,13 @@ export default function LoansPage() {
                                 Paid
                               </Badge>
                             ) : isOverdue ? (
-                              <>
-                                <Badge className="bg-red-100 text-red-800 dark:bg-red-500/20">
-                                  Overdue
-                                </Badge>
-                                <Button size="sm" variant="default">
-                                  Pay Now
-                                </Button>
-                              </>
+                              <Badge className="bg-red-100 text-red-800 dark:bg-red-500/20">
+                                Overdue
+                              </Badge>
                             ) : (
-                              <>
-                                <Badge className="bg-info/15 text-info">
-                                  Upcoming
-                                </Badge>
-                                <Button size="sm" variant="outline">
-                                  Pay Now
-                                </Button>
-                              </>
+                              <Badge className="bg-info/15 text-info">
+                                Upcoming
+                              </Badge>
                             )}
                           </div>
                         </div>

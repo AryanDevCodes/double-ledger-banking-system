@@ -198,7 +198,6 @@ export default function BanksPage() {
                 or errors out. */}
             <Can permission="BANKS_CREATE">
               <Button
-                className="bg-gradient-to-r from-cyan-500 to-blue-600 shadow-md hover:from-cyan-600 hover:to-blue-700"
                 onClick={openCreateDialog}
               >
                 <Plus className="h-4 w-4 mr-2" /> Add Bank
@@ -245,7 +244,7 @@ export default function BanksPage() {
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-cyan-500/15 to-blue-600/15 flex items-center justify-center shrink-0">
+                  <div className="h-9 w-9 rounded-md border border-border bg-muted/50 text-primary flex items-center justify-center shrink-0">
                     <Landmark className="h-4 w-4 text-cyan-600" />
                   </div>
                   <div className="min-w-0">
@@ -410,7 +409,6 @@ export default function BanksPage() {
                 </Button>
                 <Button
                   type="submit"
-                  className="bg-gradient-to-r from-cyan-500 to-blue-600 shadow-md hover:from-cyan-600 hover:to-blue-700"
                   disabled={form.formState.isSubmitting}
                 >
                   {form.formState.isSubmitting ? "Saving..." : editingBank ? "Save Changes" : "Create Bank"}

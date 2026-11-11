@@ -36,7 +36,6 @@ const UpiPayPage = lazy(() => import("@/pages/UpiPayPage"));
 const AuditLogsPage = lazy(() => import("@/pages/AuditLogsPage"));
 const SecurityPage = lazy(() => import("@/pages/SecurityPage"));
 const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
-const WebhooksPage = lazy(() => import("@/pages/WebhooksPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const CardsPage = lazy(() => import("@/pages/CardsPage"));
 const LoansPage = lazy(() => import("@/pages/LoansPage"));
@@ -108,8 +107,23 @@ const App = () => (
                   }
                 >
                   <Route path="/dashboard" element={<RoleDashboardRedirect />} />
-                  <Route path="/banks" element={<PageWrapper><BanksPage /></PageWrapper>} />
-                  <Route path="/customers" element={<PageWrapper><CustomersPage /></PageWrapper>} />
+                  <Route path="/my-account" element={<Navigate to="/profile" replace />} />
+                  <Route
+                    path="/banks"
+                    element={
+                      <ProtectedRoute requiredRoles={["ROLE_ADMIN", "ROLE_MANAGER", "ROLE_AUDITOR"]}>
+                        <PageWrapper><BanksPage /></PageWrapper>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/customers"
+                    element={
+                      <ProtectedRoute requiredRoles={["ROLE_ADMIN", "ROLE_MANAGER", "ROLE_CUSTOMER_MANAGER", "ROLE_AUDITOR"]}>
+                        <PageWrapper><CustomersPage /></PageWrapper>
+                      </ProtectedRoute>
+                    }
+                  />
                   <Route path="/accounts" element={<PageWrapper><AccountsPage /></PageWrapper>} />
                   <Route
                     path="/transactions"
@@ -127,7 +141,14 @@ const App = () => (
                       </ProtectedRoute>
                     }
                   />
-                  <Route path="/upi" element={<PageWrapper><UpiPage /></PageWrapper>} />
+                  <Route
+                    path="/upi"
+                    element={
+                      <ProtectedRoute requiredRoles={["ROLE_ADMIN", "ROLE_MANAGER", "ROLE_AUDITOR", "ROLE_USER"]}>
+                        <PageWrapper><UpiPage /></PageWrapper>
+                      </ProtectedRoute>
+                    }
+                  />
                   <Route path="/profile" element={<PageWrapper><ProfilePage /></PageWrapper>} />
                   {FEATURES.enableAuditModule && (
                     <Route
@@ -149,14 +170,6 @@ const App = () => (
                       }
                     />
                   )}
-                  <Route
-                    path="/webhooks"
-                    element={
-                      <ProtectedRoute requiredRoles={["ROLE_ADMIN", "ROLE_MANAGER"]}>
-                        <PageWrapper><WebhooksPage /></PageWrapper>
-                      </ProtectedRoute>
-                    }
-                  />
                   <Route
                     path="/admin"
                     element={

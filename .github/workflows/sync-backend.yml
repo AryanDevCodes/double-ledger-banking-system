@@ -4,8 +4,10 @@ on:
   push:
     branches:
       - backend-alignment-upgrade
+      - docs/project-report-readme-refresh
     paths:
       - "bank-backend/**"
+      - ".github/workflows/sync-backend.yml"
   workflow_dispatch: {}
 
 concurrency:

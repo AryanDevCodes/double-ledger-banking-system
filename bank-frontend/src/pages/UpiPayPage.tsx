@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Smartphone, QrCode, PlusCircle, Send, RefreshCw, CheckCircle2, Clock, Wallet, ArrowRight } from "lucide-react";
+import { Smartphone, QrCode, PlusCircle, Send, RefreshCw, Clock, Wallet, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
@@ -10,6 +10,7 @@ import PageWrapper from "@/components/PageWrapper";
 import PageHeader from "@/components/PageHeader";
 import StatCard from "@/components/StatCard";
 import StatusBadge from "@/components/StatusBadge";
+import QRCodeGenerator from "@/components/QRCodeGenerator";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,7 +23,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { TableSkeleton, StatCardSkeleton } from "@/components/LoadingStates";
 import { accountApi, upiApi, getApiErrorMessage } from "@/lib/api-client";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatCurrency, maskAccountNumber } from "@/lib/format";
 import type { AccountResponseDTO, UpiProfileResponseDTO } from "@/types/api";
 
 const upiPaymentSchema = z.object({
@@ -43,22 +44,10 @@ const upiRegistrationSchema = z.object({
 type UpiPaymentValues = z.infer<typeof upiPaymentSchema>;
 type UpiRegistrationValues = z.infer<typeof upiRegistrationSchema>;
 
-// UPI Transaction type (from the UPI pay response)
-interface UpiTransaction {
-  id: number;
-  fromUpi: string;
-  toUpi: string;
-  amount: number;
-  status: string;
-  timestamp: string;
-}
-
 export default function UpiPayPage() {
   const [accounts, setAccounts] = useState<AccountResponseDTO[]>([]);
   const [upiProfiles, setUpiProfiles] = useState<UpiProfileResponseDTO[]>([]);
-  const [upiTransactions, setUpiTransactions] = useState<UpiTransaction[]>([]);
   const [loading, setLoading] = useState(false);
-  const [showQr, setShowQr] = useState(false);
   const [selectedUpi, setSelectedUpi] = useState<string>("");
 
   const paymentForm = useForm<UpiPaymentValues>({
@@ -95,8 +84,19 @@ export default function UpiPayPage() {
   const upiStats = useMemo(() => {
     const totalLinked = upiProfiles.length;
     const activeProfiles = upiProfiles.filter((p) => p.status === "ACTIVE").length;
-    return { totalLinked, activeProfiles };
+    const linkedAccounts = new Set(upiProfiles.map((profile) => profile.accountNumber)).size;
+    return { totalLinked, activeProfiles, linkedAccounts };
   }, [upiProfiles]);
+  const activeUpiProfiles = useMemo(
+    () => upiProfiles.filter((profile) => profile.status === "ACTIVE"),
+    [upiProfiles],
+  );
+
+  useEffect(() => {
+    if (selectedUpi && !activeUpiProfiles.some((profile) => profile.upiId === selectedUpi)) {
+      setSelectedUpi("");
+    }
+  }, [selectedUpi, activeUpiProfiles]);
 
   const generateIdempotencyKey = (upiId: string) => {
     const userPrefix = upiId.replace(/[^a-zA-Z0-9]/g, "").slice(0, 10).toUpperCase();
@@ -145,7 +145,7 @@ export default function UpiPayPage() {
     }
   };
 
-  const selectedProfile = upiProfiles.find((p) => p.upiId === selectedUpi);
+  const selectedProfile = activeUpiProfiles.find((p) => p.upiId === selectedUpi);
 
   return (
     <PageWrapper>
@@ -180,7 +180,7 @@ export default function UpiPayPage() {
             />
             <StatCard
               title="Linked Accounts"
-              value={upiProfiles.length}
+              value={upiStats.linkedAccounts}
               icon={<Wallet className="h-5 w-5" />}
               tint="emerald"
             />
@@ -238,7 +238,7 @@ export default function UpiPayPage() {
                                   {accounts.map((acc) => (
                                     <SelectItem key={acc.accountNumber} value={acc.accountNumber}>
                                       <div className="flex items-center gap-2">
-                                        <span className="font-mono">{acc.accountNumber}</span>
+                                        <span className="font-mono">{maskAccountNumber(acc.accountNumber)}</span>
                                         <span className="text-muted-foreground">({acc.bankName})</span>
                                         <Badge variant="secondary">{formatCurrency(acc.balance)}</Badge>
                                       </div>
@@ -250,7 +250,7 @@ export default function UpiPayPage() {
                             </FormItem>
                           )}
                         />
-                        <Button type="submit" className="w-full" disabled={loading}>
+                        <Button type="submit" className="w-full" disabled={loading || activeUpiProfiles.length === 0}>
                           <PlusCircle className="h-4 w-4 mr-2" />
                           Register UPI
                         </Button>
@@ -290,7 +290,7 @@ export default function UpiPayPage() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {upiProfiles.map((profile) => (
+                          {activeUpiProfiles.map((profile) => (
                             <SelectItem key={profile.upiId} value={profile.upiId}>
                               <div className="flex items-center gap-2">
                                 <span>{profile.upiId}</span>
@@ -374,7 +374,7 @@ export default function UpiPayPage() {
                   <SelectValue placeholder="Select UPI ID to display QR" />
                 </SelectTrigger>
                 <SelectContent>
-                  {upiProfiles.map((profile) => (
+                  {activeUpiProfiles.map((profile) => (
                     <SelectItem key={profile.upiId} value={profile.upiId}>
                       {profile.upiId} ({profile.bankName})
                     </SelectItem>
@@ -382,18 +382,17 @@ export default function UpiPayPage() {
                 </SelectContent>
               </Select>
 
+              {activeUpiProfiles.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Activate a UPI profile to generate a receive QR code.
+                </p>
+              )}
+
               {selectedProfile && (
-                <div className="flex flex-col items-center p-6 border rounded-xl bg-white dark:bg-black">
-                  {/* Simulated QR Code */}
-                  <div className="w-48 h-48 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center mb-4">
-                    <QrCode className="w-32 h-32 text-gray-400" />
-                  </div>
-                  <p className="text-lg font-semibold">{selectedProfile.upiId}</p>
-                  <p className="text-sm text-muted-foreground">{selectedProfile.bankName}</p>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Account: {selectedProfile.accountNumber}
-                  </p>
-                </div>
+                <QRCodeGenerator
+                  upiId={selectedProfile.upiId}
+                  name={selectedProfile.accountHolderName}
+                />
               )}
 
               <div className="grid grid-cols-2 gap-3">
@@ -445,7 +444,9 @@ export default function UpiPayPage() {
                   <TableRow key={profile.id}>
                     <TableCell className="font-medium">{profile.upiId}</TableCell>
                     <TableCell>{profile.bankName}</TableCell>
-                    <TableCell className="font-mono text-xs">{profile.accountNumber}</TableCell>
+                    <TableCell className="font-mono text-xs">
+                      A/c {maskAccountNumber(profile.accountNumber)}
+                    </TableCell>
                     <TableCell>
                       <StatusBadge status={profile.status} />
                     </TableCell>

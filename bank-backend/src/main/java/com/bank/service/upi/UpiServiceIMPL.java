@@ -7,9 +7,11 @@ import com.bank.dto.upi.UpiPayRequestDTO;
 import com.bank.dto.upi.UpiProfileResponseDTO;
 import com.bank.dto.upi.UpiRegisterRequestDTO;
 import com.bank.entity.Account;
+import com.bank.entity.Role;
 import com.bank.entity.Status;
 import com.bank.entity.UpiPaymentOBJ;
 import com.bank.entity.UpiProfile;
+import com.bank.entity.User;
 import com.bank.exception.GlobalServiceException;
 import com.bank.exception.InvalidDataException;
 import com.bank.exception.ResourceNotFoundException;
@@ -20,6 +22,7 @@ import com.bank.repository.UpiPaymentObjRepository;
 import com.bank.repository.UpiRepository;
 import com.bank.service.transaction.TransactionService;
 import com.bank.service.transaction.mapper.TransactionMapper;
+import com.bank.service.access.OwnershipAuthorizationService;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +31,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -47,6 +49,7 @@ public class UpiServiceIMPL implements UpiService {
   private final UpiResolver upiResolver;
   private final AccountRepository accountRepository;
   private final CustomerRepository customerRepository;
+  private final OwnershipAuthorizationService ownershipAuthorizationService;
 
   @Override
   @Transactional
@@ -170,6 +173,7 @@ public class UpiServiceIMPL implements UpiService {
     if (account == null) {
       throw new ResourceNotFoundException("Account", "accountNumber", dto.getAccountNumber());
     }
+    ownershipAuthorizationService.assertAccountAccess(account);
 
     enforceUpiLimit(account.getAccountNumber());
     UpiProfile upiProfile = UpiProfile.builder()
@@ -183,29 +187,28 @@ public class UpiServiceIMPL implements UpiService {
 
   @Override
   @Transactional(readOnly = true)
-  @Cacheable(value = "upiProfilesActive", key = "#upiId")
   public UpiProfileResponseDTO getUpiProfile(String upiId) {
     UpiProfile upiProfile = upiRepository
         .findByUpiIdAndStatusWithDetails(upiId, Status.ACTIVE)
         .orElseThrow(() -> new ResourceNotFoundException("UPI Profile", "upiId", upiId));
+    ownershipAuthorizationService.assertAccountAccess(upiProfile.getLinkedAccount());
     return mapToResponseDTO(upiProfile);
   }
 
   @Override
   @Transactional(readOnly = true)
   public List<UpiProfileResponseDTO> getAllUpiProfiles() {
-    // Allow admins to see all UPI profiles system-wide
-    if (isAdminUser()) {
-      List<UpiProfile> profiles = upiRepository.findAll();
+    User currentUser = ownershipAuthorizationService.requireCurrentUser();
+    boolean canViewAllProfiles =
+        ownershipAuthorizationService.hasRole(currentUser, Role.RoleName.ROLE_ADMIN)
+            || ownershipAuthorizationService.hasRole(currentUser, Role.RoleName.ROLE_MANAGER)
+            || ownershipAuthorizationService.hasRole(currentUser, Role.RoleName.ROLE_AUDITOR);
+    if (canViewAllProfiles) {
+      List<UpiProfile> profiles = upiRepository.findAllWithDetails();
       return profiles.stream().map(this::mapToResponseDTO).collect(Collectors.toList());
     }
 
-    // Non-admins only see their own UPI profiles
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    if (auth == null || auth.getName() == null) {
-      return List.of();
-    }
-    List<Account> accounts = accountRepository.findByCustomerUserUsername(auth.getName());
+    List<Account> accounts = accountRepository.findByCustomerUserId(currentUser.getId());
     if (accounts.isEmpty()) {
       return List.of();
     }
@@ -237,8 +240,8 @@ public class UpiServiceIMPL implements UpiService {
     if (account == null) {
       throw new ResourceNotFoundException("Account", "accountNumber", accountNumber);
     }
+    ownershipAuthorizationService.assertAccountAccess(account);
 
-    // Allow all authenticated users to query UPI profiles for the account
     List<UpiProfile> profiles = upiRepository.findByLinkedAccountAccountNumberAndBankNameWithDetails(
         accountNumber, account.getBank().getBankName());
     return profiles.stream().map(this::mapToResponseDTO).collect(Collectors.toList());

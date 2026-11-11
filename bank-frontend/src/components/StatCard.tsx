@@ -4,32 +4,26 @@ import { cn } from "@/lib/utils";
 import NumberTicker from "@/components/ui/NumberTicker";
 import Sparkline from "@/components/ui/Sparkline";
 
-/* ───────────────────────────────────────────
-   Stat Card v2.1
-   Premium metric card with sparkline, trend
-   indicator, and gradient orb icon.
-   ─────────────────────────────────────────── */
-
 const TINT = {
   indigo: {
-    orb: "bg-gradient-to-br from-[hsl(var(--chart-1))] to-[hsl(var(--chart-2))] shadow-lg shadow-[hsl(var(--chart-1))/20]",
-    spark: "hsl(var(--chart-1))",
+    surface: "bg-primary/10 text-primary",
+    spark: "hsl(var(--primary))",
   },
   emerald: {
-    orb: "bg-gradient-to-br from-[hsl(var(--chart-3))] to-[hsl(var(--chart-6))] shadow-lg shadow-[hsl(var(--chart-3))/20]",
-    spark: "hsl(var(--chart-3))",
+    surface: "bg-success/10 text-success",
+    spark: "hsl(var(--success))",
   },
   rose: {
-    orb: "bg-gradient-to-br from-[hsl(var(--chart-5))] to-[hsl(var(--destructive))] shadow-lg shadow-[hsl(var(--chart-5))/20]",
-    spark: "hsl(var(--chart-5))",
+    surface: "bg-destructive/10 text-destructive",
+    spark: "hsl(var(--destructive))",
   },
   amber: {
-    orb: "bg-gradient-to-br from-[hsl(var(--chart-4))] to-[hsl(var(--warning))] shadow-lg shadow-[hsl(var(--chart-4))/20]",
-    spark: "hsl(var(--chart-4))",
+    surface: "bg-warning/10 text-warning",
+    spark: "hsl(var(--warning))",
   },
   sky: {
-    orb: "bg-gradient-to-br from-[hsl(var(--chart-6))] to-[hsl(var(--chart-1))] shadow-lg shadow-[hsl(var(--chart-6))/20]",
-    spark: "hsl(var(--chart-6))",
+    surface: "bg-secondary text-secondary-foreground",
+    spark: "hsl(var(--secondary-foreground))",
   },
 } as const;
 
@@ -60,11 +54,11 @@ export default function StatCard({
 
   // Safely parse numeric strings (e.g., "1,234.56" -> 1234.56)
   const numericValue = useMemo(() => {
-    if (typeof value === "number") return value;
-    // Remove commas and try to parse
+    if (typeof value === "number") return Number.isFinite(value) ? value : null;
     const cleaned = value.replace(/,/g, "").trim();
-    const parsed = parseFloat(cleaned);
-    return isNaN(parsed) ? null : parsed;
+    if (!/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(cleaned)) return null;
+    const parsed = Number(cleaned);
+    return Number.isFinite(parsed) ? parsed : null;
   }, [value]);
 
   const isNumeric = numericValue !== null;
@@ -75,56 +69,35 @@ export default function StatCard({
   return (
     <div
       className={cn(
-        "group relative overflow-hidden rounded-2xl border border-border/40 bg-card/60 backdrop-blur-xl",
-        "transition-all duration-300 ease-out",
-        "hover:bg-card/80 hover:border-border/60 hover:-translate-y-0.5 hover:shadow-lg",
+        "rounded-lg border border-border bg-card",
         className
       )}
     >
-      {/* Subtle gradient sheen */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-
-      <div className="relative p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
-              {title}
-            </p>
-            <div
-              className={cn(
-                "mt-1 font-bold tracking-tight text-foreground",
-                compact ? "text-xl" : "text-2xl"
-              )}
-            >
-              {isNumeric ? <NumberTicker value={numericValue} /> : value}
-            </div>
-          </div>
-
-          <div
-            className={cn(
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white",
-              t.orb
-            )}
-          >
+      <div className="p-4 sm:p-5">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs font-medium text-muted-foreground">{title}</p>
+          <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-md", t.surface)}>
             {icon}
           </div>
         </div>
 
-        {(subtitle || trend) && <div className="my-3 h-px bg-border/50" />}
+        <div className={cn("mt-3 font-semibold leading-tight tracking-tight tabular-nums text-foreground", compact ? "text-xl" : "text-2xl")}>
+          {isNumeric ? <NumberTicker value={numericValue} /> : value}
+        </div>
 
-        <div className="flex items-center justify-between gap-2">
+        {(subtitle || trend) && <div className="mt-2 flex items-center justify-between gap-2">
           {subtitle ? (
-            <p className="text-xs text-muted-foreground/70 truncate">{subtitle}</p>
+            <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
           ) : (
-            <span /> // keeps trend aligned to the right when subtitle is absent
+            <span />
           )}
           {trend && (
             <span
               className={cn(
                 "inline-flex items-center gap-1 text-xs font-semibold",
                 trend.positive
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-red-600 dark:text-red-400"
+                  ? "text-success"
+                  : "text-destructive"
               )}
             >
               <span
@@ -138,11 +111,11 @@ export default function StatCard({
               {trend.value}
             </span>
           )}
-        </div>
+        </div>}
 
         {sparklineData && sparklineData.length > 1 && (
           <div className="mt-3 -mx-1">
-            <Sparkline data={sparklineData} color={sparkColor} height={40} strokeWidth={2} />
+            <Sparkline data={sparklineData} color={sparkColor} height={40} />
           </div>
         )}
       </div>

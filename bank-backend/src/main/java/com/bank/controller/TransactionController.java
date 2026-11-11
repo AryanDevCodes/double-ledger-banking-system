@@ -6,6 +6,7 @@ import com.bank.dto.transaction.TransactionRequestDTO;
 import com.bank.dto.transaction.TransactionResponseDTO;
 import com.bank.repository.LedgerRepository;
 import com.bank.security.JwtUtil;
+import com.bank.service.access.OwnershipAuthorizationService;
 import com.bank.service.transaction.TransactionService;
 
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class TransactionController {
   private final TransactionService transactionService;
   private final LedgerRepository ledgerRepository;
   private final JwtUtil jwtUtil;
+  private final OwnershipAuthorizationService ownershipAuthorizationService;
 
   @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_AUDITOR', 'ROLE_CUSTOMER_MANAGER')")
   @GetMapping("/all")
@@ -63,6 +65,7 @@ public class TransactionController {
   @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_AUDITOR', 'ROLE_USER')")
   @GetMapping("/accounts/{id}/balance")
   public BigDecimal getBalance(@PathVariable Long id) {
+    ownershipAuthorizationService.assertAccountAccessById(id);
     return ledgerRepository.calculateBalance(id);
   }
 

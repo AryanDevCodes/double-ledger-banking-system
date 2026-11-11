@@ -9,6 +9,7 @@ import com.bank.exception.InvalidDataException;
 import com.bank.exception.ResourceNotFoundException;
 import com.bank.repository.AccountRepository;
 import com.bank.repository.DebitCardRepository;
+import com.bank.service.access.OwnershipAuthorizationService;
 import com.bank.service.event.CardEventService;
 import com.bank.service.mapper.DebitCardMapper;
 import java.math.BigDecimal;
@@ -26,7 +27,7 @@ public class DebitCardService {
   private final DebitCardRepository debitCardRepository;
   private final AccountRepository accountRepository;
   private final DebitCardMapper debitCardMapper;
-  private final CardAccessService cardAccessService;
+  private final OwnershipAuthorizationService ownershipAuthorizationService;
   private final CardEventService cardEventService;
   private final SecureRandom random = new SecureRandom();
 
@@ -34,7 +35,7 @@ public class DebitCardService {
   public List<DebitCardDTO> getByAccountId(Long accountId) {
     Account account = accountRepository.findById(accountId)
         .orElseThrow(() -> new ResourceNotFoundException("Account", "id", String.valueOf(accountId)));
-    cardAccessService.assertAccountAccess(account);
+    ownershipAuthorizationService.assertAccountAccess(account);
     return debitCardRepository.findByAccountId(account.getId()).stream()
         .map(debitCardMapper::toDTO)
         .toList();
@@ -46,7 +47,7 @@ public class DebitCardService {
     if (account == null) {
       throw new ResourceNotFoundException("Account", "accountNumber", accountNumber);
     }
-    cardAccessService.assertAccountAccess(account);
+    ownershipAuthorizationService.assertAccountAccess(account);
     return debitCardRepository.findByAccountId(account.getId()).stream()
         .map(debitCardMapper::toDTO)
         .toList();
@@ -56,7 +57,7 @@ public class DebitCardService {
   public DebitCardDTO getById(Long cardId) {
     DebitCard card = debitCardRepository.findById(cardId)
         .orElseThrow(() -> new ResourceNotFoundException("DebitCard", "id", String.valueOf(cardId)));
-    cardAccessService.assertAccountAccess(card.getAccount());
+    ownershipAuthorizationService.assertAccountAccess(card.getAccount());
     return debitCardMapper.toDTO(card);
   }
 
@@ -197,7 +198,7 @@ public class DebitCardService {
   private DebitCard loadAndAuthorize(Long cardId) {
     DebitCard card = debitCardRepository.findById(cardId)
         .orElseThrow(() -> new ResourceNotFoundException("DebitCard", "id", String.valueOf(cardId)));
-    cardAccessService.assertAccountAccess(card.getAccount());
+    ownershipAuthorizationService.assertAccountAccess(card.getAccount());
     return card;
   }
 

@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { debitCardRequestApi, type DebitCardRequestDTO } from '@/lib/api-client';
+import { maskAccountNumber } from '@/lib/format';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { getApiErrorMessage } from '@/lib/api-client';
@@ -37,6 +38,8 @@ export default function DebitCardRequestsPanel({
   isRequester,
 }: DebitCardRequestsPanelProps) {
   const queryClient = useQueryClient();
+  const displayAccountNumber = (value?: string) =>
+    isRequester && !isApprover ? maskAccountNumber(value) : value || '—';
   const [createOpen, setCreateOpen] = useState(false);
   const [decisionOpen, setDecisionOpen] = useState(false);
   const [decisionTarget, setDecisionTarget] = useState<DebitCardRequestDTO | null>(null);
@@ -310,7 +313,7 @@ export default function DebitCardRequestsPanel({
   };
 
   return (
-    <Card className="overflow-hidden border border-border bg-card/80 backdrop-blur">
+    <Card className="overflow-hidden border border-border bg-card">
       <CardHeader className="relative overflow-hidden border-b border-border">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,hsl(var(--chart-1)/0.10),transparent_55%)]" />
         <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -356,7 +359,7 @@ export default function DebitCardRequestsPanel({
                   <div key={request.id} className="rounded-2xl border border-border bg-card/70 p-4 shadow-sm">
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="text-sm font-semibold">{request.accountNumber}</div>
+                        <div className="text-sm font-semibold">{displayAccountNumber(request.accountNumber)}</div>
                         <div className="text-xs text-muted-foreground">Requested {formatDate(request.requestedAt)}</div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -421,7 +424,7 @@ export default function DebitCardRequestsPanel({
                         <div key={request.id} className="rounded-2xl border border-slate-200/70 dark:border-slate-700/60 bg-white/70 dark:bg-slate-900/50 p-4">
                           <div className="flex items-center justify-between">
                             <div>
-                              <div className="text-sm font-semibold">{request.accountNumber}</div>
+                              <div className="text-sm font-semibold">{displayAccountNumber(request.accountNumber)}</div>
                               <div className="text-xs text-muted-foreground">Requested by {request.requestedByName || 'User'}</div>
                             </div>
                             {statusBadge(request.status)}
@@ -462,7 +465,7 @@ export default function DebitCardRequestsPanel({
                         <div key={request.id} className="rounded-2xl border border-slate-200/70 dark:border-slate-700/60 bg-white/70 dark:bg-slate-900/50 p-4">
                           <div className="flex items-center justify-between">
                             <div>
-                              <div className="text-sm font-semibold">{request.accountNumber}</div>
+                              <div className="text-sm font-semibold">{displayAccountNumber(request.accountNumber)}</div>
                               <div className="text-xs text-muted-foreground">Approved {formatDate(request.approvedAt)}</div>
                             </div>
                             {statusBadge(request.status)}
@@ -500,7 +503,7 @@ export default function DebitCardRequestsPanel({
                         <div key={request.id} className="rounded-2xl border border-slate-200/70 dark:border-slate-700/60 bg-white/70 dark:bg-slate-900/50 p-4">
                           <div className="flex items-center justify-between">
                             <div>
-                              <div className="text-sm font-semibold">{request.accountNumber}</div>
+                              <div className="text-sm font-semibold">{displayAccountNumber(request.accountNumber)}</div>
                               <div className="text-xs text-muted-foreground">Issued {formatDate(request.issuedAt)}</div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -689,7 +692,7 @@ export default function DebitCardRequestsPanel({
           {decisionTarget ? (
             <div className="space-y-4">
               <div className="rounded-lg bg-slate-50 dark:bg-slate-900/40 p-3 text-sm">
-                <div className="font-medium">{decisionTarget.accountNumber}</div>
+                <div className="font-medium">{displayAccountNumber(decisionTarget.accountNumber)}</div>
                 <div className="text-xs text-muted-foreground">Requested by {decisionTarget.requestedByName || 'User'}</div>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
@@ -844,7 +847,7 @@ export default function DebitCardRequestsPanel({
           </DialogHeader>
           <div className="space-y-4">
             <div className="rounded-lg bg-slate-50 dark:bg-slate-900/40 p-3 text-sm">
-              <div className="font-medium">{dispatchTarget?.accountNumber}</div>
+              <div className="font-medium">{displayAccountNumber(dispatchTarget?.accountNumber)}</div>
               <div className="text-xs text-muted-foreground">Delivery {dispatchTarget?.deliveryMethod ?? 'Standard'}</div>
             </div>
             <div className="grid gap-4 md:grid-cols-2">

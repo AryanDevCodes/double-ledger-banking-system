@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
@@ -22,49 +21,37 @@ interface FuturisticStatsGridProps {
 }
 
 const TINT_COLORS = {
-  indigo: { primary: "hsl(var(--chart-1))", glow: "hsl(var(--chart-1) / 0.4)", gradient: "from-[hsl(var(--chart-1))/30] to-[hsl(var(--chart-2))/15]" },
-  emerald: { primary: "hsl(var(--chart-3))", glow: "hsl(var(--chart-3) / 0.4)", gradient: "from-[hsl(var(--chart-3))/30] to-[hsl(var(--chart-6))/15]" },
-  rose: { primary: "hsl(var(--chart-5))", glow: "hsl(var(--chart-5) / 0.4)", gradient: "from-[hsl(var(--chart-5))/30] to-[hsl(var(--destructive))/15]" },
-  amber: { primary: "hsl(var(--chart-4))", glow: "hsl(var(--chart-4) / 0.4)", gradient: "from-[hsl(var(--chart-4))/30] to-[hsl(var(--chart-6))/15]" },
-  sky: { primary: "hsl(var(--chart-6))", glow: "hsl(var(--chart-6) / 0.4)", gradient: "from-[hsl(var(--chart-6))/30] to-[hsl(var(--chart-1))/15]" },
-  cyan: { primary: "hsl(var(--chart-6))", glow: "hsl(var(--chart-6) / 0.4)", gradient: "from-[hsl(var(--chart-6))/30] to-[hsl(var(--chart-1))/15]" },
-  violet: { primary: "hsl(var(--chart-2))", glow: "hsl(var(--chart-2) / 0.4)", gradient: "from-[hsl(var(--chart-2))/30] to-[hsl(var(--chart-2))/15]" },
+  indigo: { primary: "hsl(var(--primary))", surface: "bg-primary/10", text: "text-primary" },
+  emerald: { primary: "hsl(var(--primary))", surface: "bg-primary/10", text: "text-primary" },
+  rose: { primary: "hsl(var(--destructive))", surface: "bg-destructive/10", text: "text-destructive" },
+  amber: { primary: "hsl(var(--warning))", surface: "bg-warning/10", text: "text-warning" },
+  sky: { primary: "hsl(var(--primary))", surface: "bg-primary/10", text: "text-primary" },
+  cyan: { primary: "hsl(var(--primary))", surface: "bg-primary/10", text: "text-primary" },
+  violet: { primary: "hsl(var(--primary))", surface: "bg-primary/10", text: "text-primary" },
 };
 
 function StatCardSkeleton() {
   return (
     <div className="stat-card-futuristic animate-pulse">
       <div className="flex items-center justify-between">
-        <div className="h-3 w-20 bg-white/20 rounded" />
-        <div className="h-8 w-8 bg-white/10 rounded-lg" />
+        <div className="h-3 w-20 rounded bg-muted" />
+        <div className="h-8 w-8 rounded-md bg-muted" />
       </div>
-      <div className="mt-4 h-8 w-24 bg-white/20 rounded" />
-      <div className="mt-2 h-3 w-16 bg-white/10 rounded" />
+      <div className="mt-4 h-8 w-24 rounded bg-muted" />
+      <div className="mt-2 h-3 w-16 rounded bg-muted" />
     </div>
   );
 }
 
-function FuturisticStatCard({ widget, index }: { widget: FuturisticStatWidget; index: number }) {
+function FuturisticStatCard({ widget }: { widget: FuturisticStatWidget }) {
   const colors = TINT_COLORS[widget.tint || "indigo"];
   const isNumeric = typeof widget.value === "number";
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.05 }}
-      className="stat-card-futuristic group cursor-pointer"
-      style={{
-        "--neon-primary": colors.primary,
-        "--neon-primary-glow": colors.glow,
-      } as React.CSSProperties}
-    >
+    <article className="stat-card-futuristic">
       <div className="flex items-start justify-between">
-        <div
-          className="p-2.5 rounded-xl bg-gradient-to-br opacity-80 group-hover:opacity-100 transition-opacity"
-          style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${colors.primary} 30%, transparent), color-mix(in srgb, ${colors.primary} 15%, transparent))` }}
-        >
-          <div className="text-white" style={{ color: colors.primary }}>
+        <div className={cn("rounded-md border border-border p-2.5", colors.surface)}>
+          <div className={colors.text}>
             {widget.icon}
           </div>
         </div>
@@ -73,8 +60,8 @@ function FuturisticStatCard({ widget, index }: { widget: FuturisticStatWidget; i
             className={cn(
               "text-xs font-medium px-2 py-1 rounded-full",
               widget.trend.positive
-                ? "bg-success/20 text-success"
-                : "bg-rose-500/20 text-rose-400"
+                ? "bg-success/10 text-success"
+                : "bg-destructive/10 text-destructive"
             )}
           >
             {widget.trend.positive ? "↑" : "↓"} {widget.trend.value}
@@ -86,10 +73,7 @@ function FuturisticStatCard({ widget, index }: { widget: FuturisticStatWidget; i
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {widget.title}
         </p>
-        <p
-          className="text-2xl font-bold mt-1 tracking-tight metric-glow"
-          style={{ color: colors.primary, textShadow: `0 0 30px ${colors.glow}` }}
-        >
+        <p className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
           {isNumeric ? (
             <NumberTickerAnimated value={widget.value as number} />
           ) : (
@@ -106,14 +90,7 @@ function FuturisticStatCard({ widget, index }: { widget: FuturisticStatWidget; i
           <SparklineMini data={widget.sparklineData} color={colors.primary} />
         </div>
       )}
-
-      <div
-        className="absolute bottom-0 left-0 right-0 h-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-        style={{
-          background: `linear-gradient(90deg, transparent, ${colors.primary}, transparent)`,
-        }}
-      />
-    </motion.div>
+    </article>
   );
 }
 
@@ -139,15 +116,10 @@ function SparklineMini({ data, color }: { data: number[]; color: string }) {
 
   return (
     <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
-      <defs>
-        <linearGradient id={`spark-${color.replace("#", "")}`} x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor={color} stopOpacity="0.3" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
-        </linearGradient>
-      </defs>
       <polygon
         points={`0,${height} ${points} ${width},${height}`}
-        fill={`url(#spark-${color.replace("#", "")})`}
+        fill={color}
+        fillOpacity="0.1"
       />
       <polyline
         points={points}
@@ -156,8 +128,6 @@ function SparklineMini({ data, color }: { data: number[]; color: string }) {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className="drop-shadow-lg"
-        style={{ filter: `drop-shadow(0 0 6px ${color})` }}
       />
     </svg>
   );
@@ -184,8 +154,8 @@ export default function FuturisticStatsGrid({
 
   return (
     <div className={cn("grid gap-4 mb-6 stagger-children", columnsClassName)}>
-      {widgets.map((w, i) => (
-        <FuturisticStatCard key={w.id} widget={w} index={i} />
+      {widgets.map((w) => (
+        <FuturisticStatCard key={w.id} widget={w} />
       ))}
     </div>
   );

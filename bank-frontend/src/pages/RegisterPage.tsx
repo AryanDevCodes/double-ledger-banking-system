@@ -9,7 +9,6 @@ import { Building2, Mail, Phone, User, Eye, EyeOff } from 'lucide-react';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { PasswordStrength } from '@/components/PasswordStrength';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import AuroraBackdrop from '@/components/AuroraBackdrop';
 import GradientButton from '@/components/ui/GradientButton';
 import { Button } from '@/components/ui/button';
 
@@ -74,19 +73,18 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4 py-8">
-      <AuroraBackdrop />
       <div className="absolute right-4 top-4 z-10">
         <ThemeToggle />
       </div>
 
       <div className="relative z-10 w-full max-w-md">
-        <div className="glass-panel rounded-3xl overflow-hidden">
+        <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
           {/* Header */}
-          <div className="px-7 pt-8 pb-6 text-center border-b border-border bg-gradient-to-b from-primary/10 to-transparent">
+          <div className="border-b border-border px-7 pb-5 pt-7">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 border border-border shadow-sm">
               <Building2 className="h-8 w-8 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">Create Account</h1>
+            <h1 className="font-display text-3xl font-medium text-foreground">Create account</h1>
             <p className="mt-1 text-sm text-muted-foreground">Register for banking portal access</p>
           </div>
 

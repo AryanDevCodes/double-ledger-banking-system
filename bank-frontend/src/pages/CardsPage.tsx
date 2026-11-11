@@ -4,7 +4,6 @@ import PageHeader from '@/components/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
 import { accountApi, creditPlanApi, debitCardApi, creditCardApi, API_BASE_URL } from '@/lib/api-client';
 import { useCreditPlans, useDebitCards, useCreditCards } from '@/hooks/useCards';
-import type { AccountResponseDTO } from '@/types/api';
 import DebitCardRequestsPanel from '@/components/DebitCardRequestsPanel';
 import CreditCardApplicationPanel from '@/components/CreditCardApplicationPanel';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CardSkeleton } from '@/components/LoadingStates';
 import { Lock, Unlock, CreditCard, Eye, EyeOff, MoreVertical, ShieldCheck, ShieldX } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,9 +29,12 @@ import { getApiErrorMessage } from '@/lib/api-client';
 export default function CardsPage() {
   const { user, token } = useAuth();
   const queryClient = useQueryClient();
+  const isApprover = Boolean(user?.roles?.includes('ROLE_ADMIN') || user?.roles?.includes('ROLE_MANAGER'));
+  const isRequester = Boolean(user?.roles?.includes('ROLE_USER'));
   const [selectedAccountNumber, setSelectedAccountNumber] = useState<string | null>(null);
   const [accountOptions, setAccountOptions] = useState<{ accountNumber: string; label: string }[]>([]);
   const [accountsLoading, setAccountsLoading] = useState(true);
+  const [accountsLoadFailed, setAccountsLoadFailed] = useState(false);
   const [showCardNumbers, setShowCardNumbers] = useState<Record<number, boolean>>({});
   const [limitDialogOpen, setLimitDialogOpen] = useState(false);
   const [limitTarget, setLimitTarget] = useState<{ type: 'debit' | 'credit'; id: number } | null>(null);
@@ -46,27 +49,36 @@ export default function CardsPage() {
 
   useEffect(() => {
     const loadAccounts = async () => {
+      setAccountsLoadFailed(false);
       try {
-        const accounts = (await accountApi.getMy()) as AccountResponseDTO[];
+        const accounts = isRequester
+          ? await accountApi.getMy()
+          : await accountApi.getAll();
         if (accounts.length > 0) {
-          setSelectedAccountNumber(accounts[0].accountNumber);
+          setSelectedAccountNumber((current) =>
+            current && accounts.some((account) => account.accountNumber === current)
+              ? current
+              : accounts[0].accountNumber,
+          );
           setAccountOptions(accounts.map((account) => ({
             accountNumber: account.accountNumber,
-            label: `${account.accountNumber} · ${account.bankName ?? 'Bank'}`,
+            label: `•••• ${account.accountNumber.slice(-4)} · ${account.bankName ?? 'Bank'}`,
           })));
         }
       } catch (error) {
+        setAccountsLoadFailed(true);
         console.error('Failed to load accounts:', error);
+        toast.error(getApiErrorMessage(error, 'Failed to load accounts for card management'));
       } finally {
         setAccountsLoading(false);
       }
     };
-    if (user?.userId && user?.roles?.includes('ROLE_USER')) {
+    if (user?.userId && (isRequester || isApprover)) {
       loadAccounts();
     } else {
       setAccountsLoading(false);
     }
-  }, [user?.userId, user?.roles]);
+  }, [user?.userId, isApprover, isRequester]);
 
   useEffect(() => {
     if (!token) return;
@@ -173,9 +185,6 @@ export default function CardsPage() {
   const debitCardList = debitCards ?? [];
   const creditCardList = creditCards ?? [];
 
-  const isApprover = Boolean(user?.roles?.includes('ROLE_ADMIN') || user?.roles?.includes('ROLE_MANAGER'));
-  const isRequester = Boolean(user?.roles?.includes('ROLE_USER'));
-
   const maskCardNumber = (cardNumber: string) => `•••• •••• •••• ${cardNumber.slice(-4)}`;
 
   const getStatusColor = (status: string) => {
@@ -203,6 +212,24 @@ export default function CardsPage() {
     }
   };
 
+  const accountUnavailableMessage = accountsLoadFailed
+    ? 'Account details could not be loaded. Refresh the page to try again.'
+    : 'No bank accounts are available for card management.';
+  const debitCardEmptyMessage = accountsLoadFailed
+    ? 'Account details could not be loaded.'
+    : accountOptions.length === 0
+      ? 'No bank account is available for card management.'
+      : selectedAccountNumber
+        ? 'Debit cards issued to this account will appear here.'
+        : 'Select an account above to view its debit cards.';
+  const creditCardEmptyMessage = accountsLoadFailed
+    ? 'Account details could not be loaded.'
+    : accountOptions.length === 0
+      ? 'No bank account is available for card management.'
+      : selectedAccountNumber
+        ? 'Credit cards issued to this account will appear here.'
+        : 'Select an account above to view its credit cards.';
+
   return (
     <PageWrapper>
       <PageHeader
@@ -219,7 +246,45 @@ export default function CardsPage() {
           </div>
         ) : null}
 
-        <Tabs defaultValue="debit" className="w-full">
+        {accountOptions.length > 1 && (
+          <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-medium">Card account</p>
+              <p className="text-xs text-muted-foreground">
+                Choose which account’s cards and requests to view.
+              </p>
+            </div>
+            <Select
+              value={selectedAccountNumber ?? undefined}
+              onValueChange={setSelectedAccountNumber}
+            >
+              <SelectTrigger className="w-full sm:max-w-xs" aria-label="Select card account">
+                <SelectValue placeholder="Choose an account" />
+              </SelectTrigger>
+              <SelectContent>
+                {accountOptions.map((account) => (
+                  <SelectItem key={account.accountNumber} value={account.accountNumber}>
+                    {account.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {!accountsLoading && accountOptions.length === 0 && (
+          <div
+            role="status"
+            className="rounded-lg border border-dashed border-border bg-muted/20 px-4 py-3 text-sm text-muted-foreground"
+          >
+            {accountUnavailableMessage}
+          </div>
+        )}
+
+        <Tabs
+          defaultValue="debit"
+          className={accountsLoading ? 'hidden w-full' : 'w-full'}
+        >
           <TabsList className="grid w-full max-w-md grid-cols-3">
             <TabsTrigger value="debit">Debit Cards</TabsTrigger>
             <TabsTrigger value="credit">Credit Cards</TabsTrigger>
@@ -235,8 +300,16 @@ export default function CardsPage() {
               </div>
             ) : debitCardList.length === 0 ? (
               <Card>
-                <CardContent className="pt-6 text-center text-muted-foreground">
-                  No debit cards found
+                <CardContent className="flex flex-col items-center gap-3 px-6 py-10 text-center">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-muted/50 text-primary">
+                    <CreditCard className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">No debit cards to show</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {debitCardEmptyMessage}
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             ) : (
@@ -475,7 +548,7 @@ export default function CardsPage() {
                             setPlanDialogOpen(true);
                           }}
                         >
-                          Apply Plan
+                          {creditCardList.length === 0 ? 'Available after card issuance' : 'Apply Plan'}
                         </Button>
                       </div>
                     ))}
@@ -494,8 +567,16 @@ export default function CardsPage() {
               </div>
             ) : creditCardList.length === 0 ? (
               <Card>
-                <CardContent className="pt-6 text-center text-muted-foreground">
-                  No credit cards found
+                <CardContent className="flex flex-col items-center gap-3 px-6 py-10 text-center">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-muted/50 text-primary">
+                    <CreditCard className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">No credit cards to show</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {creditCardEmptyMessage}
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             ) : (
@@ -699,9 +780,6 @@ export default function CardsPage() {
                 isRequester={isRequester}
               />
               <CreditCardApplicationPanel
-                accountNumber={selectedAccountNumber} 
-                accountOptions={accountOptions}
-                onAccountChange={(value) => setSelectedAccountNumber(value)}
                 isApprover={isApprover}
                 isRequester={isRequester}
               />

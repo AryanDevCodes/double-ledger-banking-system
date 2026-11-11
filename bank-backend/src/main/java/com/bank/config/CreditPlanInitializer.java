@@ -1,13 +1,15 @@
 package com.bank.config;
 
+import java.math.BigDecimal;
+import java.util.List;
+
+import org.springframework.boot.CommandLineRunner;
+
 import com.bank.entity.CreditPlan;
 import com.bank.entity.Status;
 import com.bank.repository.CreditPlanRepository;
-import java.math.BigDecimal;
-import java.util.List;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.stereotype.Component;
 
 // @Component
 @RequiredArgsConstructor

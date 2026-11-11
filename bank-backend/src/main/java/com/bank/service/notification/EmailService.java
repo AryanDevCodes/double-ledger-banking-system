@@ -1,15 +1,16 @@
 package com.bank.service.notification;
 
-import lombok.extern.slf4j.Slf4j;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Sends application e-mails. When {@code app.mail.enabled=false} (the default)
@@ -33,7 +34,6 @@ public class EmailService {
   @Value("${app.mail.reset-link-base:http://localhost:5173/reset-password}")
   private String resetLinkBase;
 
-  @Autowired
   public EmailService(JavaMailSender mailSender) {
     this.mailSender = mailSender;
   }
@@ -62,16 +62,20 @@ public class EmailService {
       return;
     }
     String subject = "Debit Alert: ₹" + amount + " sent from your account";
-    String body = String.format(
-        "Dear Customer,\n\n"
-            + "A debit of ₹%s has been initiated from your account %s.\n\n"
-            + "Transaction Details:\n"
-            + "- Amount: ₹%s\n"
-            + "- To Account: %s\n"
-            + "- Transaction ID: %s\n"
-            + "- Time: %s\n\n"
-            + "If you did not authorize this transaction, please contact us immediately.\n\n"
-            + "— Bank Security Team",
+    String body = String.format("""
+                                Dear Customer,
+                                
+                                A debit of \u20b9%s has been initiated from your account %s.
+                                
+                                Transaction Details:
+                                - Amount: \u20b9%s
+                                - To Account: %s
+                                - Transaction ID: %s
+                                - Time: %s
+                                
+                                If you did not authorize this transaction, please contact us immediately.
+                                
+                                \u2014 Bank Security Team""",
         amount, accountNumber, amount, recipientAccount, transactionId,
         LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")));
 
@@ -84,15 +88,18 @@ public class EmailService {
       return;
     }
     String subject = "Credit Alert: ₹" + amount + " received in your account";
-    String body = String.format(
-        "Dear Customer,\n\n"
-            + "A credit of ₹%s has been received in your account %s.\n\n"
-            + "Transaction Details:\n"
-            + "- Amount: ₹%s\n"
-            + "- From Account: %s\n"
-            + "- Transaction ID: %s\n"
-            + "- Time: %s\n\n"
-            + "— Bank Operations Team",
+    String body = String.format("""
+                                Dear Customer,
+                                
+                                A credit of \u20b9%s has been received in your account %s.
+                                
+                                Transaction Details:
+                                - Amount: \u20b9%s
+                                - From Account: %s
+                                - Transaction ID: %s
+                                - Time: %s
+                                
+                                \u2014 Bank Operations Team""",
         amount, accountNumber, amount, senderAccount, transactionId,
         LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")));
 
@@ -105,15 +112,18 @@ public class EmailService {
       return;
     }
     String subject = "Welcome! Your bank account has been created";
-    String body = String.format(
-        "Dear %s,\n\n"
-            + "Congratulations! Your bank account has been successfully created.\n\n"
-            + "Account Details:\n"
-            + "- Account Number: %s\n"
-            + "- IFSC Code: %s\n\n"
-            + "You can now use our banking services. If you have any questions, "
-            + "please contact our support team.\n\n"
-            + "— Bank Team",
+    String body = String.format("""
+                                Dear %s,
+                                
+                                Congratulations! Your bank account has been successfully created.
+                                
+                                Account Details:
+                                - Account Number: %s
+                                - IFSC Code: %s
+                                
+                                You can now use our banking services. If you have any questions, please contact our support team.
+                                
+                                \u2014 Bank Team""",
         username, accountNumber, ifscCode);
 
     sendEmail(toEmail, subject, body, "account creation");
@@ -125,16 +135,19 @@ public class EmailService {
       return;
     }
     String subject = "Loan Approved: Your " + loanType + " loan has been sanctioned";
-    String body = String.format(
-        "Dear %s,\n\n"
-            + "We are pleased to inform you that your %s loan has been approved.\n\n"
-            + "Loan Details:\n"
-            + "- Loan Amount: ₹%s\n"
-            + "- Tenure: %d months\n"
-            + "- Approval Date: %s\n\n"
-            + "The loan amount will be credited to your account shortly. "
-            + "For EMI details and repayment schedule, please login to your account.\n\n"
-            + "— Bank Loans Department",
+    String body = String.format("""
+                                Dear %s,
+                                
+                                We are pleased to inform you that your %s loan has been approved.
+                                
+                                Loan Details:
+                                - Loan Amount: \u20b9%s
+                                - Tenure: %d months
+                                - Approval Date: %s
+                                
+                                The loan amount will be credited to your account shortly. For EMI details and repayment schedule, please login to your account.
+                                
+                                \u2014 Bank Loans Department""",
         customerName, loanType, loanAmount, tenureMonths,
         LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
 
@@ -147,15 +160,18 @@ public class EmailService {
       return;
     }
     String subject = "UPI " + transactionType + ": ₹" + amount;
-    String body = String.format(
-        "Dear Customer,\n\n"
-            + "An UPI transaction of ₹%s has been %s via UPI ID %s.\n\n"
-            + "Transaction Details:\n"
-            + "- Amount: ₹%s\n"
-            + "- UPI ID: %s\n"
-            + "- Type: %s\n"
-            + "- Time: %s\n\n"
-            + "— Bank UPI Team",
+    String body = String.format("""
+                                Dear Customer,
+                                
+                                An UPI transaction of \u20b9%s has been %s via UPI ID %s.
+                                
+                                Transaction Details:
+                                - Amount: \u20b9%s
+                                - UPI ID: %s
+                                - Type: %s
+                                - Time: %s
+                                
+                                \u2014 Bank UPI Team""",
         amount, transactionType.toLowerCase(), upiId, amount, upiId, transactionType,
         LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")));
 
@@ -176,7 +192,7 @@ public class EmailService {
       msg.setText(body);
       mailSender.send(msg);
       log.info("Sent {} email to {}", logContext, toEmail);
-    } catch (Exception ex) {
+    } catch (MailException ex) {
       log.error("Failed to send {} email to {}", logContext, toEmail, ex);
     }
   }

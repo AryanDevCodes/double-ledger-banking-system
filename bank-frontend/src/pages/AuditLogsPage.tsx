@@ -144,7 +144,7 @@ export default function AuditLogsPage() {
         )}
 
         <div className="data-table-shell">
-          <div className="p-4 border-b border-[var(--glass-border)] bg-gradient-to-r from-[var(--accent-primary)]/8 to-transparent">
+          <div className="p-4 border-b border-border bg-muted/35">
             <DataTableToolbar
               searchPlaceholder="Search audit logs..."
               searchValue={search}

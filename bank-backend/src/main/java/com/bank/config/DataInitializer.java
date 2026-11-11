@@ -1,18 +1,20 @@
 package com.bank.config;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import com.bank.entity.Role;
 import com.bank.entity.User;
 import com.bank.repository.CustomerRepository;
 import com.bank.repository.RoleRepository;
 import com.bank.repository.UserRepository;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
 
 // @Component
 @RequiredArgsConstructor

@@ -5,7 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import PageWrapper from "@/components/PageWrapper";
 import PageHeader from "@/components/PageHeader";
 import { getApiErrorMessage } from "@/lib/api-client";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, maskAccountNumber } from "@/lib/format";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -44,7 +45,6 @@ import type { AccountResponseDTO } from "@/types/api";
 import { toast } from "sonner";
 import FuturisticStatsGrid, { type FuturisticStatWidget } from "@/components/dashboard/FuturisticStatsGrid";
 import FuturisticChart from "@/components/dashboard/FuturisticChart";
-import FuturisticActivityFeed, { type ActivityEvent } from "@/components/dashboard/FuturisticActivityFeed";
 import { useAccounts } from "@/hooks/useAccount";
 
 // ---- Schemas (unchanged) ----
@@ -96,18 +96,6 @@ const STEP_FIELDS: Record<Step, (keyof AccountValues)[]> = {
 };
 
 // ---- Helper functions for charts (unchanged) ----
-const generateActivityEvents = (accounts: AccountResponseDTO[]): ActivityEvent[] => {
-  return accounts.slice(0, 8).map((a, i) => ({
-    id: String(i + 1),
-    type: "account" as const,
-    title: a.status === "ACTIVE" ? "Account Activated" : a.status === "PENDING" ? "Account Pending" : "Account Updated",
-    description: `${a.accountNumber} - ${a.bankName}`,
-    timestamp: new Date(Date.now() - i * 600000).toISOString(),
-    status: a.status === "ACTIVE" ? "success" as const : a.status === "PENDING" ? "pending" as const : "warning" as const,
-    user: a.customerName,
-  }));
-};
-
 const generateStatusData = (accounts: AccountResponseDTO[]) => {
   const active = accounts.filter(a => a.status === "ACTIVE").length;
   const inactive = accounts.filter(a => a.status === "INACTIVE").length;
@@ -132,6 +120,17 @@ const generateBankData = (accounts: AccountResponseDTO[]) => {
 
 // ---- Main Component ----
 export default function AccountsPage() {
+  const { user } = useAuth();
+  const roles = user?.roles ?? [];
+  const hasStaffRole = roles.some((role) =>
+    ["ROLE_ADMIN", "ROLE_MANAGER", "ROLE_CUSTOMER_MANAGER", "ROLE_AUDITOR"].includes(role),
+  );
+  const isPersonalView = roles.includes("ROLE_USER") && !hasStaffRole;
+  const canOpenAccount = roles.some((role) => ["ROLE_ADMIN", "ROLE_MANAGER"].includes(role));
+  const canUpdateCompliance = roles.some((role) =>
+    ["ROLE_ADMIN", "ROLE_MANAGER", "ROLE_CUSTOMER_MANAGER"].includes(role),
+  );
+
   // Use the React Query hook
   const {
     accounts,
@@ -204,7 +203,6 @@ export default function AccountsPage() {
   const avgBalance = accounts.length ? totalBalance / accounts.length : 0;
   const uniqueBanks = Array.from(new Set(accounts.map((a) => a.bankName).filter(Boolean))).sort();
 
-  const activityEvents = useMemo(() => generateActivityEvents(accounts), [accounts]);
   const statusData = useMemo(() => generateStatusData(accounts), [accounts]);
   const bankData = useMemo(() => generateBankData(accounts), [accounts]);
 
@@ -343,46 +341,46 @@ export default function AccountsPage() {
   return (
     <PageWrapper>
       <PageHeader
-        title="Account Registry"
-        subtitle="Manage customer accounts, KYC verification & compliance"
+        title={isPersonalView ? "My Accounts" : "Account Registry"}
+        subtitle={
+          isPersonalView
+            ? "View your linked accounts, balances and verification status"
+            : "Manage customer accounts, KYC verification & compliance"
+        }
         icon={<Building2 className="h-5 w-5" />}
         actions={
-          <div className="flex items-center gap-3">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:gap-3">
             {lastUpdated && (
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/5 text-xs text-muted-foreground">
+              <div className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border border-border bg-muted/40 px-2 py-1 text-xs text-muted-foreground">
                 <Clock className="w-3 h-3" />
-                {lastUpdated.toLocaleTimeString()}
+                {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
               </div>
             )}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-success/20 border border-success/30">
-              <span className="w-2 h-2 bg-success rounded-full pulse-live" />
-              <span className="text-xs text-success font-medium">Live</span>
-            </div>
             <Button variant="outline" size="sm" onClick={() => refetch()} disabled={loading}>
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
               Sync
             </Button>
-            <Button
-              onClick={() => {
-                resetAccountDialog();
-                setOpenAccountDialog(true);
-              }}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Open Account
-            </Button>
+            {canOpenAccount && (
+              <Button
+                size="sm"
+                onClick={() => {
+                  resetAccountDialog();
+                  setOpenAccountDialog(true);
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Open Account
+              </Button>
+            )}
           </div>
         }
       />
 
       <FuturisticStatsGrid widgets={widgets} loading={loading} columnsClassName="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" />
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
-        <div className="xl:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <FuturisticChart data={statusData} title="Account Status" type="pie" height={240} />
-          <FuturisticChart data={bankData} title="Accounts by Bank" type="bar" height={240} />
-        </div>
-        <FuturisticActivityFeed events={activityEvents} title="Recent Activity" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <FuturisticChart data={statusData} title="Account Status" type="pie" height={240} />
+        <FuturisticChart data={bankData} title="Accounts by Bank" type="bar" height={240} />
       </div>
 
       {/* Filters */}
@@ -438,7 +436,11 @@ export default function AccountsPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="glass-card-futuristic p-10 text-center text-muted-foreground">
-          {hasFilters ? "No accounts match your filters" : "No accounts yet"}
+          {hasFilters
+            ? "No accounts match your filters"
+            : isPersonalView
+              ? "No accounts are linked to your profile yet"
+              : "No accounts yet"}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -447,8 +449,16 @@ export default function AccountsPage() {
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="font-mono text-sm text-primary truncate">{account.accountNumber}</span>
-                    <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0" onClick={() => copyToClipboard(account.accountNumber)}>
+                    <span className="font-mono text-sm text-primary truncate">
+                      {isPersonalView ? maskAccountNumber(account.accountNumber) : account.accountNumber}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5 shrink-0"
+                      aria-label="Copy full account number"
+                      onClick={() => copyToClipboard(account.accountNumber)}
+                    >
                       <Copy className="w-3 h-3" />
                     </Button>
                   </div>
@@ -474,12 +484,20 @@ export default function AccountsPage() {
               </div>
 
               <div className="mt-4 pt-3 border-t border-white/10 flex items-center gap-2">
-                <Button variant="outline" size="sm" className="h-8 flex-1 border-violet-500/30 text-violet-400 hover:bg-violet-500/20" onClick={() => openComplianceEditor(account)}>
-                  <ShieldCheck className="w-3 h-3 mr-1" /> Verify
-                </Button>
+                {canUpdateCompliance && (
+                  <Button variant="outline" size="sm" className="h-8 flex-1 border-violet-500/30 text-violet-400 hover:bg-violet-500/20" onClick={() => openComplianceEditor(account)}>
+                    <ShieldCheck className="w-3 h-3 mr-1" /> Verify
+                  </Button>
+                )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-8">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8"
+                      aria-label="Download account statement"
+                      title="Download account statement"
+                    >
                       <Download className="w-3 h-3" />
                     </Button>
                   </DropdownMenuTrigger>

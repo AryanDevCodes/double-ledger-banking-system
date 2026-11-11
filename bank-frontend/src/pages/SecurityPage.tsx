@@ -150,7 +150,7 @@ export default function SecurityPage() {
 
         <div className="grid lg:grid-cols-2 gap-6">
           <Card className="glass-elevated">
-            <CardHeader className="border-b border-[var(--glass-border)] bg-gradient-to-r from-[var(--accent-primary)]/8 to-transparent">
+            <CardHeader className="border-b border-border bg-muted/35">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Activity className="h-5 w-5 text-[var(--accent-primary)]" />
                 Active Sessions
@@ -172,7 +172,7 @@ export default function SecurityPage() {
           </Card>
 
           <Card className="glass-elevated">
-            <CardHeader className="border-b border-[var(--glass-border)] bg-gradient-to-r from-[var(--accent-primary)]/8 to-transparent">
+            <CardHeader className="border-b border-border bg-muted/35">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Shield className="h-5 w-5 text-[var(--accent-primary)]" />
                 Access Logs

@@ -47,14 +47,14 @@ public class NotificationController {
             HttpServletRequest request) {
         Long userId = extractUserId(request);
         notificationService.markAsRead(notificationId, userId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/read-all")
     public ResponseEntity<Void> markAllAsRead(HttpServletRequest request) {
         Long userId = extractUserId(request);
         notificationService.markAllAsRead(userId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     private Long extractUserId(HttpServletRequest request) {

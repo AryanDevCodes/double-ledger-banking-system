@@ -18,8 +18,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import TransactionReceipt from "@/components/TransactionReceipt";
 import { TableSkeleton, StatCardSkeleton } from "@/components/LoadingStates";
 import { accountApi, transactionApi, upiApi, getApiErrorMessage } from "@/lib/api-client";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatCurrency, formatDateTime, maskAccountNumber } from "@/lib/format";
 import type { AccountResponseDTO, ReceiverValidationResponseDTO, TransactionResponseDTO, UpiProfileResponseDTO } from "@/types/api";
+import TransactionVolumeChart from "@/components/dashboard/TransactionVolumeChart";
 
 const bankTransferSchema = z
   .object({
@@ -47,6 +48,8 @@ export default function SendMoneyPage(): JSX.Element {
   const [accounts, setAccounts] = useState<AccountResponseDTO[]>([]);
   const [transactions, setTransactions] = useState<EnrichedTransaction[]>([]);
   const [upiProfiles, setUpiProfiles] = useState<UpiProfileResponseDTO[]>([]);
+  const [bankingDataError, setBankingDataError] = useState<string | null>(null);
+  const [transactionsError, setTransactionsError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedBank, setSelectedBank] = useState<string>("all");
   const [receiverValidation, setReceiverValidation] = useState<ReceiverValidationResponseDTO | null>(null);
@@ -72,24 +75,36 @@ export default function SendMoneyPage(): JSX.Element {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [accountsData, upiData, txnsData] = await Promise.all([
+      const [accountsData, upiData] = await Promise.all([
         accountApi.getMy(),
         upiApi.getMy(),
-        transactionApi.getMy().catch(() => [] as TransactionResponseDTO[]),
       ]);
 
       setAccounts(accountsData);
       setUpiProfiles(upiData);
+      setBankingDataError(null);
 
-      const myAccountNumbers = new Set(accountsData.map((a) => a.accountNumber));
-      const enriched = txnsData.map((t) => ({
-        ...t,
-        direction: t.senderAccountNumber && myAccountNumbers.has(t.senderAccountNumber) ? "SENT" : "RECEIVED",
-      }));
-      setTransactions(enriched);
+      try {
+        const txnsData = await transactionApi.getMy();
+        const myAccountNumbers = new Set(accountsData.map((a) => a.accountNumber));
+        const enriched = txnsData.map((t) => ({
+          ...t,
+          direction: t.senderAccountNumber && myAccountNumbers.has(t.senderAccountNumber) ? "SENT" : "RECEIVED",
+        }));
+        setTransactions(enriched);
+        setTransactionsError(null);
+      } catch (error) {
+        console.error(error);
+        const message = getApiErrorMessage(error, "Failed to load transfer history");
+        setTransactions([]);
+        setTransactionsError(message);
+        toast.error(message);
+      }
     } catch (err) {
       console.error(err);
-      toast.error(getApiErrorMessage(err, "Failed to load data"));
+      const message = getApiErrorMessage(err, "Failed to load banking data");
+      setBankingDataError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -108,6 +123,17 @@ export default function SendMoneyPage(): JSX.Element {
   const selectedBankAccounts = useMemo(() => {
     return selectedBank === "all" ? accounts : accounts.filter((a) => a.bankName === selectedBank);
   }, [accounts, selectedBank]);
+  const activeBankAccounts = useMemo(
+    () => selectedBankAccounts.filter((account) => account.status === "ACTIVE"),
+    [selectedBankAccounts],
+  );
+
+  useEffect(() => {
+    const senderAccount = form.getValues("senderAccount");
+    if (senderAccount && !activeBankAccounts.some((account) => account.accountNumber === senderAccount)) {
+      form.setValue("senderAccount", "", { shouldValidate: true });
+    }
+  }, [activeBankAccounts, form]);
 
   const filteredTransactions = useMemo(() => {
     if (selectedBank === "all") return transactions;
@@ -120,8 +146,9 @@ export default function SendMoneyPage(): JSX.Element {
     const sent = completed.filter((t) => t.direction === "SENT").reduce((s, t) => s + (t.amount || 0), 0);
     const received = completed.filter((t) => t.direction === "RECEIVED").reduce((s, t) => s + (t.amount || 0), 0);
     const pending = filteredTransactions.filter((t) => t.status === "PENDING").length;
-    return { sent, received, pending };
+    return { sent, received, pending, completed };
   }, [filteredTransactions]);
+  const historyError = bankingDataError || transactionsError;
 
   const onSubmit = async (values: BankTransferValues) => {
     try {
@@ -221,11 +248,31 @@ export default function SendMoneyPage(): JSX.Element {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-          <StatCard title="Available Balance" value={formatCurrency(selectedBankAccounts.reduce((s, a) => s + a.balance, 0))} icon={<Wallet className="h-5 w-5" />} tint="emerald" />
-          <StatCard title="Total Sent" value={formatCurrency(stats.sent)} icon={<Send className="h-5 w-5" />} tint="rose" />
-          <StatCard title="Total Received" value={formatCurrency(stats.received)} icon={<CheckCircle2 className="h-5 w-5" />} tint="emerald" />
-          <StatCard title="Pending" value={stats.pending} subtitle="Transactions" icon={<Clock className="h-5 w-5" />} tint="amber" />
+          <StatCard title="Available Balance" value={bankingDataError ? "—" : formatCurrency(activeBankAccounts.reduce((s, a) => s + a.balance, 0))} icon={<Wallet className="h-5 w-5" />} tint="emerald" />
+          <StatCard title="Total Sent" value={historyError ? "—" : formatCurrency(stats.sent)} subtitle={historyError ? "History unavailable" : undefined} icon={<Send className="h-5 w-5" />} tint="rose" />
+          <StatCard title="Total Received" value={historyError ? "—" : formatCurrency(stats.received)} subtitle={historyError ? "History unavailable" : undefined} icon={<CheckCircle2 className="h-5 w-5" />} tint="emerald" />
+          <StatCard title="Pending" value={historyError ? "—" : stats.pending} subtitle={historyError ? "History unavailable" : "Transactions"} icon={<Clock className="h-5 w-5" />} tint="amber" />
         </div>
+      )}
+
+      {historyError ? (
+        <div role="alert" className="mb-6 flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
+          <span>
+            {bankingDataError
+              ? `Banking data could not be loaded: ${bankingDataError}`
+              : `Transfer history could not be loaded: ${historyError}`}
+          </span>
+          <Button variant="outline" size="sm" onClick={() => void loadData()} disabled={loading}>
+            Retry
+          </Button>
+        </div>
+      ) : (
+        <TransactionVolumeChart
+          transactions={stats.completed}
+          loading={loading}
+          title="Completed transfer volume · last 6 months"
+          className="mb-6"
+        />
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
@@ -250,10 +297,10 @@ export default function SendMoneyPage(): JSX.Element {
                             <SelectValue placeholder="Select your account" />
                           </SelectTrigger>
                           <SelectContent>
-                            {selectedBankAccounts.map((acc) => (
+                            {activeBankAccounts.map((acc) => (
                               <SelectItem key={acc.accountNumber} value={acc.accountNumber}>
                                 <div className="flex items-center gap-2">
-                                  <span className="font-mono">{acc.accountNumber}</span>
+                                  <span className="font-mono">{maskAccountNumber(acc.accountNumber)}</span>
                                   <span className="text-muted-foreground">({acc.bankName})</span>
                                   <Badge variant="secondary">{formatCurrency(acc.balance)}</Badge>
                                 </div>
@@ -297,7 +344,7 @@ export default function SendMoneyPage(): JSX.Element {
                       <div><span className="font-medium">Holder:</span> {receiverValidation.accountHolderName}</div>
                       <div><span className="font-medium">Bank:</span> {receiverValidation.bankName}</div>
                       <div><span className="font-medium">IFSC:</span> {receiverValidation.ifscCode}</div>
-                      <div><span className="font-medium">Account:</span> {receiverValidation.accountNumber}</div>
+                      <div><span className="font-medium">Account:</span> {maskAccountNumber(receiverValidation.accountNumber)}</div>
                     </div>
                   ) : null}
                 </div>
@@ -360,7 +407,7 @@ export default function SendMoneyPage(): JSX.Element {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading || !receiverValidation?.valid}>
+              <Button type="submit" className="w-full" disabled={loading || activeBankAccounts.length === 0 || !receiverValidation?.valid}>
                 <Send className="mr-2 h-4 w-4" />
                 Send Money
               </Button>
@@ -374,10 +421,29 @@ export default function SendMoneyPage(): JSX.Element {
               <h2 className="text-lg font-semibold">Recent transfers</h2>
               <p className="text-xs text-muted-foreground">Your latest activity across accounts.</p>
             </div>
-            {selectedBank !== "all" && <Badge variant="outline">{selectedBank}</Badge>}
+            <div className="flex items-center gap-2">
+              {banks.length > 1 && (
+                <Select value={selectedBank} onValueChange={setSelectedBank}>
+                  <SelectTrigger className="w-full sm:w-[160px]" aria-label="Filter transfers by bank">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All banks</SelectItem>
+                    {banks.map((bank) => (
+                      <SelectItem key={bank} value={bank}>{bank}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              {selectedBank !== "all" && <Badge variant="outline">{selectedBank}</Badge>}
+            </div>
           </div>
           {loading ? (
             <TableSkeleton columns={4} rows={5} />
+          ) : historyError ? (
+            <div role="alert" className="py-8 text-center text-sm text-destructive">
+              Transfer history is unavailable. Use Retry above to try again.
+            </div>
           ) : filteredTransactions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <AlertCircle className="mx-auto mb-3 h-12 w-12 opacity-50" />

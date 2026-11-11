@@ -1,263 +1,153 @@
-import { useMemo } from "react";
+import { Link } from "react-router-dom";
 import {
-  Building2,
-  Users,
-  CreditCard,
   ArrowLeftRight,
-  TrendingUp,
-  RefreshCw,
-  Link2,
-  ClipboardCheck,
-  Wallet,
-  Clock,
+  Building2,
   CheckCircle2,
-  XCircle,
-  AlertCircle,
-  FileCheck,
-  UserCheck,
+  Clock3,
+  CreditCard,
+  RefreshCw,
+  ShieldCheck,
+  Users,
+  Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import PageWrapper from "@/components/PageWrapper";
-import PageHeader from "@/components/PageHeader";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { formatCurrency } from "@/lib/format";
-import FuturisticStatsGrid, { type FuturisticStatWidget } from "@/components/dashboard/FuturisticStatsGrid";
-import FuturisticChart from "@/components/dashboard/FuturisticChart";
-import FuturisticActivityFeed, { type ActivityEvent } from "@/components/dashboard/FuturisticActivityFeed";
-import FuturisticQuickActions from "@/components/dashboard/FuturisticQuickActions";
-
-const generateActivityEvents = (transactions: any[], accounts: any[], customers: any[]): ActivityEvent[] => {
-  const events: ActivityEvent[] = [];
-  
-  accounts.filter(a => a.status === "PENDING").slice(0, 3).forEach((a, i) => {
-    events.push({
-      id: `acc-${a.accountId || i}`,
-      type: "account",
-      title: "Account Approval Request",
-      description: `${a.accountNumber} pending review`,
-      timestamp: new Date(Date.now() - i * 300000).toISOString(),
-      status: "pending" as const,
-      user: a.customerName || "Unknown",
-    });
-  });
-
-  customers.filter(c => c.kycStatus === "PENDING").slice(0, 2).forEach((c, i) => {
-    events.push({
-      id: `kyc-${c.customerId || i}`,
-      type: "kyc",
-      title: "KYC Verification",
-      description: "Documents uploaded for review",
-      timestamp: new Date(Date.now() - (i + 3) * 300000).toISOString(),
-      status: "pending" as const,
-      user: c.fullName || c.email,
-    });
-  });
-
-  transactions.slice(0, 2).forEach((t, i) => {
-    events.push({
-      id: `txn-${t.transactionId || i}`,
-      type: "transaction",
-      title: t.status === "COMPLETED" || t.status === "SUCCESS" ? "Transaction Processed" : "Transaction Pending",
-      description: t.description || `${formatCurrency(t.amount)} transfer`,
-      timestamp: t.transactionDate || new Date(Date.now() - (i + 5) * 300000).toISOString(),
-      status: (t.status === "COMPLETED" || t.status === "SUCCESS") ? "success" as const : "pending" as const,
-      amount: formatCurrency(t.amount),
-      user: t.senderName || t.receiverName || "Unknown",
-    });
-  });
-
-  return events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-};
-
-const generateTransactionData = (transactions: any[]) => {
-  const dailyData: Record<string, number> = {};
-  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  days.forEach(d => dailyData[d] = 0);
-  
-  transactions.forEach(t => {
-    if (t.transactionDate) {
-      const d = new Date(t.transactionDate);
-      const key = days[d.getDay()];
-      dailyData[key] = (dailyData[key] || 0) + 1;
-    }
-  });
-  
-  return Object.entries(dailyData).map(([name, value]) => ({ name, value }));
-};
-
-const generateApprovalData = (accounts: any[], customers: any[]) => {
-  const pendingAccounts = accounts.filter(a => a.status === "PENDING").length;
-  const pendingKyc = customers.filter(c => c.kycStatus === "PENDING").length;
-  
-  return [
-    { name: "Accounts", value: pendingAccounts || 3 },
-    { name: "KYC", value: pendingKyc || 5 },
-    { name: "Transactions", value: 2 },
-    { name: "Limits", value: 1 },
-  ];
-};
+import { buildMonthlyTransactionTrend } from "@/components/dashboard/dashboard-data";
+import {
+  DashboardEmpty,
+  DashboardHero,
+  DashboardMetric,
+  DashboardPanel,
+  DashboardTransactions,
+  DashboardTrend,
+} from "@/components/dashboard/RoleDashboardPrimitives";
 
 export default function ManagerDashboard() {
-  const { banks, customers, accounts, upiProfiles, transactions, loading, reload, lastUpdated } =
-    useDashboardData("all", { realtime: 30000 });
-
-  const totalBalance = accounts.reduce((s, a) => s + (a.balance || 0), 0);
-  const pendingApprovals = accounts.filter((a) => a.status === "PENDING").length;
-  const pendingKyc = customers.filter((c) => c.kycStatus === "PENDING").length;
-  const successRate = transactions.length
-    ? Math.round(
-        (transactions.filter((t) => t.status === "COMPLETED" || t.status === "SUCCESS").length /
-          transactions.length) *
-          100,
-      )
-    : 0;
-
-  const activityEvents = useMemo(() => generateActivityEvents(transactions, accounts, customers), [transactions, accounts, customers]);
-  const transactionData = useMemo(() => generateTransactionData(transactions), [transactions]);
-  const approvalData = useMemo(() => generateApprovalData(accounts, customers), [accounts, customers]);
-
-  const widgets: FuturisticStatWidget[] = [
-    { id: "banks", title: "Partner Banks", value: banks.length, icon: <Building2 className="h-5 w-5" />, tint: "violet" },
-    { id: "customers", title: "Total Customers", value: customers.length, icon: <Users className="h-5 w-5" />, subtitle: `${pendingKyc} KYC pending`, tint: "cyan" },
-    { id: "accounts", title: "Accounts", value: accounts.length, icon: <CreditCard className="h-5 w-5" />, subtitle: `${pendingApprovals} awaiting`, tint: "amber" },
-    { id: "balance", title: "Total Balance", value: formatCurrency(totalBalance), icon: <Wallet className="h-5 w-5" />, tint: "emerald" },
-    { id: "transactions", title: "Transactions", value: transactions.length, icon: <ArrowLeftRight className="h-5 w-5" />, subtitle: `${successRate}% success`, tint: "sky" },
-    { id: "approvals", title: "Pending Approvals", value: pendingApprovals + pendingKyc, icon: <ClipboardCheck className="h-5 w-5" />, subtitle: "Queue", tint: "rose" },
-  ];
+  const { banks, customers, accounts, transactions, loading, reload, lastUpdated } =
+    useDashboardData("all", { upi: false, realtime: 30000 });
+  const pendingAccounts = accounts.filter((account) => account.status === "PENDING");
+  const pendingKyc = customers.filter((customer) => customer.kycStatus === "PENDING");
+  const activeAccounts = accounts.filter((account) => account.status === "ACTIVE").length;
+  const completedTransactions = transactions.filter(
+    (transaction) => transaction.status === "COMPLETED" || transaction.status === "SUCCESS",
+  ).length;
+  const trend = buildMonthlyTransactionTrend(transactions, { metric: "count" });
 
   return (
-    <PageWrapper>
-      <PageHeader
-        title="Operations Hub"
-        subtitle="Approval workflows, customer management & throughput"
-        icon={<TrendingUp className="h-5 w-5" />}
+    <div className="space-y-5">
+      <DashboardHero
+        eyebrow="Banking operations"
+        title="Operations overview"
+        description="Monitor service activity, account requests, and customer verification queues."
+        icon={Building2}
+        updatedAt={lastUpdated}
         actions={
-          <div className="flex items-center gap-3">
-            {lastUpdated && (
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/5 text-xs text-muted-foreground">
-                <Clock className="w-3 h-3" />
-                {lastUpdated.toLocaleTimeString()}
-              </div>
-            )}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-warning/20 border border-warning/30">
-              <Clock className="w-3 h-3 text-warning" />
-              <span className="text-xs text-warning font-medium">{pendingApprovals + pendingKyc} Pending</span>
-            </div>
-            <Button variant="outline" size="sm" onClick={reload} disabled={loading}>
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-              Sync
-            </Button>
-          </div>
+          <Button variant="outline" size="sm" onClick={() => void reload()} disabled={loading}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
         }
       />
 
-      <FuturisticStatsGrid widgets={widgets} loading={loading} columnsClassName="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6" />
-
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
-        <div className="xl:col-span-2">
-          <FuturisticChart 
-            data={transactionData} 
-            title="Daily Transaction Volume" 
-            type="bar" 
-            height={320}
-            
-          />
-        </div>
-        <FuturisticChart 
-          data={approvalData} 
-          title="Pending Approvals" 
-          type="pie" 
-          height={320}
-          
-        />
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <DashboardMetric label="Partner banks" value={banks.length} detail="Registered institutions" icon={Building2} tone="violet" />
+        <DashboardMetric label="Customers" value={customers.length} detail="Customer records" icon={Users} tone="blue" />
+        <DashboardMetric label="Active accounts" value={activeAccounts} detail={`${accounts.length} total accounts`} icon={CreditCard} tone="green" />
+        <DashboardMetric label="Awaiting attention" value={pendingAccounts.length + pendingKyc.length} detail={`${pendingAccounts.length} accounts · ${pendingKyc.length} KYC reviews`} icon={Clock3} tone="amber" />
+        <DashboardMetric label="Successful transfers" value={completedTransactions} detail={`${transactions.length} recorded transactions`} icon={CheckCircle2} tone="blue" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <FuturisticActivityFeed 
-          events={activityEvents} 
-          title="Approval Queue"
-          maxEvents={6}
+      <div className="grid gap-5 xl:grid-cols-[1.35fr_1fr]">
+        <DashboardTrend
+          title="Transaction activity"
+          description="Recorded transfers by month"
+          points={trend}
         />
-        
-        <div className="lg:col-span-2">
-          <div className="glass-card-futuristic p-5">
-            <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-              <ClipboardCheck className="w-4 h-4 text-warning" />
-              Quick Review Actions
-            </h3>
-            <div className="space-y-3">
-              {accounts.filter(a => a.status === "PENDING").slice(0, 3).map((acc, i) => (
-                <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-muted/25 border border-border hover:border-warning/30 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-warning/20">
-                      <CreditCard className="w-4 h-4 text-warning" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Account: {acc.accountNumber}</p>
-                      <p className="text-xs text-muted-foreground">{acc.customerName} • {acc.bankName}</p>
-                    </div>
+        <DashboardPanel
+          title="Operations shortcuts"
+          description="Open the relevant work queue"
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            {[
+              { to: "/accounts", label: "Account requests", count: pendingAccounts.length, icon: CreditCard },
+              { to: "/customers", label: "KYC reviews", count: pendingKyc.length, icon: ShieldCheck },
+              { to: "/customers", label: "Customer directory", count: customers.length, icon: Users },
+              { to: "/banks", label: "Partner banks", count: banks.length, icon: Building2 },
+              { to: "/transactions", label: "Transactions", count: transactions.length, icon: ArrowLeftRight },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.label}
+                  to={item.to}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-border/70 p-3 transition-colors hover:border-primary/30 hover:bg-muted/40"
+                >
+                  <span className="flex min-w-0 items-center gap-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <Icon className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    <span className="truncate text-sm font-medium">{item.label}</span>
+                  </span>
+                  <span className="font-mono text-sm tabular-nums text-muted-foreground">{item.count}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </DashboardPanel>
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-2">
+        <DashboardPanel
+          title="Account requests"
+          description="Accounts currently marked as pending"
+          action={
+            <Button asChild variant="ghost" size="sm" className="-mr-2">
+              <Link to="/accounts">Open accounts</Link>
+            </Button>
+          }
+        >
+          {pendingAccounts.length === 0 ? (
+            <DashboardEmpty title="No pending account requests" description="New requests will appear in this queue." icon={CreditCard} />
+          ) : (
+            <div className="space-y-2">
+              {pendingAccounts.slice(0, 4).map((account) => (
+                <div key={account.accountNumber} className="flex items-center justify-between gap-3 rounded-xl bg-muted/40 px-3 py-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{account.customerName || "Customer"}</p>
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                      {account.bankName} · A/c •••• {account.accountNumber.slice(-4)}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button size="sm" variant="outline" className="h-8 border-success/30 text-success hover:bg-success/20">
-                      <CheckCircle2 className="w-3 h-3 mr-1" /> Approve
-                    </Button>
-                    <Button size="sm" variant="outline" className="h-8 border-destructive/30 text-destructive hover:bg-destructive/20">
-                      <XCircle className="w-3 h-3 mr-1" /> Reject
-                    </Button>
-                  </div>
+                  <span className="shrink-0 rounded-full bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-700 dark:text-amber-400">
+                    Pending
+                  </span>
                 </div>
               ))}
             </div>
-          </div>
-        </div>
+          )}
+        </DashboardPanel>
+
+        <DashboardPanel
+          title="Recent transactions"
+          description="Latest system-wide transaction activity"
+          action={
+            <Button asChild variant="ghost" size="sm" className="-mr-2">
+              <Link to="/transactions">View all</Link>
+            </Button>
+          }
+        >
+          <DashboardTransactions transactions={transactions} />
+        </DashboardPanel>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <FuturisticQuickActions
-          title="Manager Console"
-          actions={[
-            { to: "/accounts", label: "Account Approvals", icon: CreditCard, description: `${pendingApprovals} awaiting`, badge: `${pendingApprovals}`, badgeType: "warning" },
-            { to: "/customers", label: "KYC Reviews", icon: UserCheck, description: `${pendingKyc} pending`, badge: `${pendingKyc}`, badgeType: "warning" },
-            { to: "/banks", label: "Bank Registry", icon: Building2, description: "Manage partners" },
-            { to: "/webhooks", label: "Webhooks", icon: Link2, description: "Integration config" },
-            { to: "/transactions", label: "Transactions", icon: ArrowLeftRight, description: "View all" },
-            { to: "/customers", label: "Customer List", icon: Users, description: "Manage customers" },
-          ]}
-          columns={2}
-          className="lg:col-span-2"
-        />
-        
-        <div className="glass-card-futuristic p-5">
-          <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-              <FileCheck className="w-4 h-4 text-success" />
-            Today's Performance
-          </h3>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Accounts Opened</span>
-              <span className="text-lg font-bold text-success">{accounts.filter(a => a.status === "ACTIVE").length}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">KYC Verified</span>
-              <span className="text-lg font-bold text-primary">{customers.filter(c => c.kycStatus === "COMPLETED").length}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Transactions Processed</span>
-              <span className="text-lg font-bold text-warning">{transactions.length}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Success Rate</span>
-              <span className="text-lg font-bold text-info">{successRate}%</span>
-            </div>
-            <div className="pt-4 border-t border-white/10">
-              <div className="progress-futuristic">
-                <div className="progress-futuristic-bar" style={{ width: `${successRate}%` }} />
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">{successRate}% target achieved</p>
-            </div>
-          </div>
-        </div>
+      <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
+        <Wallet className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+        Figures reflect the records currently available to your operations account.
+        <span className="ml-auto hidden shrink-0 items-center gap-1 text-emerald-700 dark:text-emerald-400 sm:flex">
+          <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+          Role-scoped access
+        </span>
       </div>
-    </PageWrapper>
+    </div>
   );
 }

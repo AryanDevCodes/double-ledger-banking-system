@@ -1,1 +1,4442 @@
-{"openapi":"3.0.1","info":{"title":"OpenAPI definition","version":"v0"},"servers":[{"url":"http://localhost:8080","description":"Generated server url"}],"paths":{"/upi/register":{"post":{"tags":["upi-controller"],"operationId":"registerUpiProfile","requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/UpiRegisterRequestDTO"}}},"required":true},"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"$ref":"#/components/schemas/UpiProfileResponseDTO"}}}}}}},"/upi/pay":{"post":{"tags":["upi-controller"],"operationId":"executeUpiPayment","requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/UpiPayRequestDTO"}}},"required":true},"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"$ref":"#/components/schemas/TransactionResponseDTO"}}}}}}},"/transaction":{"get":{"tags":["transaction-controller"],"operationId":"getTransactions","parameters":[{"name":"accountNumber","in":"query","required":true,"schema":{"type":"string"}},{"name":"email","in":"query","required":true,"schema":{"type":"string"}}],"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/TransactionResponseDTO"}}}}}}},"post":{"tags":["transaction-controller"],"operationId":"createTransaction","requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/TransactionRequestDTO"}}},"required":true},"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"$ref":"#/components/schemas/TransactionResponseDTO"}}}}}}},"/bank/create":{"post":{"tags":["bank-controller"],"operationId":"createBank","requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/BankRequestDTO"}}},"required":true},"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"$ref":"#/components/schemas/BankResponseDTO"}}}}}}},"/account/{bankName}":{"post":{"tags":["account-controller"],"operationId":"createAccount","parameters":[{"name":"bankName","in":"path","required":true,"schema":{"type":"string"}}],"requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/AccountRequestDTO"}}},"required":true},"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"$ref":"#/components/schemas/AccountResponseDTO"}}}}}}},"/upi/{upiId}/status":{"patch":{"tags":["upi-controller"],"operationId":"updateUpiStatus","parameters":[{"name":"upiId","in":"path","required":true,"schema":{"type":"string"}},{"name":"status","in":"query","required":true,"schema":{"type":"string"}}],"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"$ref":"#/components/schemas/UpiProfileResponseDTO"}}}}}}},"/customer/update":{"patch":{"tags":["customer-controller"],"operationId":"updateCustomer","parameters":[{"name":"name","in":"query","required":true,"schema":{"type":"string"}},{"name":"email","in":"query","required":true,"schema":{"type":"string"}},{"name":"phoneNumber","in":"query","required":true,"schema":{"type":"string"}}],"requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/CustomerRequestDTO"}}},"required":true},"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"$ref":"#/components/schemas/CustomerResponseDTO"}}}}}}},"/bank/{id}":{"get":{"tags":["bank-controller"],"operationId":"findBankById","parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"}}],"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"$ref":"#/components/schemas/BankResponseDTO"}}}}}},"delete":{"tags":["bank-controller"],"operationId":"deleteBank","parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"}}],"responses":{"200":{"description":"OK"}}},"patch":{"tags":["bank-controller"],"operationId":"updateBank","parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"}}],"requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/BankRequestDTO"}}},"required":true},"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"$ref":"#/components/schemas/BankResponseDTO"}}}}}}},"/account/{accNumber}":{"delete":{"tags":["account-controller"],"operationId":"deleteAccount","parameters":[{"name":"accNumber","in":"path","required":true,"schema":{"type":"string"}}],"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"$ref":"#/components/schemas/AccountResponseDTO"}}}}}},"patch":{"tags":["account-controller"],"operationId":"updateAccount","parameters":[{"name":"accNumber","in":"path","required":true,"schema":{"type":"string"}}],"requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/AccountRequestDTO"}}},"required":true},"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"$ref":"#/components/schemas/AccountResponseDTO"}}}}}}},"/upi":{"get":{"tags":["upi-controller"],"operationId":"getAllUpiProfiles","responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/UpiProfileResponseDTO"}}}}}}}},"/upi/{upiId}":{"get":{"tags":["upi-controller"],"operationId":"getUpiProfile","parameters":[{"name":"upiId","in":"path","required":true,"schema":{"type":"string"}}],"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"$ref":"#/components/schemas/UpiProfileResponseDTO"}}}}}},"delete":{"tags":["upi-controller"],"operationId":"deleteUpiProfile","parameters":[{"name":"upiId","in":"path","required":true,"schema":{"type":"string"}}],"responses":{"200":{"description":"OK"}}}},"/upi/account/{accountNumber}":{"get":{"tags":["upi-controller"],"operationId":"getUpiProfilesByAccountNumber","parameters":[{"name":"accountNumber","in":"path","required":true,"schema":{"type":"string"}}],"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/UpiProfileResponseDTO"}}}}}}}},"/transaction/accounts/{id}/balance":{"get":{"tags":["transaction-controller"],"operationId":"getBalance","parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"integer","format":"int64"}}],"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"type":"number"}}}}}}},"/customer":{"get":{"tags":["customer-controller"],"operationId":"getAllCustomer","responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/CustomerResponseDTO"}}}}}}}},"/customer/search":{"get":{"tags":["customer-controller"],"operationId":"searchCustomer","parameters":[{"name":"name","in":"query","required":true,"schema":{"type":"string"}},{"name":"bankName","in":"query","required":true,"schema":{"type":"string"}}],"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/CustomerResponseDTO"}}}}}}}},"/customer/bank":{"get":{"tags":["customer-controller"],"operationId":"getCustomersByBank","parameters":[{"name":"bankName","in":"query","required":true,"schema":{"type":"string"}}],"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/CustomerResponseDTO"}}}}}}}},"/bank":{"get":{"tags":["bank-controller"],"operationId":"findAllBanks","responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/BankResponseDTO"}}}}}}}},"/account":{"get":{"tags":["account-controller"],"operationId":"getAllAccounts","responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/AccountResponseDTO"}}}}}}}},"/account/{id}":{"get":{"tags":["account-controller"],"operationId":"getAccount","parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"}}],"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"$ref":"#/components/schemas/AccountResponseDTO"}}}}}}},"/account/name/{bankName}":{"get":{"tags":["account-controller"],"operationId":"getAccountsByBankName","parameters":[{"name":"bankName","in":"path","required":true,"schema":{"type":"string"}}],"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/AccountResponseDTO"}}}}}}}},"/customer/delete":{"delete":{"tags":["customer-controller"],"operationId":"deleteCustomer","parameters":[{"name":"id","in":"query","required":true,"schema":{"type":"string"}}],"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"$ref":"#/components/schemas/CustomerResponseDTO"}}}}}}}},"components":{"schemas":{"UpiRegisterRequestDTO":{"required":["accountNumber","upiId"],"type":"object","properties":{"upiId":{"type":"string"},"accountNumber":{"type":"string"}}},"UpiProfileResponseDTO":{"type":"object","properties":{"id":{"type":"integer","format":"int64"},"upiId":{"type":"string"},"accountNumber":{"type":"string"},"accountHolderName":{"type":"string"},"bankName":{"type":"string"},"status":{"type":"string","enum":["PENDING","COMPLETED","FAILED","ACTIVE","INACTIVE","CLOSED","INITIATED","PROCESSING","SUCCESS"]},"createdAt":{"type":"string","format":"date-time"}}},"UpiPayRequestDTO":{"type":"object","properties":{"id":{"type":"integer","format":"int64"},"idempotencyKey":{"type":"string"},"fromUpi":{"type":"string"},"toUpi":{"type":"string"},"amount":{"type":"number"},"status":{"type":"string","enum":["PENDING","COMPLETED","FAILED","ACTIVE","INACTIVE","CLOSED","INITIATED","PROCESSING","SUCCESS"]}}},"TransactionResponseDTO":{"type":"object","properties":{"transactionId":{"type":"integer","format":"int64"},"senderName":{"type":"string"},"senderAccountNumber":{"type":"string"},"senderBankName":{"type":"string"},"receiverName":{"type":"string"},"receiverAccountNumber":{"type":"string"},"receiverBankName":{"type":"string"},"amount":{"type":"number"},"status":{"type":"string","enum":["PENDING","COMPLETED","FAILED","ACTIVE","INACTIVE","CLOSED","INITIATED","PROCESSING","SUCCESS"]},"transactionDate":{"type":"string","format":"date-time"}}},"TransactionRequestDTO":{"required":["receiverAccount","senderAccount"],"type":"object","properties":{"senderAccount":{"type":"string"},"receiverAccount":{"type":"string"},"amount":{"type":"number"},"senderBankName":{"type":"string"},"receiverBankName":{"type":"string"}}},"BankRequestDTO":{"required":["bankName","branch","branchAddress","ifscCode"],"type":"object","properties":{"bankName":{"type":"string"},"branchAddress":{"type":"string"},"ifscCode":{"type":"string"},"city":{"type":"string"},"state":{"type":"string"},"branch":{"type":"string"}}},"BankResponseDTO":{"type":"object","properties":{"id":{"type":"string"},"bankName":{"type":"string"},"branch":{"type":"string"},"ifscCode":{"type":"string"},"city":{"type":"string"},"state":{"type":"string"},"branchAddress":{"type":"string"},"accountNumbers":{"type":"array","items":{"type":"string"}}}},"AccountRequestDTO":{"type":"object","properties":{"initialDeposit":{"type":"number"},"customer":{"$ref":"#/components/schemas/CustomerRequestDTO"}}},"CustomerRequestDTO":{"type":"object","properties":{"fullName":{"type":"string"},"email":{"type":"string"},"phoneNumber":{"type":"string"},"kycStatus":{"type":"string","enum":["PENDING","COMPLETED","FAILED","ACTIVE","INACTIVE","CLOSED","INITIATED","PROCESSING","SUCCESS"]},"age":{"type":"integer","format":"int32"},"address":{"type":"string"},"customerStatus":{"type":"string","enum":["PENDING","COMPLETED","FAILED","ACTIVE","INACTIVE","CLOSED","INITIATED","PROCESSING","SUCCESS"]}}},"AccountResponseDTO":{"type":"object","properties":{"accountNumber":{"type":"string"},"currencyCode":{"type":"string"},"balance":{"type":"number"},"status":{"type":"string","enum":["PENDING","COMPLETED","FAILED","ACTIVE","INACTIVE","CLOSED","INITIATED","PROCESSING","SUCCESS"]},"bankId":{"type":"string"},"bankName":{"type":"string"},"customerId":{"type":"string"},"customerName":{"type":"string"},"age":{"type":"integer","format":"int32"},"address":{"type":"string"}}},"CustomerResponseDTO":{"type":"object","properties":{"id":{"type":"string"},"fullName":{"type":"string"},"email":{"type":"string"},"phoneNumber":{"type":"string"},"kycStatus":{"type":"string","enum":["PENDING","COMPLETED","FAILED","ACTIVE","INACTIVE","CLOSED","INITIATED","PROCESSING","SUCCESS"]},"age":{"type":"integer","format":"int32"},"address":{"type":"string"},"customerStatus":{"type":"string","enum":["PENDING","COMPLETED","FAILED","ACTIVE","INACTIVE","CLOSED","INITIATED","PROCESSING","SUCCESS"]},"accountNumbers":{"type":"array","items":{"type":"string"}}}}}}}
+{
+	"openapi": "3.0.1",
+	"info": { "title": "OpenAPI definition", "version": "v0" },
+	"servers": [
+		{
+			"url": "http://localhost:8080/api",
+			"description": "Generated server url"
+		}
+	],
+	"paths": {
+		"/upi/{upiId}/toggle": {
+			"put": {
+				"tags": ["upi-controller"],
+				"operationId": "toggleUpiProfile",
+				"parameters": [
+					{
+						"name": "upiId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					},
+					{
+						"name": "isEnabled",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "boolean" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"$ref": "#/components/schemas/UpiProfileResponseDTO"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/notifications/{notificationId}/read": {
+			"put": {
+				"tags": ["notification-controller"],
+				"operationId": "markAsRead",
+				"parameters": [
+					{
+						"name": "notificationId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"responses": { "200": { "description": "OK" } }
+			}
+		},
+		"/notifications/read-all": {
+			"put": {
+				"tags": ["notification-controller"],
+				"operationId": "markAllAsRead",
+				"responses": { "200": { "description": "OK" } }
+			}
+		},
+		"/debit-cards/{cardId}/toggle-otp": {
+			"put": {
+				"tags": ["debit-card-controller"],
+				"operationId": "toggleOtp",
+				"parameters": [
+					{
+						"name": "cardId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					},
+					{
+						"name": "enabled",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "boolean" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/DebitCardDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/debit-cards/{cardId}/toggle-international": {
+			"put": {
+				"tags": ["debit-card-controller"],
+				"operationId": "toggleInternational",
+				"parameters": [
+					{
+						"name": "cardId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					},
+					{
+						"name": "enabled",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "boolean" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/DebitCardDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/debit-cards/{cardId}/toggle-contactless": {
+			"put": {
+				"tags": ["debit-card-controller"],
+				"operationId": "toggleContactless",
+				"parameters": [
+					{
+						"name": "cardId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					},
+					{
+						"name": "enabled",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "boolean" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/DebitCardDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/debit-cards/{cardId}/merchant-blocks": {
+			"put": {
+				"tags": ["debit-card-controller"],
+				"operationId": "updateMerchantBlocks",
+				"parameters": [
+					{
+						"name": "cardId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/MerchantBlockUpdateRequest"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/DebitCardDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/debit-cards/{cardId}/limits": {
+			"put": {
+				"tags": ["debit-card-controller"],
+				"operationId": "updateLimits",
+				"parameters": [
+					{
+						"name": "cardId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CardLimitUpdateRequest"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/DebitCardDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/debit-cards/{cardId}/block": {
+			"put": {
+				"tags": ["debit-card-controller"],
+				"operationId": "blockCard",
+				"parameters": [
+					{
+						"name": "cardId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					},
+					{
+						"name": "reason",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/DebitCardDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/credit-cards/{cardId}/toggle-otp": {
+			"put": {
+				"tags": ["credit-card-controller"],
+				"operationId": "toggleOtp_1",
+				"parameters": [
+					{
+						"name": "cardId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					},
+					{
+						"name": "enabled",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "boolean" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/CreditCardDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/credit-cards/{cardId}/toggle-international": {
+			"put": {
+				"tags": ["credit-card-controller"],
+				"operationId": "toggleInternational_1",
+				"parameters": [
+					{
+						"name": "cardId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					},
+					{
+						"name": "enabled",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "boolean" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/CreditCardDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/credit-cards/{cardId}/toggle-contactless": {
+			"put": {
+				"tags": ["credit-card-controller"],
+				"operationId": "toggleContactless_1",
+				"parameters": [
+					{
+						"name": "cardId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					},
+					{
+						"name": "enabled",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "boolean" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/CreditCardDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/credit-cards/{cardId}/merchant-blocks": {
+			"put": {
+				"tags": ["credit-card-controller"],
+				"operationId": "updateMerchantBlocks_1",
+				"parameters": [
+					{
+						"name": "cardId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/MerchantBlockUpdateRequest"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/CreditCardDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/credit-cards/{cardId}/limits": {
+			"put": {
+				"tags": ["credit-card-controller"],
+				"operationId": "updateLimits_1",
+				"parameters": [
+					{
+						"name": "cardId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CardLimitUpdateRequest"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/CreditCardDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/credit-cards/{cardId}/block": {
+			"put": {
+				"tags": ["credit-card-controller"],
+				"operationId": "blockCard_1",
+				"parameters": [
+					{
+						"name": "cardId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					},
+					{
+						"name": "reason",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/CreditCardDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/upi/register": {
+			"post": {
+				"tags": ["upi-controller"],
+				"operationId": "registerUpiProfile",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": { "$ref": "#/components/schemas/UpiRegisterRequestDTO" }
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"$ref": "#/components/schemas/UpiProfileResponseDTO"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/upi/pay": {
+			"post": {
+				"tags": ["upi-controller"],
+				"operationId": "executeUpiPayment",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": { "$ref": "#/components/schemas/UpiPayRequestDTO" }
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"$ref": "#/components/schemas/TransactionResponseDTO"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/transaction": {
+			"get": {
+				"tags": ["transaction-controller"],
+				"operationId": "getTransactions",
+				"parameters": [
+					{
+						"name": "accountNumber",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "string" }
+					},
+					{
+						"name": "email",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/TransactionResponseDTO"
+									}
+								}
+							}
+						}
+					}
+				}
+			},
+			"post": {
+				"tags": ["transaction-controller"],
+				"operationId": "createTransaction",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": { "$ref": "#/components/schemas/TransactionRequestDTO" }
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"$ref": "#/components/schemas/TransactionResponseDTO"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/transaction/{transactionId}/reverse": {
+			"post": {
+				"tags": ["transaction-controller"],
+				"operationId": "reverseTransaction",
+				"parameters": [
+					{
+						"name": "transactionId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					},
+					{
+						"name": "reason",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"$ref": "#/components/schemas/TransactionResponseDTO"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/security/sessions/terminate-all": {
+			"post": {
+				"tags": ["security-controller"],
+				"operationId": "terminateAllSessions",
+				"parameters": [
+					{
+						"name": "Authorization",
+						"in": "header",
+						"required": false,
+						"schema": { "type": "string" }
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/TerminateAllSessionsRequestDTO"
+							}
+						}
+					}
+				},
+				"responses": { "200": { "description": "OK" } }
+			}
+		},
+		"/loans": {
+			"post": {
+				"tags": ["loan-controller"],
+				"operationId": "createLoan",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": { "$ref": "#/components/schemas/LoanDTO" }
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": { "schema": { "$ref": "#/components/schemas/LoanDTO" } }
+						}
+					}
+				}
+			}
+		},
+		"/debit-cards/{cardId}/unfreeze": {
+			"post": {
+				"tags": ["debit-card-controller"],
+				"operationId": "unfreezeCard",
+				"parameters": [
+					{
+						"name": "cardId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/DebitCardDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/debit-cards/{cardId}/replace": {
+			"post": {
+				"tags": ["debit-card-controller"],
+				"operationId": "replaceCard",
+				"parameters": [
+					{
+						"name": "cardId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/DebitCardDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/debit-cards/{cardId}/freeze": {
+			"post": {
+				"tags": ["debit-card-controller"],
+				"operationId": "freezeCard",
+				"parameters": [
+					{
+						"name": "cardId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					},
+					{
+						"name": "reason",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/DebitCardDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/debit-card-requests": {
+			"post": {
+				"tags": ["debit-card-request-controller"],
+				"operationId": "createRequest",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/DebitCardRequestCreateRequest"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/DebitCardRequestDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/debit-card-requests/{requestId}/reject": {
+			"post": {
+				"tags": ["debit-card-request-controller"],
+				"operationId": "rejectRequest",
+				"parameters": [
+					{
+						"name": "requestId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/DebitCardRequestDecisionRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/DebitCardRequestDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/debit-card-requests/{requestId}/issue": {
+			"post": {
+				"tags": ["debit-card-request-controller"],
+				"operationId": "issueRequest",
+				"parameters": [
+					{
+						"name": "requestId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/DebitCardRequestDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/debit-card-requests/{requestId}/dispatch": {
+			"post": {
+				"tags": ["debit-card-request-controller"],
+				"operationId": "dispatchRequest",
+				"parameters": [
+					{
+						"name": "requestId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/DebitCardRequestDecisionRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/DebitCardRequestDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/debit-card-requests/{requestId}/deliver": {
+			"post": {
+				"tags": ["debit-card-request-controller"],
+				"operationId": "deliverRequest",
+				"parameters": [
+					{
+						"name": "requestId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/DebitCardRequestDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/debit-card-requests/{requestId}/approve": {
+			"post": {
+				"tags": ["debit-card-request-controller"],
+				"operationId": "approveRequest",
+				"parameters": [
+					{
+						"name": "requestId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/DebitCardRequestDecisionRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/DebitCardRequestDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/credit-plans": {
+			"get": {
+				"tags": ["credit-plan-controller"],
+				"operationId": "listActivePlans",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": { "$ref": "#/components/schemas/CreditPlanDTO" }
+								}
+							}
+						}
+					}
+				}
+			},
+			"post": {
+				"tags": ["credit-plan-controller"],
+				"operationId": "createPlan",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": { "$ref": "#/components/schemas/CreditPlanDTO" }
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/CreditPlanDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/credit-plans/{planId}/assign/{cardId}": {
+			"post": {
+				"tags": ["credit-plan-controller"],
+				"operationId": "assignPlan",
+				"parameters": [
+					{
+						"name": "planId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					},
+					{
+						"name": "cardId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/CreditPlanDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/credit-cards/{cardId}/unfreeze": {
+			"post": {
+				"tags": ["credit-card-controller"],
+				"operationId": "unfreezeCard_1",
+				"parameters": [
+					{
+						"name": "cardId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/CreditCardDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/credit-cards/{cardId}/replace": {
+			"post": {
+				"tags": ["credit-card-controller"],
+				"operationId": "replaceCard_1",
+				"parameters": [
+					{
+						"name": "cardId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/CreditCardDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/credit-cards/{cardId}/freeze": {
+			"post": {
+				"tags": ["credit-card-controller"],
+				"operationId": "freezeCard_1",
+				"parameters": [
+					{
+						"name": "cardId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					},
+					{
+						"name": "reason",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/CreditCardDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/composite/transfer": {
+			"post": {
+				"tags": ["composite-controller"],
+				"operationId": "comprehensiveTransfer",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": { "$ref": "#/components/schemas/TransactionRequestDTO" }
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/TransferReceiptDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/composite/customers/{customerId}/kyc-verify": {
+			"post": {
+				"tags": ["composite-controller"],
+				"operationId": "kycVerify",
+				"parameters": [
+					{
+						"name": "customerId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/ActionResultDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/composite/accounts/{accountNumber}/freeze": {
+			"post": {
+				"tags": ["composite-controller"],
+				"operationId": "freezeAccount",
+				"parameters": [
+					{
+						"name": "accountNumber",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"additionalProperties": { "type": "string" }
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/ActionResultDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/composite/accounts/balance-check": {
+			"post": {
+				"tags": ["composite-controller"],
+				"operationId": "batchBalanceCheck",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": { "type": "array", "items": { "type": "string" } }
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": { "$ref": "#/components/schemas/AccountBalanceDTO" }
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/bank/create": {
+			"post": {
+				"tags": ["bank-controller"],
+				"operationId": "createBank",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": { "$ref": "#/components/schemas/BankRequestDTO" }
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/BankResponseDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/reset-password": {
+			"post": {
+				"tags": ["auth-controller"],
+				"operationId": "resetPassword",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ResetPasswordRequestDTO"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": { "200": { "description": "OK" } }
+			}
+		},
+		"/auth/refresh": {
+			"post": {
+				"tags": ["auth-controller"],
+				"operationId": "refresh",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RefreshTokenRequestDTO"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/AuthResponseDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/logout": {
+			"post": {
+				"tags": ["auth-controller"],
+				"operationId": "logout",
+				"parameters": [
+					{
+						"name": "Authorization",
+						"in": "header",
+						"required": false,
+						"schema": { "type": "string" }
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RefreshTokenRequestDTO"
+							}
+						}
+					}
+				},
+				"responses": { "200": { "description": "OK" } }
+			}
+		},
+		"/auth/login": {
+			"post": {
+				"tags": ["auth-controller"],
+				"operationId": "login",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": { "$ref": "#/components/schemas/LoginRequestDTO" }
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/AuthResponseDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/forgot-password": {
+			"post": {
+				"tags": ["auth-controller"],
+				"operationId": "forgotPassword",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ForgotPasswordRequestDTO"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"$ref": "#/components/schemas/ForgotPasswordResponseDTO"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/change-password": {
+			"post": {
+				"tags": ["auth-controller"],
+				"operationId": "changePassword",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ChangePasswordRequestDTO"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": { "200": { "description": "OK" } }
+			}
+		},
+		"/account/{bankName}": {
+			"post": {
+				"tags": ["account-controller"],
+				"operationId": "createAccount",
+				"parameters": [
+					{
+						"name": "bankName",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": { "$ref": "#/components/schemas/AccountRequestDTO" }
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/AccountResponseDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/upi/{upiId}/status": {
+			"patch": {
+				"tags": ["upi-controller"],
+				"operationId": "updateUpiStatus",
+				"parameters": [
+					{
+						"name": "upiId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					},
+					{
+						"name": "status",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"$ref": "#/components/schemas/UpiProfileResponseDTO"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/customer/update": {
+			"patch": {
+				"tags": ["customer-controller"],
+				"operationId": "updateCustomer",
+				"parameters": [
+					{
+						"name": "name",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "string" }
+					},
+					{
+						"name": "email",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "string" }
+					},
+					{
+						"name": "phoneNumber",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": { "$ref": "#/components/schemas/CustomerRequestDTO" }
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/CustomerResponseDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/credit-plans/{planId}": {
+			"patch": {
+				"tags": ["credit-plan-controller"],
+				"operationId": "updatePlan",
+				"parameters": [
+					{
+						"name": "planId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": { "$ref": "#/components/schemas/CreditPlanDTO" }
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/CreditPlanDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/bank/{id}": {
+			"get": {
+				"tags": ["bank-controller"],
+				"operationId": "findBankById",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/BankResponseDTO" }
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"tags": ["bank-controller"],
+				"operationId": "deleteBank",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": { "200": { "description": "OK" } }
+			},
+			"patch": {
+				"tags": ["bank-controller"],
+				"operationId": "updateBank",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": { "$ref": "#/components/schemas/BankRequestDTO" }
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/BankResponseDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/account/{accNumber}": {
+			"delete": {
+				"tags": ["account-controller"],
+				"operationId": "deleteAccount",
+				"parameters": [
+					{
+						"name": "accNumber",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/AccountResponseDTO" }
+							}
+						}
+					}
+				}
+			},
+			"patch": {
+				"tags": ["account-controller"],
+				"operationId": "updateAccount",
+				"parameters": [
+					{
+						"name": "accNumber",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": { "$ref": "#/components/schemas/AccountRequestDTO" }
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/AccountResponseDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/account/{accNumber}/compliance": {
+			"patch": {
+				"tags": ["account-controller"],
+				"operationId": "updateAccountCompliance",
+				"parameters": [
+					{
+						"name": "accNumber",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/AccountComplianceUpdateRequestDTO"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/AccountResponseDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/upi": {
+			"get": {
+				"tags": ["upi-controller"],
+				"operationId": "getAllUpiProfiles",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/UpiProfileResponseDTO"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/upi/{upiId}": {
+			"get": {
+				"tags": ["upi-controller"],
+				"operationId": "getUpiProfile",
+				"parameters": [
+					{
+						"name": "upiId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"$ref": "#/components/schemas/UpiProfileResponseDTO"
+								}
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"tags": ["upi-controller"],
+				"operationId": "deleteUpiProfile",
+				"parameters": [
+					{
+						"name": "upiId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": { "200": { "description": "OK" } }
+			}
+		},
+		"/upi/paginated": {
+			"get": {
+				"tags": ["upi-controller"],
+				"operationId": "getUpiProfilesPaginated",
+				"parameters": [
+					{
+						"name": "page",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "integer", "format": "int32", "default": 0 }
+					},
+					{
+						"name": "size",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "integer", "format": "int32", "default": 20 }
+					},
+					{
+						"name": "sortBy",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string", "default": "upiId" }
+					},
+					{
+						"name": "sortDir",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string", "default": "asc" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"$ref": "#/components/schemas/PagedResponseUpiProfileResponseDTO"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/upi/my": {
+			"get": {
+				"tags": ["upi-controller"],
+				"operationId": "getMyUpiProfiles",
+				"parameters": [
+					{
+						"name": "Authorization",
+						"in": "header",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/UpiProfileResponseDTO"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/upi/account/{accountNumber}": {
+			"get": {
+				"tags": ["upi-controller"],
+				"operationId": "getUpiProfilesByAccountNumber",
+				"parameters": [
+					{
+						"name": "accountNumber",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/UpiProfileResponseDTO"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/transaction/{transactionId}/receipt": {
+			"get": {
+				"tags": ["transaction-controller"],
+				"operationId": "getReceipt",
+				"parameters": [
+					{
+						"name": "transactionId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"$ref": "#/components/schemas/TransactionReceiptDTO"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/transaction/my": {
+			"get": {
+				"tags": ["transaction-controller"],
+				"operationId": "getMyTransactions",
+				"parameters": [
+					{
+						"name": "Authorization",
+						"in": "header",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/TransactionResponseDTO"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/transaction/customer/{customerId}": {
+			"get": {
+				"tags": ["transaction-controller"],
+				"operationId": "getCustomerTransactions",
+				"parameters": [
+					{
+						"name": "customerId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/TransactionResponseDTO"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/transaction/all": {
+			"get": {
+				"tags": ["transaction-controller"],
+				"operationId": "getAllTransactions",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/TransactionResponseDTO"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/transaction/all/paginated": {
+			"get": {
+				"tags": ["transaction-controller"],
+				"operationId": "getTransactionsPaginated",
+				"parameters": [
+					{
+						"name": "page",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "integer", "format": "int32", "default": 0 }
+					},
+					{
+						"name": "size",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "integer", "format": "int32", "default": 20 }
+					},
+					{
+						"name": "sortBy",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string", "default": "transactionId" }
+					},
+					{
+						"name": "sortDir",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string", "default": "desc" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"$ref": "#/components/schemas/PagedResponseTransactionResponseDTO"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/transaction/accounts/{id}/balance": {
+			"get": {
+				"tags": ["transaction-controller"],
+				"operationId": "getBalance",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": { "*/*": { "schema": { "type": "number" } } }
+					}
+				}
+			}
+		},
+		"/stream/events": {
+			"get": {
+				"tags": ["card-events-controller"],
+				"operationId": "stream",
+				"parameters": [
+					{
+						"name": "token",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"text/event-stream": {
+								"schema": { "$ref": "#/components/schemas/SseEmitter" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/security/sessions": {
+			"get": {
+				"tags": ["security-controller"],
+				"operationId": "getSessions",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": { "$ref": "#/components/schemas/SessionInfoDTO" }
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/security/access-logs": {
+			"get": {
+				"tags": ["security-controller"],
+				"operationId": "getAccessLogs",
+				"parameters": [
+					{
+						"name": "startDate",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string", "format": "date-time" }
+					},
+					{
+						"name": "endDate",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string", "format": "date-time" }
+					},
+					{
+						"name": "eventType",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": { "$ref": "#/components/schemas/AccessLogEntryDTO" }
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/qr/generate": {
+			"get": {
+				"tags": ["qr-code-controller"],
+				"operationId": "generateQRCode",
+				"parameters": [
+					{
+						"name": "upiId",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "string" }
+					},
+					{
+						"name": "name",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string" }
+					},
+					{
+						"name": "amount",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "number", "format": "double" }
+					},
+					{
+						"name": "width",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "integer", "format": "int32", "default": 300 }
+					},
+					{
+						"name": "height",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "integer", "format": "int32", "default": 300 }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": { "schema": { "type": "string", "format": "byte" } }
+						}
+					}
+				}
+			}
+		},
+		"/qr/account": {
+			"get": {
+				"tags": ["qr-code-controller"],
+				"operationId": "generateAccountQR",
+				"parameters": [
+					{
+						"name": "accountNumber",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "string" }
+					},
+					{
+						"name": "bankName",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "string" }
+					},
+					{
+						"name": "ifscCode",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "string" }
+					},
+					{
+						"name": "width",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "integer", "format": "int32", "default": 300 }
+					},
+					{
+						"name": "height",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "integer", "format": "int32", "default": 300 }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": { "schema": { "type": "string", "format": "byte" } }
+						}
+					}
+				}
+			}
+		},
+		"/notifications": {
+			"get": {
+				"tags": ["notification-controller"],
+				"operationId": "getNotifications",
+				"parameters": [
+					{
+						"name": "page",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "integer", "format": "int32", "default": 0 }
+					},
+					{
+						"name": "size",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "integer", "format": "int32", "default": 20 }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"$ref": "#/components/schemas/PagedResponseNotificationDTO"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/notifications/unread": {
+			"get": {
+				"tags": ["notification-controller"],
+				"operationId": "getUnreadNotifications",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": { "$ref": "#/components/schemas/NotificationDTO" }
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/notifications/unread/count": {
+			"get": {
+				"tags": ["notification-controller"],
+				"operationId": "getUnreadCount",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "object",
+									"additionalProperties": {
+										"type": "integer",
+										"format": "int64"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/loans/{loanId}": {
+			"get": {
+				"tags": ["loan-controller"],
+				"operationId": "getLoan",
+				"parameters": [
+					{
+						"name": "loanId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": { "schema": { "$ref": "#/components/schemas/LoanDTO" } }
+						}
+					}
+				}
+			}
+		},
+		"/loans/customer/{customerId}": {
+			"get": {
+				"tags": ["loan-controller"],
+				"operationId": "getLoansByCustomer",
+				"parameters": [
+					{
+						"name": "customerId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": { "$ref": "#/components/schemas/LoanDTO" }
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/loans/account/{accountId}": {
+			"get": {
+				"tags": ["loan-controller"],
+				"operationId": "getLoansByAccount",
+				"parameters": [
+					{
+						"name": "accountId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": { "$ref": "#/components/schemas/LoanDTO" }
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/health": {
+			"get": {
+				"tags": ["health-controller"],
+				"operationId": "health",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": { "*/*": { "schema": { "type": "string" } } }
+					}
+				}
+			}
+		},
+		"/emis/{emiId}": {
+			"get": {
+				"tags": ["emi-controller"],
+				"operationId": "getEMI",
+				"parameters": [
+					{
+						"name": "emiId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": { "schema": { "$ref": "#/components/schemas/EMIDTO" } }
+						}
+					}
+				}
+			}
+		},
+		"/emis/loan/{loanId}": {
+			"get": {
+				"tags": ["emi-controller"],
+				"operationId": "getEMIsByLoan",
+				"parameters": [
+					{
+						"name": "loanId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": { "$ref": "#/components/schemas/EMIDTO" }
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/debit-cards/{cardId}": {
+			"get": {
+				"tags": ["debit-card-controller"],
+				"operationId": "getCard",
+				"parameters": [
+					{
+						"name": "cardId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/DebitCardDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/debit-cards/account/{accountId}": {
+			"get": {
+				"tags": ["debit-card-controller"],
+				"operationId": "getCardsByAccount",
+				"parameters": [
+					{
+						"name": "accountId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": { "$ref": "#/components/schemas/DebitCardDTO" }
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/debit-cards/account-number/{accountNumber}": {
+			"get": {
+				"tags": ["debit-card-controller"],
+				"operationId": "getCardsByAccountNumber",
+				"parameters": [
+					{
+						"name": "accountNumber",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": { "$ref": "#/components/schemas/DebitCardDTO" }
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/debit-card-requests/pending": {
+			"get": {
+				"tags": ["debit-card-request-controller"],
+				"operationId": "getPendingRequests",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/DebitCardRequestDTO"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/debit-card-requests/my": {
+			"get": {
+				"tags": ["debit-card-request-controller"],
+				"operationId": "getMyRequests",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/DebitCardRequestDTO"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/debit-card-requests/issued": {
+			"get": {
+				"tags": ["debit-card-request-controller"],
+				"operationId": "getIssuedRequests",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/DebitCardRequestDTO"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/debit-card-requests/approved": {
+			"get": {
+				"tags": ["debit-card-request-controller"],
+				"operationId": "getApprovedRequests",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/DebitCardRequestDTO"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/customer": {
+			"get": {
+				"tags": ["customer-controller"],
+				"operationId": "getAllCustomer",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/CustomerResponseDTO"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/customer/search": {
+			"get": {
+				"tags": ["customer-controller"],
+				"operationId": "searchCustomer",
+				"parameters": [
+					{
+						"name": "name",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "string" }
+					},
+					{
+						"name": "bankName",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/CustomerResponseDTO"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/customer/paginated": {
+			"get": {
+				"tags": ["customer-controller"],
+				"operationId": "getCustomersPaginated",
+				"parameters": [
+					{
+						"name": "page",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "integer", "format": "int32", "default": 0 }
+					},
+					{
+						"name": "size",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "integer", "format": "int32", "default": 20 }
+					},
+					{
+						"name": "sortBy",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string", "default": "fullName" }
+					},
+					{
+						"name": "sortDir",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string", "default": "asc" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"$ref": "#/components/schemas/PagedResponseCustomerResponseDTO"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/customer/me": {
+			"get": {
+				"tags": ["customer-controller"],
+				"operationId": "getMyProfile",
+				"parameters": [
+					{
+						"name": "Authorization",
+						"in": "header",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/CustomerResponseDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/customer/email/{email}": {
+			"get": {
+				"tags": ["customer-controller"],
+				"operationId": "getCustomerByEmail",
+				"parameters": [
+					{
+						"name": "email",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/CustomerResponseDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/customer/bank": {
+			"get": {
+				"tags": ["customer-controller"],
+				"operationId": "getCustomersByBank",
+				"parameters": [
+					{
+						"name": "bankName",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/CustomerResponseDTO"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/credit-plans/all": {
+			"get": {
+				"tags": ["credit-plan-controller"],
+				"operationId": "listAllPlans",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": { "$ref": "#/components/schemas/CreditPlanDTO" }
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/credit-cards/{cardId}": {
+			"get": {
+				"tags": ["credit-card-controller"],
+				"operationId": "getCard_1",
+				"parameters": [
+					{
+						"name": "cardId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/CreditCardDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/credit-cards/account/{accountId}": {
+			"get": {
+				"tags": ["credit-card-controller"],
+				"operationId": "getCardsByAccount_1",
+				"parameters": [
+					{
+						"name": "accountId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "format": "int64" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": { "$ref": "#/components/schemas/CreditCardDTO" }
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/credit-cards/account-number/{accountNumber}": {
+			"get": {
+				"tags": ["credit-card-controller"],
+				"operationId": "getCardsByAccountNumber_1",
+				"parameters": [
+					{
+						"name": "accountNumber",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": { "$ref": "#/components/schemas/CreditCardDTO" }
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/composite/transactions/advanced": {
+			"get": {
+				"tags": ["composite-controller"],
+				"operationId": "advancedTransactionSearch",
+				"parameters": [
+					{
+						"name": "dateFrom",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string", "format": "date-time" }
+					},
+					{
+						"name": "dateTo",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string", "format": "date-time" }
+					},
+					{
+						"name": "amountMin",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "number" }
+					},
+					{
+						"name": "amountMax",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "number" }
+					},
+					{
+						"name": "status",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string" }
+					},
+					{
+						"name": "bankName",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/TransactionResponseDTO"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/composite/search/global": {
+			"get": {
+				"tags": ["composite-controller"],
+				"operationId": "globalSearch",
+				"parameters": [
+					{
+						"name": "q",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"$ref": "#/components/schemas/GlobalSearchResultDTO"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/composite/my/overview": {
+			"get": {
+				"tags": ["composite-controller"],
+				"operationId": "getMyOverview",
+				"parameters": [
+					{
+						"name": "Authorization",
+						"in": "header",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/AccountOverviewDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/composite/customers/{customerId}/banking-profile": {
+			"get": {
+				"tags": ["composite-controller"],
+				"operationId": "getCustomerBankingProfile",
+				"parameters": [
+					{
+						"name": "customerId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"$ref": "#/components/schemas/CustomerBankingProfileDTO"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/composite/banks/{bankId}/operations-summary": {
+			"get": {
+				"tags": ["composite-controller"],
+				"operationId": "getBankOperationsSummary",
+				"parameters": [
+					{
+						"name": "bankId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"$ref": "#/components/schemas/BankOperationsSummaryDTO"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/bank": {
+			"get": {
+				"tags": ["bank-controller"],
+				"operationId": "findAllBanks",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": { "$ref": "#/components/schemas/BankResponseDTO" }
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/bank/upi/{upiId}": {
+			"get": {
+				"tags": ["bank-controller"],
+				"operationId": "findBankByUpiId",
+				"parameters": [
+					{
+						"name": "upiId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/BankResponseDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/me": {
+			"get": {
+				"tags": ["auth-controller"],
+				"operationId": "getCurrentUser",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/UserResponseDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/audit/logs": {
+			"get": {
+				"tags": ["audit-controller"],
+				"operationId": "getLogs",
+				"parameters": [
+					{
+						"name": "startDate",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string" }
+					},
+					{
+						"name": "endDate",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string" }
+					},
+					{
+						"name": "action",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string" }
+					},
+					{
+						"name": "userId",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string" }
+					},
+					{
+						"name": "resource",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string" }
+					},
+					{
+						"name": "page",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "integer", "format": "int32", "default": 1 }
+					},
+					{
+						"name": "size",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "integer", "format": "int32", "default": 25 }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"$ref": "#/components/schemas/AuditLogPageResponseDTO"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/audit/logs/{id}": {
+			"get": {
+				"tags": ["audit-controller"],
+				"operationId": "getLogById",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/AuditLogEntryDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/accounts/{accountNumber}/statement": {
+			"get": {
+				"tags": ["statement-controller"],
+				"operationId": "exportStatement",
+				"parameters": [
+					{
+						"name": "accountNumber",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					},
+					{
+						"name": "format",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string", "default": "csv" }
+					},
+					{
+						"name": "from",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string", "format": "date" }
+					},
+					{
+						"name": "to",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string", "format": "date" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": { "schema": { "type": "string", "format": "byte" } }
+						}
+					}
+				}
+			}
+		},
+		"/account": {
+			"get": {
+				"tags": ["account-controller"],
+				"operationId": "getAllAccounts",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": { "$ref": "#/components/schemas/AccountResponseDTO" }
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/account/{id}": {
+			"get": {
+				"tags": ["account-controller"],
+				"operationId": "getAccount",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/AccountResponseDTO" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/account/{accountNumber}/balance": {
+			"get": {
+				"tags": ["account-controller"],
+				"operationId": "getLedgerBalance",
+				"parameters": [
+					{
+						"name": "accountNumber",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"$ref": "#/components/schemas/AccountLedgerBalanceDTO"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/account/validate-receiver": {
+			"get": {
+				"tags": ["account-controller"],
+				"operationId": "validateReceiverDetails",
+				"parameters": [
+					{
+						"name": "bankName",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "string" }
+					},
+					{
+						"name": "ifscCode",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "string" }
+					},
+					{
+						"name": "holderName",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"$ref": "#/components/schemas/ReceiverValidationResponseDTO"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/account/paginated": {
+			"get": {
+				"tags": ["account-controller"],
+				"operationId": "getAccountsPaginated",
+				"parameters": [
+					{
+						"name": "page",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "integer", "format": "int32", "default": 0 }
+					},
+					{
+						"name": "size",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "integer", "format": "int32", "default": 20 }
+					},
+					{
+						"name": "sortBy",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string", "default": "accountNumber" }
+					},
+					{
+						"name": "sortDir",
+						"in": "query",
+						"required": false,
+						"schema": { "type": "string", "default": "asc" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"$ref": "#/components/schemas/PagedResponseAccountResponseDTO"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/account/name/{bankName}": {
+			"get": {
+				"tags": ["account-controller"],
+				"operationId": "getAccountsByBankName",
+				"parameters": [
+					{
+						"name": "bankName",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": { "$ref": "#/components/schemas/AccountResponseDTO" }
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/account/my": {
+			"get": {
+				"tags": ["account-controller"],
+				"operationId": "getMyAccounts",
+				"parameters": [
+					{
+						"name": "Authorization",
+						"in": "header",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": { "$ref": "#/components/schemas/AccountResponseDTO" }
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/account/lookup-by-number": {
+			"get": {
+				"tags": ["account-controller"],
+				"operationId": "lookupByAccountNumber",
+				"parameters": [
+					{
+						"name": "accountNumber",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"$ref": "#/components/schemas/ReceiverValidationResponseDTO"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/account/email/{email}": {
+			"get": {
+				"tags": ["account-controller"],
+				"operationId": "getAccountsByEmail",
+				"parameters": [
+					{
+						"name": "email",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "array",
+									"items": { "$ref": "#/components/schemas/AccountResponseDTO" }
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/security/sessions/{sessionId}": {
+			"delete": {
+				"tags": ["security-controller"],
+				"operationId": "terminateSession",
+				"parameters": [
+					{
+						"name": "sessionId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": { "200": { "description": "OK" } }
+			}
+		},
+		"/customer/delete": {
+			"delete": {
+				"tags": ["customer-controller"],
+				"operationId": "deleteCustomer",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": { "$ref": "#/components/schemas/CustomerResponseDTO" }
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+	"components": {
+		"schemas": {
+			"UpiProfileResponseDTO": {
+				"type": "object",
+				"properties": {
+					"id": { "type": "integer", "format": "int64" },
+					"upiId": { "type": "string" },
+					"accountNumber": { "type": "string" },
+					"accountHolderName": { "type": "string" },
+					"bankName": { "type": "string" },
+					"status": {
+						"type": "string",
+						"enum": [
+							"PENDING",
+							"COMPLETED",
+							"FAILED",
+							"ACTIVE",
+							"INACTIVE",
+							"CLOSED",
+							"INITIATED",
+							"PROCESSING",
+							"SUCCESS",
+							"REVERSED",
+							"BLOCKED"
+						]
+					},
+					"createdAt": { "type": "string", "format": "date-time" }
+				}
+			},
+			"DebitCardDTO": {
+				"type": "object",
+				"properties": {
+					"id": { "type": "integer", "format": "int64" },
+					"accountId": { "type": "integer", "format": "int64" },
+					"cardNumber": { "type": "string" },
+					"cardHolderName": { "type": "string" },
+					"expiryDate": {
+						"type": "object",
+						"properties": {
+							"year": { "type": "integer", "format": "int32" },
+							"month": {
+								"type": "string",
+								"enum": [
+									"JANUARY",
+									"FEBRUARY",
+									"MARCH",
+									"APRIL",
+									"MAY",
+									"JUNE",
+									"JULY",
+									"AUGUST",
+									"SEPTEMBER",
+									"OCTOBER",
+									"NOVEMBER",
+									"DECEMBER"
+								]
+							},
+							"monthValue": { "type": "integer", "format": "int32" },
+							"leapYear": { "type": "boolean" }
+						}
+					},
+					"cardType": { "type": "string" },
+					"status": { "type": "string" },
+					"isVirtual": { "type": "boolean" },
+					"isContactlessEnabled": { "type": "boolean" },
+					"isInternationalEnabled": { "type": "boolean" },
+					"merchantCategoryBlocks": {
+						"type": "array",
+						"items": { "type": "string" }
+					},
+					"dailyLimit": { "type": "number" },
+					"monthlyLimit": { "type": "number" },
+					"spentToday": { "type": "number" },
+					"spentMonth": { "type": "number" },
+					"isLinkedToUpi": { "type": "boolean" },
+					"otpRequired": { "type": "boolean" },
+					"blockedReason": { "type": "string" },
+					"createdAt": { "type": "string" },
+					"issueDate": { "type": "string" },
+					"blockedDate": { "type": "string" }
+				}
+			},
+			"MerchantBlockUpdateRequest": {
+				"type": "object",
+				"properties": {
+					"categories": { "type": "array", "items": { "type": "string" } }
+				}
+			},
+			"CardLimitUpdateRequest": {
+				"type": "object",
+				"properties": {
+					"dailyLimit": { "type": "number" },
+					"monthlyLimit": { "type": "number" }
+				}
+			},
+			"CreditCardDTO": {
+				"type": "object",
+				"properties": {
+					"id": { "type": "integer", "format": "int64" },
+					"accountId": { "type": "integer", "format": "int64" },
+					"cardNumber": { "type": "string" },
+					"cardHolderName": { "type": "string" },
+					"expiryDate": {
+						"type": "object",
+						"properties": {
+							"year": { "type": "integer", "format": "int32" },
+							"month": {
+								"type": "string",
+								"enum": [
+									"JANUARY",
+									"FEBRUARY",
+									"MARCH",
+									"APRIL",
+									"MAY",
+									"JUNE",
+									"JULY",
+									"AUGUST",
+									"SEPTEMBER",
+									"OCTOBER",
+									"NOVEMBER",
+									"DECEMBER"
+								]
+							},
+							"monthValue": { "type": "integer", "format": "int32" },
+							"leapYear": { "type": "boolean" }
+						}
+					},
+					"cardType": { "type": "string" },
+					"status": { "type": "string" },
+					"creditLimit": { "type": "number" },
+					"availableCredit": { "type": "number" },
+					"currentBalance": { "type": "number" },
+					"minimumDue": { "type": "number" },
+					"dueDate": { "type": "integer", "format": "int32" },
+					"isContactlessEnabled": { "type": "boolean" },
+					"isInternationalEnabled": { "type": "boolean" },
+					"dailyLimit": { "type": "number" },
+					"monthlyLimit": { "type": "number" },
+					"isLinkedToUpi": { "type": "boolean" },
+					"otpRequired": { "type": "boolean" },
+					"rewardPoints": { "type": "integer", "format": "int64" },
+					"cashbackPercentage": { "type": "number" },
+					"merchantCategoryBlocks": {
+						"type": "array",
+						"items": { "type": "string" }
+					},
+					"planId": { "type": "integer", "format": "int64" },
+					"planName": { "type": "string" },
+					"planApr": { "type": "number" },
+					"planAnnualFee": { "type": "number" },
+					"planGracePeriodDays": { "type": "integer", "format": "int32" },
+					"planLateFee": { "type": "number" },
+					"blockedReason": { "type": "string" },
+					"createdAt": { "type": "string" },
+					"issueDate": { "type": "string" },
+					"blockedDate": { "type": "string" }
+				}
+			},
+			"UpiRegisterRequestDTO": {
+				"required": ["accountNumber", "upiId"],
+				"type": "object",
+				"properties": {
+					"upiId": { "type": "string" },
+					"accountNumber": { "type": "string" }
+				}
+			},
+			"UpiPayRequestDTO": {
+				"type": "object",
+				"properties": {
+					"id": { "type": "integer", "format": "int64" },
+					"idempotencyKey": { "type": "string" },
+					"fromUpi": { "type": "string" },
+					"toUpi": { "type": "string" },
+					"amount": { "type": "number" },
+					"status": {
+						"type": "string",
+						"enum": [
+							"PENDING",
+							"COMPLETED",
+							"FAILED",
+							"ACTIVE",
+							"INACTIVE",
+							"CLOSED",
+							"INITIATED",
+							"PROCESSING",
+							"SUCCESS",
+							"REVERSED",
+							"BLOCKED"
+						]
+					}
+				}
+			},
+			"TransactionResponseDTO": {
+				"type": "object",
+				"properties": {
+					"transactionId": { "type": "integer", "format": "int64" },
+					"senderName": { "type": "string" },
+					"senderAccountNumber": { "type": "string" },
+					"senderBankName": { "type": "string" },
+					"receiverName": { "type": "string" },
+					"receiverAccountNumber": { "type": "string" },
+					"receiverBankName": { "type": "string" },
+					"amount": { "type": "number" },
+					"status": {
+						"type": "string",
+						"enum": [
+							"PENDING",
+							"COMPLETED",
+							"FAILED",
+							"ACTIVE",
+							"INACTIVE",
+							"CLOSED",
+							"INITIATED",
+							"PROCESSING",
+							"SUCCESS",
+							"REVERSED",
+							"BLOCKED"
+						]
+					},
+					"transactionDate": { "type": "string", "format": "date-time" },
+					"reversalOfTransactionId": { "type": "integer", "format": "int64" },
+					"reversalReason": { "type": "string" }
+				}
+			},
+			"TransactionRequestDTO": {
+				"required": ["amount", "receiverAccount", "senderAccount"],
+				"type": "object",
+				"properties": {
+					"senderAccount": { "type": "string" },
+					"receiverAccount": { "type": "string" },
+					"amount": { "type": "number" },
+					"senderBankName": { "type": "string" },
+					"receiverBankName": { "type": "string" }
+				}
+			},
+			"TerminateAllSessionsRequestDTO": {
+				"type": "object",
+				"properties": { "excludeCurrent": { "type": "boolean" } }
+			},
+			"LoanDTO": {
+				"type": "object",
+				"properties": {
+					"id": { "type": "integer", "format": "int64" },
+					"customerId": { "type": "integer", "format": "int64" },
+					"accountId": { "type": "integer", "format": "int64" },
+					"loanType": { "type": "string" },
+					"principalAmount": { "type": "number" },
+					"loanAmount": { "type": "number" },
+					"outstandingAmount": { "type": "number" },
+					"interestRate": { "type": "number" },
+					"tenureMonths": { "type": "integer", "format": "int32" },
+					"emiAmount": { "type": "number" },
+					"startDate": { "type": "string", "format": "date" },
+					"endDate": { "type": "string", "format": "date" },
+					"nextEmiDate": { "type": "string", "format": "date" },
+					"emisPaid": { "type": "integer", "format": "int32" },
+					"emisRemaining": { "type": "integer", "format": "int32" },
+					"status": { "type": "string" },
+					"collateralDetails": { "type": "string" },
+					"isForeclosureAllowed": { "type": "boolean" },
+					"foreclosureCharges": { "type": "number" },
+					"createdAt": { "type": "string" },
+					"updatedAt": { "type": "string" }
+				}
+			},
+			"DebitCardRequestCreateRequest": {
+				"type": "object",
+				"properties": {
+					"accountNumber": { "type": "string" },
+					"cardType": { "type": "string" },
+					"isVirtual": { "type": "boolean" },
+					"dailyLimit": { "type": "number" },
+					"monthlyLimit": { "type": "number" },
+					"otpRequired": { "type": "boolean" },
+					"isContactlessEnabled": { "type": "boolean" },
+					"isInternationalEnabled": { "type": "boolean" },
+					"deliveryMethod": { "type": "string" },
+					"deliveryAddress": { "type": "string" }
+				}
+			},
+			"DebitCardRequestDTO": {
+				"type": "object",
+				"properties": {
+					"id": { "type": "integer", "format": "int64" },
+					"accountId": { "type": "integer", "format": "int64" },
+					"accountNumber": { "type": "string" },
+					"requestedByUserId": { "type": "integer", "format": "int64" },
+					"requestedByName": { "type": "string" },
+					"status": { "type": "string" },
+					"requestedAt": { "type": "string" },
+					"approvedAt": { "type": "string" },
+					"issuedCardId": { "type": "integer", "format": "int64" },
+					"cardType": { "type": "string" },
+					"isVirtual": { "type": "boolean" },
+					"dailyLimit": { "type": "number" },
+					"monthlyLimit": { "type": "number" },
+					"otpRequired": { "type": "boolean" },
+					"isContactlessEnabled": { "type": "boolean" },
+					"isInternationalEnabled": { "type": "boolean" },
+					"deliveryMethod": { "type": "string" },
+					"deliveryAddress": { "type": "string" },
+					"deliveryStatus": { "type": "string" },
+					"trackingNumber": { "type": "string" },
+					"expectedDeliveryDate": { "type": "string" },
+					"issuedAt": { "type": "string" },
+					"dispatchedAt": { "type": "string" },
+					"deliveredAt": { "type": "string" },
+					"kycStatusAtRequest": { "type": "string" },
+					"reviewNotes": { "type": "string" },
+					"rejectionReason": { "type": "string" }
+				}
+			},
+			"DebitCardRequestDecisionRequest": {
+				"type": "object",
+				"properties": {
+					"dailyLimit": { "type": "number" },
+					"monthlyLimit": { "type": "number" },
+					"cardType": { "type": "string" },
+					"isVirtual": { "type": "boolean" },
+					"otpRequired": { "type": "boolean" },
+					"isContactlessEnabled": { "type": "boolean" },
+					"isInternationalEnabled": { "type": "boolean" },
+					"deliveryMethod": { "type": "string" },
+					"deliveryAddress": { "type": "string" },
+					"trackingNumber": { "type": "string" },
+					"expectedDeliveryDate": { "type": "string" },
+					"reviewNotes": { "type": "string" },
+					"rejectionReason": { "type": "string" }
+				}
+			},
+			"CreditPlanDTO": {
+				"type": "object",
+				"properties": {
+					"id": { "type": "integer", "format": "int64" },
+					"name": { "type": "string" },
+					"description": { "type": "string" },
+					"apr": { "type": "number" },
+					"annualFee": { "type": "number" },
+					"lateFee": { "type": "number" },
+					"gracePeriodDays": { "type": "integer", "format": "int32" },
+					"minLimit": { "type": "number" },
+					"maxLimit": { "type": "number" },
+					"cashbackPercentage": { "type": "number" },
+					"status": { "type": "string" }
+				}
+			},
+			"TransferReceiptDTO": {
+				"type": "object",
+				"properties": {
+					"transaction": {
+						"$ref": "#/components/schemas/TransactionResponseDTO"
+					},
+					"senderNewBalance": { "type": "number" },
+					"receiverNewBalance": { "type": "number" },
+					"senderAccountNumber": { "type": "string" },
+					"receiverAccountNumber": { "type": "string" },
+					"processedAt": { "type": "string", "format": "date-time" },
+					"status": { "type": "string" }
+				}
+			},
+			"ActionResultDTO": {
+				"type": "object",
+				"properties": {
+					"success": { "type": "boolean" },
+					"message": { "type": "string" },
+					"resourceId": { "type": "string" },
+					"newStatus": { "type": "string" },
+					"performedAt": { "type": "string", "format": "date-time" },
+					"performedBy": { "type": "string" }
+				}
+			},
+			"AccountBalanceDTO": {
+				"type": "object",
+				"properties": {
+					"accountNumber": { "type": "string" },
+					"balance": { "type": "number" },
+					"bankName": { "type": "string" },
+					"status": { "type": "string" },
+					"errorMessage": { "type": "string" }
+				}
+			},
+			"BankRequestDTO": {
+				"required": ["bankName", "branch", "branchAddress", "ifscCode"],
+				"type": "object",
+				"properties": {
+					"bankName": { "type": "string" },
+					"branchAddress": { "type": "string" },
+					"ifscCode": { "type": "string" },
+					"city": { "type": "string" },
+					"state": { "type": "string" },
+					"branch": { "type": "string" }
+				}
+			},
+			"BankResponseDTO": {
+				"type": "object",
+				"properties": {
+					"id": { "type": "string" },
+					"bankName": { "type": "string" },
+					"branch": { "type": "string" },
+					"ifscCode": { "type": "string" },
+					"city": { "type": "string" },
+					"state": { "type": "string" },
+					"branchAddress": { "type": "string" },
+					"accountNumbers": { "type": "array", "items": { "type": "string" } }
+				}
+			},
+			"ResetPasswordRequestDTO": {
+				"type": "object",
+				"properties": {
+					"token": { "type": "string" },
+					"newPassword": { "type": "string" }
+				}
+			},
+			"RefreshTokenRequestDTO": {
+				"type": "object",
+				"properties": { "refreshToken": { "type": "string" } }
+			},
+			"AuthResponseDTO": {
+				"type": "object",
+				"properties": {
+					"accessToken": { "type": "string" },
+					"refreshToken": { "type": "string" },
+					"tokenType": { "type": "string" },
+					"userId": { "type": "integer", "format": "int64" },
+					"username": { "type": "string" },
+					"email": { "type": "string" },
+					"fullName": { "type": "string" },
+					"phoneNumber": { "type": "string" },
+					"avatarUrl": { "type": "string" },
+					"roles": {
+						"uniqueItems": true,
+						"type": "array",
+						"items": { "type": "string" }
+					},
+					"role": { "type": "string" },
+					"expiresAt": { "type": "string", "format": "date-time" },
+					"passwordChangeRequired": { "type": "boolean" }
+				}
+			},
+			"LoginRequestDTO": {
+				"type": "object",
+				"properties": {
+					"username": { "type": "string" },
+					"password": { "type": "string" }
+				}
+			},
+			"ForgotPasswordRequestDTO": {
+				"type": "object",
+				"properties": { "identifier": { "type": "string" } }
+			},
+			"ForgotPasswordResponseDTO": {
+				"type": "object",
+				"properties": {
+					"message": { "type": "string" },
+					"resetToken": { "type": "string" },
+					"expiresAt": { "type": "string", "format": "date-time" }
+				}
+			},
+			"ChangePasswordRequestDTO": {
+				"type": "object",
+				"properties": {
+					"currentPassword": { "type": "string" },
+					"newPassword": { "type": "string" }
+				}
+			},
+			"AccountRequestDTO": {
+				"type": "object",
+				"properties": {
+					"initialDeposit": { "type": "number" },
+					"customer": { "$ref": "#/components/schemas/CustomerRequestDTO" }
+				}
+			},
+			"CustomerRequestDTO": {
+				"type": "object",
+				"properties": {
+					"fullName": { "type": "string" },
+					"email": { "type": "string" },
+					"phoneNumber": { "type": "string" },
+					"kycStatus": {
+						"type": "string",
+						"enum": [
+							"PENDING",
+							"COMPLETED",
+							"FAILED",
+							"ACTIVE",
+							"INACTIVE",
+							"CLOSED",
+							"INITIATED",
+							"PROCESSING",
+							"SUCCESS",
+							"REVERSED",
+							"BLOCKED"
+						]
+					},
+					"age": { "type": "integer", "format": "int32" },
+					"address": { "type": "string" },
+					"customerStatus": {
+						"type": "string",
+						"enum": [
+							"PENDING",
+							"COMPLETED",
+							"FAILED",
+							"ACTIVE",
+							"INACTIVE",
+							"CLOSED",
+							"INITIATED",
+							"PROCESSING",
+							"SUCCESS",
+							"REVERSED",
+							"BLOCKED"
+						]
+					},
+					"username": { "type": "string" },
+					"password": { "type": "string" }
+				}
+			},
+			"AccountResponseDTO": {
+				"type": "object",
+				"properties": {
+					"accountNumber": { "type": "string" },
+					"currencyCode": { "type": "string" },
+					"balance": { "type": "number" },
+					"status": {
+						"type": "string",
+						"enum": [
+							"PENDING",
+							"COMPLETED",
+							"FAILED",
+							"ACTIVE",
+							"INACTIVE",
+							"CLOSED",
+							"INITIATED",
+							"PROCESSING",
+							"SUCCESS",
+							"REVERSED",
+							"BLOCKED"
+						]
+					},
+					"bankId": { "type": "string" },
+					"bankName": { "type": "string" },
+					"customerId": { "type": "string" },
+					"customerName": { "type": "string" },
+					"kycStatus": {
+						"type": "string",
+						"enum": [
+							"PENDING",
+							"COMPLETED",
+							"FAILED",
+							"ACTIVE",
+							"INACTIVE",
+							"CLOSED",
+							"INITIATED",
+							"PROCESSING",
+							"SUCCESS",
+							"REVERSED",
+							"BLOCKED"
+						]
+					},
+					"customerStatus": {
+						"type": "string",
+						"enum": [
+							"PENDING",
+							"COMPLETED",
+							"FAILED",
+							"ACTIVE",
+							"INACTIVE",
+							"CLOSED",
+							"INITIATED",
+							"PROCESSING",
+							"SUCCESS",
+							"REVERSED",
+							"BLOCKED"
+						]
+					},
+					"age": { "type": "integer", "format": "int32" },
+					"address": { "type": "string" },
+					"userId": { "type": "integer", "format": "int64" },
+					"username": { "type": "string" },
+					"temporaryPassword": { "type": "string" }
+				}
+			},
+			"CustomerResponseDTO": {
+				"type": "object",
+				"properties": {
+					"id": { "type": "string" },
+					"fullName": { "type": "string" },
+					"email": { "type": "string" },
+					"phoneNumber": { "type": "string" },
+					"kycStatus": {
+						"type": "string",
+						"enum": [
+							"PENDING",
+							"COMPLETED",
+							"FAILED",
+							"ACTIVE",
+							"INACTIVE",
+							"CLOSED",
+							"INITIATED",
+							"PROCESSING",
+							"SUCCESS",
+							"REVERSED",
+							"BLOCKED"
+						]
+					},
+					"age": { "type": "integer", "format": "int32" },
+					"address": { "type": "string" },
+					"customerStatus": {
+						"type": "string",
+						"enum": [
+							"PENDING",
+							"COMPLETED",
+							"FAILED",
+							"ACTIVE",
+							"INACTIVE",
+							"CLOSED",
+							"INITIATED",
+							"PROCESSING",
+							"SUCCESS",
+							"REVERSED",
+							"BLOCKED"
+						]
+					},
+					"accountNumbers": { "type": "array", "items": { "type": "string" } }
+				}
+			},
+			"AccountComplianceUpdateRequestDTO": {
+				"type": "object",
+				"properties": {
+					"accountStatus": {
+						"type": "string",
+						"enum": [
+							"PENDING",
+							"COMPLETED",
+							"FAILED",
+							"ACTIVE",
+							"INACTIVE",
+							"CLOSED",
+							"INITIATED",
+							"PROCESSING",
+							"SUCCESS",
+							"REVERSED",
+							"BLOCKED"
+						]
+					},
+					"kycStatus": {
+						"type": "string",
+						"enum": [
+							"PENDING",
+							"COMPLETED",
+							"FAILED",
+							"ACTIVE",
+							"INACTIVE",
+							"CLOSED",
+							"INITIATED",
+							"PROCESSING",
+							"SUCCESS",
+							"REVERSED",
+							"BLOCKED"
+						]
+					},
+					"customerStatus": {
+						"type": "string",
+						"enum": [
+							"PENDING",
+							"COMPLETED",
+							"FAILED",
+							"ACTIVE",
+							"INACTIVE",
+							"CLOSED",
+							"INITIATED",
+							"PROCESSING",
+							"SUCCESS",
+							"REVERSED",
+							"BLOCKED"
+						]
+					}
+				}
+			},
+			"PagedResponseUpiProfileResponseDTO": {
+				"type": "object",
+				"properties": {
+					"content": {
+						"type": "array",
+						"items": { "$ref": "#/components/schemas/UpiProfileResponseDTO" }
+					},
+					"page": { "type": "integer", "format": "int32" },
+					"size": { "type": "integer", "format": "int32" },
+					"totalElements": { "type": "integer", "format": "int64" },
+					"totalPages": { "type": "integer", "format": "int32" },
+					"first": { "type": "boolean" },
+					"last": { "type": "boolean" },
+					"empty": { "type": "boolean" }
+				}
+			},
+			"TransactionReceiptDTO": {
+				"type": "object",
+				"properties": {
+					"receiptId": { "type": "string" },
+					"transactionId": { "type": "integer", "format": "int64" },
+					"transactionType": { "type": "string" },
+					"status": { "type": "string" },
+					"amount": { "type": "number" },
+					"currency": { "type": "string" },
+					"senderName": { "type": "string" },
+					"senderAccountNumber": { "type": "string" },
+					"senderBankName": { "type": "string" },
+					"senderIfsc": { "type": "string" },
+					"receiverName": { "type": "string" },
+					"receiverAccountNumber": { "type": "string" },
+					"receiverBankName": { "type": "string" },
+					"receiverIfsc": { "type": "string" },
+					"upiId": { "type": "string" },
+					"description": { "type": "string" },
+					"referenceId": { "type": "string" },
+					"transactionDate": { "type": "string", "format": "date-time" },
+					"completedDate": { "type": "string", "format": "date-time" },
+					"senderBalanceBefore": { "type": "number" },
+					"senderBalanceAfter": { "type": "number" },
+					"receiverBalanceBefore": { "type": "number" },
+					"receiverBalanceAfter": { "type": "number" },
+					"reversalReason": { "type": "string" },
+					"reversed": { "type": "boolean" }
+				}
+			},
+			"PagedResponseTransactionResponseDTO": {
+				"type": "object",
+				"properties": {
+					"content": {
+						"type": "array",
+						"items": { "$ref": "#/components/schemas/TransactionResponseDTO" }
+					},
+					"page": { "type": "integer", "format": "int32" },
+					"size": { "type": "integer", "format": "int32" },
+					"totalElements": { "type": "integer", "format": "int64" },
+					"totalPages": { "type": "integer", "format": "int32" },
+					"first": { "type": "boolean" },
+					"last": { "type": "boolean" },
+					"empty": { "type": "boolean" }
+				}
+			},
+			"SseEmitter": {
+				"type": "object",
+				"properties": { "timeout": { "type": "integer", "format": "int64" } }
+			},
+			"SessionInfoDTO": {
+				"type": "object",
+				"properties": {
+					"id": { "type": "string" },
+					"userId": { "type": "string" },
+					"userName": { "type": "string" },
+					"ipAddress": { "type": "string" },
+					"userAgent": { "type": "string" },
+					"createdAt": { "type": "string", "format": "date-time" },
+					"lastActivity": { "type": "string", "format": "date-time" },
+					"expiresAt": { "type": "string", "format": "date-time" },
+					"isActive": { "type": "boolean" }
+				}
+			},
+			"AccessLogEntryDTO": {
+				"type": "object",
+				"properties": {
+					"id": { "type": "string" },
+					"timestamp": { "type": "string", "format": "date-time" },
+					"userId": { "type": "string" },
+					"userName": { "type": "string" },
+					"eventType": { "type": "string" },
+					"ipAddress": { "type": "string" },
+					"userAgent": { "type": "string" },
+					"location": { "type": "string" },
+					"success": { "type": "boolean" }
+				}
+			},
+			"NotificationDTO": {
+				"type": "object",
+				"properties": {
+					"id": { "type": "integer", "format": "int64" },
+					"title": { "type": "string" },
+					"message": { "type": "string" },
+					"type": {
+						"type": "string",
+						"enum": [
+							"TRANSACTION_DEBIT",
+							"TRANSACTION_CREDIT",
+							"TRANSACTION_REVERSED",
+							"UPI_PAYMENT",
+							"ACCOUNT_CREATED",
+							"LOAN_APPROVED",
+							"PASSWORD_RESET",
+							"KYC_VERIFIED",
+							"ACCOUNT_BLOCKED",
+							"SYSTEM_ALERT"
+						]
+					},
+					"isRead": { "type": "boolean" },
+					"referenceId": { "type": "string" },
+					"referenceType": { "type": "string" },
+					"createdAt": { "type": "string", "format": "date-time" }
+				}
+			},
+			"PagedResponseNotificationDTO": {
+				"type": "object",
+				"properties": {
+					"content": {
+						"type": "array",
+						"items": { "$ref": "#/components/schemas/NotificationDTO" }
+					},
+					"page": { "type": "integer", "format": "int32" },
+					"size": { "type": "integer", "format": "int32" },
+					"totalElements": { "type": "integer", "format": "int64" },
+					"totalPages": { "type": "integer", "format": "int32" },
+					"first": { "type": "boolean" },
+					"last": { "type": "boolean" },
+					"empty": { "type": "boolean" }
+				}
+			},
+			"EMIDTO": {
+				"type": "object",
+				"properties": {
+					"id": { "type": "integer", "format": "int64" },
+					"loanId": { "type": "integer", "format": "int64" },
+					"emiNumber": { "type": "integer", "format": "int32" },
+					"emiAmount": { "type": "number" },
+					"principalComponent": { "type": "number" },
+					"interestComponent": { "type": "number" },
+					"dueDate": { "type": "string", "format": "date" },
+					"paymentDate": { "type": "string", "format": "date" },
+					"amountPaid": { "type": "number" },
+					"status": { "type": "string" },
+					"penalties": { "type": "number" },
+					"remarks": { "type": "string" },
+					"createdAt": { "type": "string" },
+					"updatedAt": { "type": "string" }
+				}
+			},
+			"PagedResponseCustomerResponseDTO": {
+				"type": "object",
+				"properties": {
+					"content": {
+						"type": "array",
+						"items": { "$ref": "#/components/schemas/CustomerResponseDTO" }
+					},
+					"page": { "type": "integer", "format": "int32" },
+					"size": { "type": "integer", "format": "int32" },
+					"totalElements": { "type": "integer", "format": "int64" },
+					"totalPages": { "type": "integer", "format": "int32" },
+					"first": { "type": "boolean" },
+					"last": { "type": "boolean" },
+					"empty": { "type": "boolean" }
+				}
+			},
+			"GlobalSearchResultDTO": {
+				"type": "object",
+				"properties": {
+					"query": { "type": "string" },
+					"customers": {
+						"type": "array",
+						"items": { "$ref": "#/components/schemas/CustomerResponseDTO" }
+					},
+					"accounts": {
+						"type": "array",
+						"items": { "$ref": "#/components/schemas/AccountResponseDTO" }
+					},
+					"transactions": {
+						"type": "array",
+						"items": { "$ref": "#/components/schemas/TransactionResponseDTO" }
+					},
+					"totalResults": { "type": "integer", "format": "int32" }
+				}
+			},
+			"AccountOverviewDTO": {
+				"type": "object",
+				"properties": {
+					"accounts": {
+						"type": "array",
+						"items": { "$ref": "#/components/schemas/AccountResponseDTO" }
+					},
+					"totalBalance": { "type": "number" },
+					"totalAccounts": { "type": "integer", "format": "int32" },
+					"recentTransactions": {
+						"type": "array",
+						"items": { "$ref": "#/components/schemas/TransactionResponseDTO" }
+					},
+					"upiProfiles": {
+						"type": "array",
+						"items": { "$ref": "#/components/schemas/UpiProfileResponseDTO" }
+					},
+					"totalTransactions": { "type": "integer", "format": "int32" },
+					"activeUpiProfiles": { "type": "integer", "format": "int32" }
+				}
+			},
+			"CustomerBankingProfileDTO": {
+				"type": "object",
+				"properties": {
+					"customer": { "$ref": "#/components/schemas/CustomerResponseDTO" },
+					"accounts": {
+						"type": "array",
+						"items": { "$ref": "#/components/schemas/AccountResponseDTO" }
+					},
+					"totalBalance": { "type": "number" },
+					"recentTransactions": {
+						"type": "array",
+						"items": { "$ref": "#/components/schemas/TransactionResponseDTO" }
+					},
+					"upiProfiles": {
+						"type": "array",
+						"items": { "$ref": "#/components/schemas/UpiProfileResponseDTO" }
+					},
+					"totalTransactions": { "type": "integer", "format": "int32" },
+					"totalAccounts": { "type": "integer", "format": "int32" }
+				}
+			},
+			"BankOperationsSummaryDTO": {
+				"type": "object",
+				"properties": {
+					"bank": { "$ref": "#/components/schemas/BankResponseDTO" },
+					"totalAccounts": { "type": "integer", "format": "int32" },
+					"totalCustomers": { "type": "integer", "format": "int32" },
+					"totalBalance": { "type": "number" },
+					"totalTransactions": { "type": "integer", "format": "int64" },
+					"completedTransactions": { "type": "integer", "format": "int64" },
+					"reversedTransactions": { "type": "integer", "format": "int64" },
+					"failedTransactions": { "type": "integer", "format": "int64" }
+				}
+			},
+			"UserResponseDTO": {
+				"type": "object",
+				"properties": {
+					"id": { "type": "integer", "format": "int64" },
+					"username": { "type": "string" },
+					"email": { "type": "string" },
+					"fullName": { "type": "string" },
+					"phoneNumber": { "type": "string" },
+					"avatarUrl": { "type": "string" },
+					"primaryRole": { "type": "string" },
+					"isActive": { "type": "boolean" },
+					"isLocked": { "type": "boolean" },
+					"roles": {
+						"uniqueItems": true,
+						"type": "array",
+						"items": { "type": "string" }
+					},
+					"createdAt": { "type": "string", "format": "date-time" },
+					"updatedAt": { "type": "string", "format": "date-time" },
+					"lastLogin": { "type": "string", "format": "date-time" },
+					"customerId": { "type": "string" },
+					"customerStatus": { "type": "string" },
+					"kycStatus": { "type": "string" },
+					"age": { "type": "integer", "format": "int32" },
+					"address": { "type": "string" },
+					"accountCount": { "type": "integer", "format": "int64" },
+					"totalBalance": { "type": "number" },
+					"transactionCount": { "type": "integer", "format": "int64" },
+					"upiProfileCount": { "type": "integer", "format": "int64" },
+					"managedBankCount": { "type": "integer", "format": "int64" },
+					"managedCustomerCount": { "type": "integer", "format": "int64" },
+					"managedAccountCount": { "type": "integer", "format": "int64" },
+					"managedTransactionCount": { "type": "integer", "format": "int64" },
+					"managedUpiProfileCount": { "type": "integer", "format": "int64" },
+					"pendingKycCount": { "type": "integer", "format": "int64" },
+					"activeSessionCount": { "type": "integer", "format": "int64" },
+					"failedLoginCount": { "type": "integer", "format": "int64" },
+					"auditSuccessCount": { "type": "integer", "format": "int64" },
+					"auditFailureCount": { "type": "integer", "format": "int64" }
+				}
+			},
+			"AuditLogEntryDTO": {
+				"type": "object",
+				"properties": {
+					"id": { "type": "string" },
+					"timestamp": { "type": "string", "format": "date-time" },
+					"userId": { "type": "string" },
+					"userName": { "type": "string" },
+					"action": { "type": "string" },
+					"resource": { "type": "string" },
+					"resourceId": { "type": "string" },
+					"details": { "type": "string" },
+					"ipAddress": { "type": "string" },
+					"userAgent": { "type": "string" },
+					"status": { "type": "string" }
+				}
+			},
+			"AuditLogPageResponseDTO": {
+				"type": "object",
+				"properties": {
+					"items": {
+						"type": "array",
+						"items": { "$ref": "#/components/schemas/AuditLogEntryDTO" }
+					},
+					"page": { "type": "integer", "format": "int32" },
+					"size": { "type": "integer", "format": "int32" },
+					"totalElements": { "type": "integer", "format": "int64" },
+					"totalPages": { "type": "integer", "format": "int32" },
+					"hasNext": { "type": "boolean" },
+					"hasPrevious": { "type": "boolean" }
+				}
+			},
+			"AccountLedgerBalanceDTO": {
+				"type": "object",
+				"properties": {
+					"accountNumber": { "type": "string" },
+					"currencyCode": { "type": "string" },
+					"bankName": { "type": "string" },
+					"accountStatus": {
+						"type": "string",
+						"enum": [
+							"PENDING",
+							"COMPLETED",
+							"FAILED",
+							"ACTIVE",
+							"INACTIVE",
+							"CLOSED",
+							"INITIATED",
+							"PROCESSING",
+							"SUCCESS",
+							"REVERSED",
+							"BLOCKED"
+						]
+					},
+					"liveBalance": { "type": "number" },
+					"totalReceived": { "type": "number" },
+					"totalSent": { "type": "number" }
+				}
+			},
+			"ReceiverValidationResponseDTO": {
+				"type": "object",
+				"properties": {
+					"valid": { "type": "boolean" },
+					"message": { "type": "string" },
+					"accountNumber": { "type": "string" },
+					"accountHolderName": { "type": "string" },
+					"bankName": { "type": "string" },
+					"ifscCode": { "type": "string" },
+					"matchedAccountCount": { "type": "integer", "format": "int32" }
+				}
+			},
+			"PagedResponseAccountResponseDTO": {
+				"type": "object",
+				"properties": {
+					"content": {
+						"type": "array",
+						"items": { "$ref": "#/components/schemas/AccountResponseDTO" }
+					},
+					"page": { "type": "integer", "format": "int32" },
+					"size": { "type": "integer", "format": "int32" },
+					"totalElements": { "type": "integer", "format": "int64" },
+					"totalPages": { "type": "integer", "format": "int32" },
+					"first": { "type": "boolean" },
+					"last": { "type": "boolean" },
+					"empty": { "type": "boolean" }
+				}
+			}
+		}
+	}
+}

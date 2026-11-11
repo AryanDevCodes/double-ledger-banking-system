@@ -95,7 +95,7 @@ export default function DataTableToolbar({
 
           {/* Export */}
           {onExport && (
-            <Button variant="outline" size="sm" onClick={onExport} className="rounded-xl">
+            <Button variant="outline" size="sm" onClick={onExport} className="rounded-md">
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
@@ -105,7 +105,7 @@ export default function DataTableToolbar({
 
       {/* Filter Row */}
       {showFilters && filters.length > 0 && (
-        <div className="flex flex-wrap gap-2.5 rounded-xl border border-border/60 bg-card/75 p-3 shadow-sm backdrop-blur-xl">
+        <div className="flex flex-wrap gap-2.5 rounded-md border border-border bg-card p-3">
           {filters.map((filter) => (
             <div key={filter.key} className="flex flex-col gap-1.5">
               <label className="text-xs text-muted-foreground">{filter.label}</label>
@@ -114,7 +114,7 @@ export default function DataTableToolbar({
                   value={(activeFilters[filter.key] as string) || ALL_FILTER_VALUE}
                   onValueChange={(value) => onFilterChange?.(filter.key, value === ALL_FILTER_VALUE ? undefined : value)}
                 >
-                  <SelectTrigger className="h-9 w-[160px] rounded-xl bg-card/75">
+                  <SelectTrigger className="h-9 w-[160px] rounded-md bg-card">
                     <SelectValue placeholder="All" />
                   </SelectTrigger>
                   <SelectContent>
@@ -134,7 +134,7 @@ export default function DataTableToolbar({
                       variant="outline"
                       size="sm"
                       className={cn(
-                        "h-9 w-[160px] justify-start rounded-xl text-left font-normal",
+                        "h-9 w-[160px] justify-start rounded-md text-left font-normal",
                         !activeFilters[filter.key] && "text-muted-foreground"
                       )}
                     >
@@ -144,7 +144,7 @@ export default function DataTableToolbar({
                         : "Pick date"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto border-border/70 bg-popover/95 p-0 backdrop-blur-xl" align="start">
+                  <PopoverContent className="w-auto rounded-md border-border bg-popover p-0" align="start">
                     <Calendar
                       mode="single"
                       selected={activeFilters[filter.key] as Date | undefined}

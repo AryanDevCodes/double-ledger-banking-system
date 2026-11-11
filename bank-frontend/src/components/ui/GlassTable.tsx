@@ -5,7 +5,7 @@ export function GlassTable({ children, className, stickyHeader = true }: { child
   return (
     <div
       className={cn(
-        "rounded-2xl border border-border/40 bg-card/60 backdrop-blur-xl overflow-hidden",
+        "rounded-lg border border-border bg-card overflow-hidden",
         stickyHeader && "[&_thead_tr_th]:sticky [&_thead_tr_th]:top-0 [&_thead_tr_th]:z-10",
         className
       )}
@@ -62,7 +62,7 @@ export function GlassTableHead({
     <th
       className={cn(
         "px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground",
-        "bg-card/80 backdrop-blur-sm",
+        "bg-muted/60",
         "whitespace-nowrap",
         className
       )}

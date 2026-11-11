@@ -3,12 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import AuroraBackdrop from "@/components/AuroraBackdrop";
-import GradientButton from "@/components/ui/GradientButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
-import { Lock, ShieldCheck, Eye, EyeOff } from "lucide-react";
+import { Lock, ShieldCheck, Eye, EyeOff, LoaderCircle } from "lucide-react";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { PasswordStrength } from "@/components/PasswordStrength";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -57,20 +55,18 @@ export default function SetPasswordPage() {
 
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4">
-      <AuroraBackdrop />
       <div className="absolute right-4 top-4 z-10">
         <ThemeToggle />
       </div>
 
       <div className="relative z-10 w-full max-w-md">
-        <div className="glass-panel rounded-3xl overflow-hidden">
-          {/* Header */}
-          <div className="px-7 pt-8 pb-6 text-center border-b border-border bg-gradient-to-b from-success/10 to-transparent">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-success/10 border border-border shadow-sm">
-              <ShieldCheck className="h-8 w-8 text-success" />
+        <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+          <div className="border-b border-border px-7 pb-5 pt-7">
+            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-md border border-border bg-muted/50">
+              <ShieldCheck className="h-5 w-5 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">Set Your Password</h1>
-            <p className="mt-1 text-sm text-muted-foreground">For security, please set a new password before continuing.</p>
+            <h1 className="font-display text-3xl font-medium text-foreground">Set your password</h1>
+            <p className="mt-1 text-sm text-muted-foreground">For security, set a new password before continuing.</p>
           </div>
 
         <Form {...form}>
@@ -171,11 +167,11 @@ export default function SetPasswordPage() {
               />
             </div>
 
-            {/* Footer */}
-            <div className="px-7 py-5 border-t border-border bg-card/60">
-              <GradientButton type="submit" fullWidth variant="success" loading={form.formState.isSubmitting}>
+            <div className="border-t border-border px-7 py-5">
+              <Button type="submit" className="h-11 w-full rounded-md" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
                 {form.formState.isSubmitting ? "Updating…" : "Update Password"}
-              </GradientButton>
+              </Button>
             </div>
           </form>
         </Form>

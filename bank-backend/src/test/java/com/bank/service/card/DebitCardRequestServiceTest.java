@@ -1,10 +1,17 @@
 package com.bank.service.card;
 
+import java.math.BigDecimal;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.bank.dto.card.DebitCardRequestCreateRequest;
 import com.bank.dto.card.DebitCardRequestDTO;
@@ -15,12 +22,7 @@ import com.bank.entity.Status;
 import com.bank.entity.User;
 import com.bank.repository.AccountRepository;
 import com.bank.repository.DebitCardRequestRepository;
-import java.math.BigDecimal;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import com.bank.service.access.OwnershipAuthorizationService;
 
 @ExtendWith(MockitoExtension.class)
 class DebitCardRequestServiceTest {
@@ -31,11 +33,9 @@ class DebitCardRequestServiceTest {
   @Mock
   private AccountRepository accountRepository;
 
-  @Mock
-  private DebitCardService debitCardService;
 
   @Mock
-  private CardAccessService cardAccessService;
+  private OwnershipAuthorizationService ownershipAuthorizationService;
 
   @InjectMocks
   private DebitCardRequestService debitCardRequestService;
@@ -59,8 +59,8 @@ class DebitCardRequestServiceTest {
         .build();
 
     when(accountRepository.findByAccountNumberWithDetails("ACC-123")).thenReturn(account);
-    doNothing().when(cardAccessService).assertAccountAccess(account);
-    when(cardAccessService.requireCurrentUser()).thenReturn(requester);
+    doNothing().when(ownershipAuthorizationService).assertAccountAccess(account);
+    when(ownershipAuthorizationService.requireCurrentUser()).thenReturn(requester);
     when(debitCardRequestRepository.save(any())).thenAnswer(invocation -> {
       com.bank.entity.DebitCardRequest saved = invocation.getArgument(0);
       saved.setId(99L);

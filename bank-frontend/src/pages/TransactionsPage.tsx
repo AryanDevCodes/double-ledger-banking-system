@@ -666,7 +666,7 @@ export default function TransactionsPage() {
                   }}
                 >
                   <DialogTrigger asChild>
-                    <Button className="bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--chart-6))] shadow-md hover:brightness-110 transition-all gap-1.5">
+                    <Button className="gap-1.5">
                       <Plus className="h-4 w-4" />
                       New Transfer
                       <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border border-[hsl(var(--primary-foreground)/0.3)] bg-[hsl(var(--primary-foreground)/0.1)] px-1.5 font-mono text-[10px] font-medium">
@@ -891,7 +891,7 @@ export default function TransactionsPage() {
 
         {/* Table Shell */}
         <div className="data-table-shell transition-shadow">
-          <div className="p-4 border-b border-[var(--glass-border)] bg-gradient-to-r from-[var(--accent-primary)]/8 to-transparent space-y-4">
+          <div className="space-y-4 border-b border-border bg-muted/35 p-4">
             <DataTableToolbar
   searchPlaceholder="Search transactions..."
   searchValue={search}
@@ -1077,7 +1077,7 @@ export default function TransactionsPage() {
               {/* Table */}
               <div className="overflow-x-auto rounded-xl border border-border/60 bg-card/45">
                 <Table className="min-w-[900px]">
-                  <TableHeader className="sticky top-0 z-10 bg-card/90 backdrop-blur-xl supports-[backdrop-filter]:bg-card/75">
+                  <TableHeader className="sticky top-0 z-10 bg-muted/70">
                     <TableRow>
                       {visibleColumns.has("select") && (
                         <TableHead className="w-10">

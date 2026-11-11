@@ -17,7 +17,7 @@ import { TableSkeleton } from "@/components/LoadingStates";
 
 import { upiApi, accountApi, getApiErrorMessage } from "@/lib/api-client";
 import { exportToCSV, exportToExcel, exportToPDF } from "@/lib/export";
-import { formatDate } from "@/lib/format";
+import { formatDate, maskAccountNumber } from "@/lib/format";
 import { ROLES, hasPermission } from "@/lib/rbac";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -38,7 +38,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Progress } from "@/components/ui/progress";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Ban, CheckCircle2, ChevronLeft, ChevronRight, Copy, Plus, QrCode, RefreshCw, Smartphone, Trash2 } from "lucide-react";
@@ -54,17 +54,15 @@ export default function UpiPage() {
   const { user } = useAuth();
   const roles = user?.roles || [];
 
-  const staffRoleSet = useMemo(
-    () => new Set<string>([ROLES.ADMIN, ROLES.MANAGER, ROLES.CUSTOMER_MANAGER, ROLES.AUDITOR]),
-    [],
-  );
-
-  const isCustomerOnly = roles.includes(ROLES.USER) && !roles.some((role) => staffRoleSet.has(role));
-  const canCustomerOperateUpi = isCustomerOnly;
+  const canViewAll = hasPermission(roles, "UPI_VIEW_ALL");
+  const isCustomerOnly = !canViewAll && hasPermission(roles, "UPI_VIEW_OWN");
+  const canRegisterUpi = hasPermission(roles, "UPI_CREATE");
   const canEditOwn = hasPermission(roles, "UPI_EDIT_OWN");
   const canEditAll = hasPermission(roles, "UPI_EDIT_ALL");
-  const canToggleStatus = canCustomerOperateUpi && (canEditOwn || canEditAll);
-  const canGenerateQr = canCustomerOperateUpi && hasPermission(roles, "UPI_GENERATE_QR");
+  const canToggleStatus = canEditOwn || canEditAll;
+  const canGenerateQr = hasPermission(roles, "UPI_GENERATE_QR");
+  const canDeleteProfiles = roles.includes(ROLES.ADMIN);
+  const isReadOnly = !canRegisterUpi && !canToggleStatus && !canGenerateQr && !canDeleteProfiles;
   const showBulkControls = canToggleStatus;
 
   const [profiles, setProfiles] = useState<UpiProfileResponseDTO[]>([]);
@@ -95,7 +93,7 @@ export default function UpiPage() {
     try {
       setLoading(true);
       const [profilesData, accountsData] = await Promise.all([
-        isCustomerOnly ? upiApi.getMy() : upiApi.getAll(),
+        canViewAll ? upiApi.getAll() : upiApi.getMy(),
         isCustomerOnly ? accountApi.getMy() : accountApi.getAll(),
       ]);
       setProfiles(profilesData);
@@ -309,17 +307,19 @@ export default function UpiPage() {
               Refresh
             </Button>
             <ExportMenu onExport={handleExport} disabled={loading || filtered.length === 0} />
-            {canCustomerOperateUpi ? (
             <Can permission="UPI_CREATE">
               <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-gradient-to-r from-fuchsia-500 to-violet-600 shadow-md hover:from-fuchsia-600 hover:to-violet-700">
+                  <Button>
                     <Plus className="h-4 w-4 mr-2" /> Register UPI
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="glass-panel border-[var(--glass-border)]">
                   <DialogHeader>
                     <DialogTitle>Register UPI Profile</DialogTitle>
+                    <DialogDescription>
+                      Link a UPI ID to an active account. Each account can have up to four IDs.
+                    </DialogDescription>
                   </DialogHeader>
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit(handleAdd)} className="grid gap-4 py-2">
@@ -356,7 +356,7 @@ export default function UpiPage() {
                                         value={a.accountNumber}
                                         disabled={(upiCountByAccount[a.accountNumber] || 0) >= 4}
                                       >
-                                        {a.customerName} — {a.accountNumber}
+                                        {a.customerName} — {isCustomerOnly ? maskAccountNumber(a.accountNumber) : a.accountNumber}
                                         {(upiCountByAccount[a.accountNumber] || 0) >= 4 ? " (limit reached)" : ""}
                                       </SelectItem>
                                     ))}
@@ -372,7 +372,7 @@ export default function UpiPage() {
                       </p>
                       <Button
                         type="submit"
-                        className="bg-gradient-to-r from-fuchsia-500 to-violet-600 shadow-md hover:from-fuchsia-600 hover:to-violet-700"
+                        className="rounded-md"
                         disabled={form.formState.isSubmitting}
                       >
                         {form.formState.isSubmitting ? "Registering..." : "Register Profile"}
@@ -382,22 +382,9 @@ export default function UpiPage() {
                 </DialogContent>
               </Dialog>
             </Can>
-            ) : null}
           </>
         }
       />
-
-      <div className="module-hero module-hero--upi mb-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">UPI Workspace</p>
-            <p className="text-sm text-foreground/90 mt-1">Control identity rails, status governance, and QR-ready payment surfaces.</p>
-          </div>
-          <div className="inline-flex items-center rounded-full border border-border/70 bg-background/70 px-3 py-1.5 text-xs text-muted-foreground">
-            Profile + Status + QR Operations
-          </div>
-        </div>
-      </div>
 
       <div className="grid gap-5 lg:grid-cols-3 mb-6">
         <div className="lg:col-span-2 grid gap-4 sm:grid-cols-2">
@@ -455,11 +442,11 @@ export default function UpiPage() {
         </div>
       </div>
 
-      {!canCustomerOperateUpi ? (
+      {isReadOnly ? (
         <div className="panel-luxe border-l-4 border-l-amber-500 p-5 mb-6">
           <p className="text-sm font-semibold">Read-only UPI mode</p>
           <p className="text-sm text-muted-foreground mt-2 max-w-3xl">
-            Staff roles can audit UPI profiles and exports, but cannot register UPI IDs, change status, or generate QR codes.
+            Your role can review and export UPI profiles, but cannot register profiles, change status, or generate QR codes.
           </p>
         </div>
       ) : null}
@@ -476,7 +463,7 @@ export default function UpiPage() {
 
         <TabsContent value="profiles" className="space-y-4">
           <div className="data-table-shell">
-            <div className="p-4 border-b border-[var(--glass-border)] bg-gradient-to-r from-[var(--accent-primary)]/8 to-transparent">
+            <div className="border-b border-border bg-muted/35 p-4">
               <DataTableToolbar
                 searchPlaceholder="Search UPI..."
                 searchValue={search}
@@ -560,7 +547,7 @@ export default function UpiPage() {
               <>
               <div className="overflow-x-auto">
               <Table className="min-w-[980px]">
-                <TableHeader className="bg-card/80 backdrop-blur-xl">
+                <TableHeader className="bg-muted/60">
                   <TableRow>
                     {showBulkControls ? (
                       <TableHead className="w-[42px]">
@@ -594,7 +581,9 @@ export default function UpiPage() {
                       ) : null}
                       <TableCell className="font-mono text-sm font-medium">{p.upiId}</TableCell>
                       <TableCell>{p.accountHolderName}</TableCell>
-                      <TableCell className="font-mono text-xs">{p.accountNumber}</TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {isCustomerOnly ? maskAccountNumber(p.accountNumber) : p.accountNumber}
+                      </TableCell>
                       <TableCell>{p.bankName}</TableCell>
                       <TableCell>
                         {canToggleStatus ? (
@@ -615,7 +604,7 @@ export default function UpiPage() {
                           <Button variant="ghost" size="sm" onClick={() => copyUpiId(p.upiId)} title="Copy UPI ID">
                             <Copy className="h-4 w-4" />
                           </Button>
-                          {canEditAll ? (
+                          {canDeleteProfiles ? (
                             <Button variant="ghost" size="sm" onClick={() => setDeleteTargetUpi(p.upiId)} title="Delete UPI profile">
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -661,7 +650,7 @@ export default function UpiPage() {
             <div className="grid md:grid-cols-2 gap-6">
               <QRCodeGenerator upiId={qrUpiId} />
               <div className="space-y-4">
-                <div className="glass-panel rounded-2xl p-6 bg-gradient-to-br from-primary/10 to-primary/5">
+                <div className="glass-panel p-6">
 
                   <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
                     <QrCode className="h-5 w-5 text-primary" />

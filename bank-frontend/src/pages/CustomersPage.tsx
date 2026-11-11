@@ -15,7 +15,7 @@ import { getApiErrorMessage } from "@/lib/api-client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -233,11 +233,14 @@ export default function CustomersPage() {
             <ExportMenu onExport={handleExport} disabled={loading || filtered.length === 0} />
             <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm(); }}>
               <DialogTrigger asChild>
-                <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 shadow-md hover:from-cyan-600 hover:to-blue-700"><Plus className="h-4 w-4 mr-2" /> Add Customer</Button>
+                <Button><Plus className="h-4 w-4 mr-2" /> Add Customer</Button>
               </DialogTrigger>
               <DialogContent className="glass-panel border-[var(--glass-border)]">
                 <DialogHeader>
                   <DialogTitle>{editingCustomer ? "Edit Customer" : "Add New Customer"}</DialogTitle>
+                  <DialogDescription>
+                    {editingCustomer ? "Update the customer's profile details." : "Enter the customer's details to create a profile."}
+                  </DialogDescription>
                 </DialogHeader>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-4 py-2">
@@ -308,7 +311,7 @@ export default function CustomersPage() {
                   />
                   <DialogFooter>
                     <Button type="button" variant="outline" className="rounded-xl" onClick={() => { setOpen(false); resetForm(); }}>Cancel</Button>
-                    <Button type="submit" className="bg-gradient-to-r from-cyan-500 to-blue-600 shadow-md hover:from-cyan-600 hover:to-blue-700" disabled={form.formState.isSubmitting}>
+                    <Button type="submit" disabled={form.formState.isSubmitting}>
                       {form.formState.isSubmitting ? "Saving..." : editingCustomer ? "Save Changes" : "Create Customer"}
                     </Button>
                   </DialogFooter>
@@ -342,7 +345,7 @@ export default function CustomersPage() {
       </div>
 
       <div className="glass-elevated transition-shadow">
-        <div className="border-b border-[var(--glass-border)] bg-gradient-to-r from-[var(--accent-primary)]/8 to-transparent p-4">
+        <div className="border-b border-border bg-muted/35 p-4">
           <DataTableToolbar
             searchPlaceholder="Search customers..."
             searchValue={search}
@@ -366,7 +369,7 @@ export default function CustomersPage() {
           />
         ) : (
           <Table>
-            <TableHeader className="bg-card/80 backdrop-blur-xl">
+            <TableHeader className="bg-muted/60">
               <TableRow>
                 <TableHead>ID</TableHead>
                 <TableHead>Name</TableHead>
@@ -422,6 +425,7 @@ export default function CustomersPage() {
         <DialogContent className="glass-panel border-[var(--glass-border)]">
           <DialogHeader>
             <DialogTitle>Customer Details</DialogTitle>
+            <DialogDescription>Review profile information and recent transaction activity.</DialogDescription>
           </DialogHeader>
           {viewCustomer ? (
             <div className="grid gap-3 text-sm">

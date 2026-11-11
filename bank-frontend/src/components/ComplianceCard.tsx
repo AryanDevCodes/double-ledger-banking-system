@@ -90,15 +90,15 @@ export default function ComplianceCard({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-2xl border border-border/50 bg-card/70 backdrop-blur-xl p-6",
-        "shadow-sm transition-all duration-300 hover:shadow-md hover:border-border/70",
+        "relative overflow-hidden rounded-lg border border-border bg-card p-6",
+        "transition-colors duration-150 hover:border-primary/30",
         className
       )}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <div className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-muted/50 text-primary">
             <Shield className="h-5 w-5" />
           </div>
           <h3 className="font-semibold text-foreground">Compliance Overview</h3>

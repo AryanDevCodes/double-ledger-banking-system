@@ -50,7 +50,7 @@ export default function AccessLogTable({ logs, className }: AccessLogTableProps)
   return (
     <div className={cn("overflow-x-auto rounded-xl border border-border/60 bg-card/45", className)}>
       <Table>
-        <TableHeader className="sticky top-0 z-10 bg-card/85 backdrop-blur-xl">
+        <TableHeader className="sticky top-0 z-10 bg-muted/60">
           <TableRow>
             <TableHead className="w-[150px]">Timestamp</TableHead>
             <TableHead>User</TableHead>

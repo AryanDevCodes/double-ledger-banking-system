@@ -15,6 +15,7 @@ import com.bank.repository.AccountRepository;
 import com.bank.repository.CustomerRepository;
 import com.bank.repository.LedgerRepository;
 import com.bank.repository.TransactionRepository;
+import com.bank.service.access.OwnershipAuthorizationService;
 import com.bank.service.transaction.mapper.TransactionMapper;
 import java.math.BigDecimal;
 import java.util.List;
@@ -52,6 +53,9 @@ class TransactionServiceIMPLTest {
 
   @Mock
   private ApplicationEventPublisher eventPublisher;
+
+  @Mock
+  private OwnershipAuthorizationService ownershipAuthorizationService;
 
   @InjectMocks
   private TransactionServiceIMPL transactionService;

@@ -91,7 +91,7 @@ import {
   type AuthUserProfileResponse,
 } from "@/lib/api-client";
 import { ROLES, ROLE_LABELS, getPrimaryRole } from "@/lib/rbac";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatCurrency, formatDateTime, maskAccountNumber } from "@/lib/format";
 import { normalizeProfilePhotoUrl } from "@/lib/profile-photo";
 import type {
   AccountResponseDTO,
@@ -193,18 +193,75 @@ export default function ProfilePage() {
   );
 
   const personalTotalBalance =
-    typeof profile?.totalBalance === "number"
-      ? profile.totalBalance
-      : myAccounts.reduce((sum, item) => sum + (Number(item.balance) || 0), 0);
+    myAccounts.length > 0
+      ? myAccounts.reduce((sum, item) => sum + (Number(item.balance) || 0), 0)
+      : Number(profile?.totalBalance) || 0;
 
   const finalBalance = isRetailUser ? personalTotalBalance : totalBalance;
 
+  const managedCustomerCount = profile?.managedCustomerCount;
+  const pendingKycCount = profile?.pendingKycCount;
+  const kycCompliance =
+    managedCustomerCount && managedCustomerCount > 0
+      ? Math.max(
+          0,
+          Math.min(
+            100,
+            Math.round(((managedCustomerCount - (pendingKycCount ?? 0)) / managedCustomerCount) * 100),
+          ),
+        )
+      : null;
+
   const stats = {
-    accounts: accountsView.length,
-    upi: upiView.length,
-    transactions: transactionsView.length,
+    accounts: isRetailUser
+      ? myAccounts.length
+      : profile?.managedAccountCount ?? (managedDataLoaded ? managedAccounts.length : "—"),
+    upi: isRetailUser
+      ? myUpiProfiles.length
+      : profile?.managedUpiProfileCount ?? (managedDataLoaded ? managedUpiProfiles.length : "—"),
+    transactions: isRetailUser
+      ? myTransactions.length
+      : profile?.managedTransactionCount ?? (managedDataLoaded ? managedTransactions.length : "—"),
     balance: finalBalance,
   };
+
+  const profileMetrics = isRetailUser
+    ? [
+        { title: "Accounts", value: stats.accounts, icon: <CreditCard className="h-5 w-5" />, tint: "indigo" as const },
+        { title: "Balance", value: formatCurrency(stats.balance), icon: <Building2 className="h-5 w-5" />, tint: "emerald" as const },
+        { title: "Transactions", value: stats.transactions, icon: <ArrowLeftRight className="h-5 w-5" />, tint: "sky" as const },
+        { title: "UPI Profiles", value: stats.upi, icon: <Smartphone className="h-5 w-5" />, tint: "rose" as const },
+      ]
+    : canViewManagedTransactions
+      ? [
+          { title: "Managed Accounts", value: stats.accounts, icon: <CreditCard className="h-5 w-5" />, tint: "indigo" as const },
+          { title: "Managed Customers", value: managedCustomerCount ?? "—", icon: <Users className="h-5 w-5" />, tint: "sky" as const },
+          { title: "Transactions", value: stats.transactions, icon: <ArrowLeftRight className="h-5 w-5" />, tint: "amber" as const },
+          { title: "UPI Profiles", value: stats.upi, icon: <Smartphone className="h-5 w-5" />, tint: "rose" as const },
+        ]
+      : [
+          { title: "Managed Customers", value: managedCustomerCount ?? "—", icon: <Users className="h-5 w-5" />, tint: "sky" as const },
+          { title: "Managed Accounts", value: stats.accounts, icon: <CreditCard className="h-5 w-5" />, tint: "indigo" as const },
+          { title: "Pending KYC", value: pendingKycCount ?? "—", icon: <AlertCircle className="h-5 w-5" />, tint: "amber" as const },
+          { title: "KYC Compliance", value: kycCompliance === null ? "—" : `${kycCompliance}%`, icon: <ShieldCheck className="h-5 w-5" />, tint: "emerald" as const },
+        ];
+
+  const profileSignals = isRetailUser
+    ? [
+        { label: "KYC Status", value: profile?.kycStatus ?? "—", icon: ShieldCheck },
+        { label: "Active Accounts", value: myAccounts.filter((account) => account.status === "ACTIVE").length, icon: CreditCard },
+        { label: "UPI Profiles", value: myUpiProfiles.length, icon: Smartphone },
+      ]
+    : [
+        { label: "KYC Compliance", value: kycCompliance === null ? "—" : `${kycCompliance}%`, icon: ShieldCheck },
+        { label: "Pending Reviews", value: pendingKycCount ?? "—", icon: AlertCircle },
+        ...(isAdmin
+          ? [
+              { label: "Active Sessions", value: profile?.activeSessionCount ?? "—", icon: Lock },
+              { label: "Failed Logins", value: profile?.failedLoginCount ?? "—", icon: AlertTriangle },
+            ]
+          : []),
+      ];
 
   // ─── Handlers ─────────────────────────────
 
@@ -441,7 +498,7 @@ export default function ProfilePage() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/5 via-background to-secondary/5 border border-border/40 p-6 md:p-8"
+          className="overflow-hidden rounded-lg border border-border bg-card p-6 md:p-8"
         >
           <div className="flex flex-col md:flex-row md:items-center gap-6">
             <div className="relative">
@@ -540,30 +597,15 @@ export default function ProfilePage() {
           transition={{ delay: 0.1 }}
           className="grid grid-cols-2 md:grid-cols-4 gap-4"
         >
-          <StatCard
-            title="Accounts"
-            value={stats.accounts}
-            icon={<CreditCard className="h-5 w-5" />}
-            tint="indigo"
-          />
-          <StatCard
-            title="Balance"
-            value={formatCurrency(stats.balance)}
-            icon={<Building2 className="h-5 w-5" />}
-            tint="emerald"
-          />
-          <StatCard
-            title="Transactions"
-            value={stats.transactions}
-            icon={<ArrowLeftRight className="h-5 w-5" />}
-            tint="sky"
-          />
-          <StatCard
-            title="UPI Profiles"
-            value={stats.upi}
-            icon={<Smartphone className="h-5 w-5" />}
-            tint="rose"
-          />
+          {profileMetrics.map((metric) => (
+            <StatCard
+              key={metric.title}
+              title={metric.title}
+              value={metric.value}
+              icon={metric.icon}
+              tint={metric.tint}
+            />
+          ))}
         </motion.div>
 
         {/* ── Tabs ── */}
@@ -621,15 +663,10 @@ export default function ProfilePage() {
 
                   <Card className="panel-luxe">
                     <CardHeader>
-                      <CardTitle className="text-base">Live Signals</CardTitle>
+                      <CardTitle className="text-base">Operational Signals</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      {[
-                        { label: "KYC Compliance", value: profile?.kycCompliance ?? 0, icon: ShieldCheck },
-                        { label: "Active Sessions", value: profile?.activeSessionCount ?? 0, icon: Lock },
-                        { label: "Pending Reviews", value: profile?.pendingKycCount ?? 0, icon: AlertCircle },
-                        { label: "Failed Logins", value: profile?.failedLoginCount ?? 0, icon: AlertTriangle },
-                      ].map((item) => (
+                      {profileSignals.map((item) => (
                         <div
                           key={item.label}
                           className="flex items-center justify-between rounded-xl border border-border/40 bg-muted/10 p-3"
@@ -650,7 +687,31 @@ export default function ProfilePage() {
                     <CardTitle className="text-base">Recent Activity</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {recentTransactions.length === 0 ? (
+                    {!isRetailUser &&
+                    canViewManagedTransactions &&
+                    !managedDataLoaded &&
+                    stats.transactions !== 0 ? (
+                      <div className="text-sm text-muted-foreground">
+                        {loadingManagedData ? (
+                          <p>Loading managed transaction activity…</p>
+                        ) : (
+                          <>
+                            <p>Managed transaction activity has not been loaded yet.</p>
+                            <Button
+                              variant="link"
+                              className="mt-1 h-auto p-0"
+                              onClick={() => setActiveTab("banking")}
+                            >
+                              Load activity
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    ) : !isRetailUser && !canViewManagedTransactions ? (
+                      <p className="text-sm text-muted-foreground">
+                        Transaction activity is not available for your role.
+                      </p>
+                    ) : recentTransactions.length === 0 ? (
                       <p className="text-sm text-muted-foreground">No recent activity.</p>
                     ) : (
                       <div className="space-y-3">
@@ -674,7 +735,9 @@ export default function ProfilePage() {
                               </div>
                               <div className="min-w-0">
                                 <p className="text-sm font-medium truncate">
-                                  {tx.senderAccountNumber} → {tx.receiverAccountNumber}
+                                  {isRetailUser
+                                    ? `${tx.senderName || "Unknown"} → ${tx.receiverName || "Unknown"}`
+                                    : `${tx.senderAccountNumber} → ${tx.receiverAccountNumber}`}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
                                   {formatDateTime(tx.transactionDate)}
@@ -716,7 +779,9 @@ export default function ProfilePage() {
                               className="flex items-center justify-between rounded-xl border border-border/40 bg-muted/10 p-3"
                             >
                               <div>
-                                <p className="font-mono text-sm font-medium">{acc.accountNumber}</p>
+                                <p className="font-mono text-sm font-medium">
+                                  {isRetailUser ? maskAccountNumber(acc.accountNumber) : acc.accountNumber}
+                                </p>
                                 <p className="text-xs text-muted-foreground">{acc.bankName}</p>
                               </div>
                               <div className="text-right">
@@ -786,8 +851,22 @@ export default function ProfilePage() {
                             {transactionsView.slice(0, 8).map((tx) => (
                               <tr key={tx.transactionId} className="border-b border-border/40 hover:bg-muted/10 transition">
                                 <td className="py-2 px-3 text-xs">{formatDateTime(tx.transactionDate)}</td>
-                                <td className="py-2 px-3 text-xs">{tx.senderAccountNumber}</td>
-                                <td className="py-2 px-3 text-xs">{tx.receiverAccountNumber}</td>
+                                <td className="py-2 px-3 text-xs">
+                                  {isRetailUser ? (
+                                    <div>
+                                      <p>{tx.senderName || "Unknown"}</p>
+                                      <p className="font-mono text-muted-foreground">A/c {maskAccountNumber(tx.senderAccountNumber)}</p>
+                                    </div>
+                                  ) : tx.senderAccountNumber}
+                                </td>
+                                <td className="py-2 px-3 text-xs">
+                                  {isRetailUser ? (
+                                    <div>
+                                      <p>{tx.receiverName || "Unknown"}</p>
+                                      <p className="font-mono text-muted-foreground">A/c {maskAccountNumber(tx.receiverAccountNumber)}</p>
+                                    </div>
+                                  ) : tx.receiverAccountNumber}
+                                </td>
                                 <td className="py-2 px-3 text-right font-mono font-semibold">
                                   {formatCurrency(tx.amount)}
                                 </td>
@@ -927,25 +1006,31 @@ export default function ProfilePage() {
                       <div className="grid grid-cols-2 gap-2">
                         <div className="rounded-xl border border-border/40 p-3 text-center">
                           <p className="text-xs text-muted-foreground">Banks</p>
-                          <p className="text-xl font-bold">{profile?.managedBankCount ?? 0}</p>
+                          <p className="text-xl font-bold">{profile?.managedBankCount ?? "—"}</p>
                         </div>
                         <div className="rounded-xl border border-border/40 p-3 text-center">
                           <p className="text-xs text-muted-foreground">Customers</p>
-                          <p className="text-xl font-bold">{profile?.managedCustomerCount ?? 0}</p>
+                          <p className="text-xl font-bold">{profile?.managedCustomerCount ?? "—"}</p>
                         </div>
                         <div className="rounded-xl border border-border/40 p-3 text-center">
                           <p className="text-xs text-muted-foreground">Accounts</p>
-                          <p className="text-xl font-bold">{profile?.managedAccountCount ?? 0}</p>
+                          <p className="text-xl font-bold">{profile?.managedAccountCount ?? "—"}</p>
                         </div>
                         <div className="rounded-xl border border-border/40 p-3 text-center">
                           <p className="text-xs text-muted-foreground">UPI</p>
-                          <p className="text-xl font-bold">{profile?.managedUpiProfileCount ?? 0}</p>
+                          <p className="text-xl font-bold">{profile?.managedUpiProfileCount ?? "—"}</p>
                         </div>
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground mb-1">KYC Compliance</p>
-                        <Progress value={profile?.kycCompliance ?? 0} className="h-2" />
-                        <p className="text-xs text-right mt-1">{profile?.kycCompliance ?? 0}%</p>
+                        {kycCompliance === null ? (
+                          <p className="text-sm text-muted-foreground">No customer KYC metrics available.</p>
+                        ) : (
+                          <>
+                            <Progress value={kycCompliance} className="h-2" />
+                            <p className="text-xs text-right mt-1">{kycCompliance}%</p>
+                          </>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

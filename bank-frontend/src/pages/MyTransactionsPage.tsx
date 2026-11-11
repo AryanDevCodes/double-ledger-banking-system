@@ -251,7 +251,7 @@ export default function MyTransactionsPage() {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search name, account or txn id"
+            placeholder="Search name, account suffix or txn ID"
             className="pl-9"
           />
         </div>
@@ -271,10 +271,10 @@ export default function MyTransactionsPage() {
             </p>
             {enriched.length === 0 && (
               <Button variant="outline" size="sm" className="mt-4" asChild>
-                            ? "bg-info/15 text-info"
+                <Link to="/send-money">
                   <Send className="h-4 w-4 mr-2" />
-                              ? "bg-success/15 text-success"
-                              : "bg-destructive/15 text-destructive"
+                  Send your first transfer
+                </Link>
               </Button>
             )}
           </div>
@@ -292,7 +292,12 @@ export default function MyTransactionsPage() {
             <TableBody>
               {filtered.map((t) => {
                 const upi = upiByAccount.get(t.counterpartyAccount) || [];
-                const identifier = upi.length > 0 ? `UPI: ${upi[0]}` : t.counterpartyAccount;
+                const identifier =
+                  upi.length > 0
+                    ? `UPI: ${upi[0]}`
+                    : t.counterpartyAccount !== "-"
+                      ? `A/c •••• ${t.counterpartyAccount.slice(-4)}`
+                      : "Bank transfer";
                 const isReceived = t.direction === "RECEIVED";
                 return (
                   <TableRow key={t.transactionId}>

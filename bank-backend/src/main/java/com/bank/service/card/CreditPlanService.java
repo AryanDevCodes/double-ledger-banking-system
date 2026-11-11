@@ -9,6 +9,7 @@ import com.bank.exception.InvalidDataException;
 import com.bank.exception.ResourceNotFoundException;
 import com.bank.repository.CreditCardRepository;
 import com.bank.repository.CreditPlanRepository;
+import com.bank.service.access.OwnershipAuthorizationService;
 import com.bank.service.event.CardEventService;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -22,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CreditPlanService {
   private final CreditPlanRepository creditPlanRepository;
   private final CreditCardRepository creditCardRepository;
-  private final CardAccessService cardAccessService;
+  private final OwnershipAuthorizationService ownershipAuthorizationService;
   private final CardEventService cardEventService;
 
   @Transactional(readOnly = true)
@@ -83,7 +84,7 @@ public class CreditPlanService {
     CreditCard card = creditCardRepository.findById(cardId)
         .orElseThrow(() -> new ResourceNotFoundException("CreditCard", "id", String.valueOf(cardId)));
 
-    cardAccessService.assertAccountAccess(card.getAccount());
+    ownershipAuthorizationService.assertAccountAccess(card.getAccount());
 
     card.setCreditPlan(plan);
     if (card.getCreditLimit() == null

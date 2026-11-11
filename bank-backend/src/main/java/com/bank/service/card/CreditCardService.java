@@ -9,6 +9,7 @@ import com.bank.exception.InvalidDataException;
 import com.bank.exception.ResourceNotFoundException;
 import com.bank.repository.AccountRepository;
 import com.bank.repository.CreditCardRepository;
+import com.bank.service.access.OwnershipAuthorizationService;
 import com.bank.service.event.CardEventService;
 import com.bank.service.mapper.CreditCardMapper;
 import java.math.BigDecimal;
@@ -26,7 +27,7 @@ public class CreditCardService {
   private final CreditCardRepository creditCardRepository;
   private final AccountRepository accountRepository;
   private final CreditCardMapper creditCardMapper;
-  private final CardAccessService cardAccessService;
+  private final OwnershipAuthorizationService ownershipAuthorizationService;
   private final CardEventService cardEventService;
   private final SecureRandom random = new SecureRandom();
 
@@ -34,7 +35,7 @@ public class CreditCardService {
   public List<CreditCardDTO> getByAccountId(Long accountId) {
     Account account = accountRepository.findById(accountId)
         .orElseThrow(() -> new ResourceNotFoundException("Account", "id", String.valueOf(accountId)));
-    cardAccessService.assertAccountAccess(account);
+    ownershipAuthorizationService.assertAccountAccess(account);
     return creditCardRepository.findByAccountId(account.getId()).stream()
         .map(creditCardMapper::toDTO)
         .toList();
@@ -46,7 +47,7 @@ public class CreditCardService {
     if (account == null) {
       throw new ResourceNotFoundException("Account", "accountNumber", accountNumber);
     }
-    cardAccessService.assertAccountAccess(account);
+    ownershipAuthorizationService.assertAccountAccess(account);
     return creditCardRepository.findByAccountId(account.getId()).stream()
         .map(creditCardMapper::toDTO)
         .toList();
@@ -56,7 +57,7 @@ public class CreditCardService {
   public CreditCardDTO getById(Long cardId) {
     CreditCard card = creditCardRepository.findById(cardId)
         .orElseThrow(() -> new ResourceNotFoundException("CreditCard", "id", String.valueOf(cardId)));
-    cardAccessService.assertAccountAccess(card.getAccount());
+    ownershipAuthorizationService.assertAccountAccess(card.getAccount());
     return creditCardMapper.toDTO(card);
   }
 
@@ -167,7 +168,7 @@ public class CreditCardService {
   private CreditCard loadAndAuthorize(Long cardId) {
     CreditCard card = creditCardRepository.findById(cardId)
         .orElseThrow(() -> new ResourceNotFoundException("CreditCard", "id", String.valueOf(cardId)));
-    cardAccessService.assertAccountAccess(card.getAccount());
+    ownershipAuthorizationService.assertAccountAccess(card.getAccount());
     return card;
   }
 
